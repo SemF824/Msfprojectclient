@@ -2,8 +2,13 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client using environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://kkrfqweqapnhcnjlzmvm.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrcmZxd2VxYXBuaGNuamx6bXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNzg1NzEsImV4cCI6MjA5MTg1NDU3MX0.pz2EkX-xNE2NFtCaUMNKR6BinqJnZLM61K1QUs-g4ZM';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Variables VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY requises');
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface User {

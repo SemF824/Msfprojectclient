@@ -60,6 +60,15 @@ export default function Contact() {
         return;
       }
 
+      // Rate limiting: prevent spam submissions (1 minute cooldown)
+      const lastSubmit = localStorage.getItem('last_contact_submit');
+      const now = Date.now();
+      if (lastSubmit && now - parseInt(lastSubmit) < 60000) {
+        setSubmitError('Veuillez attendre 1 minute avant d\'envoyer un nouveau message.');
+        setIsSubmitting(false);
+        return;
+      }
+
       // TODO: Intégrer un token reCAPTCHA v3/Turnstile ici avant l'insertion Supabase
 
       // Insert contact request into Supabase
@@ -81,6 +90,9 @@ export default function Contact() {
       if (error) {
         throw error;
       }
+
+      // Save timestamp for rate limiting
+      localStorage.setItem('last_contact_submit', now.toString());
 
       // Success
       setSubmitted(true);

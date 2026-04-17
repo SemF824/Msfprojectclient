@@ -56,14 +56,14 @@ https://votre-site.netlify.app/?admin=true
 
 Une fois sur la page de login admin :
 
-### Identifiants DÉMO :
+### Identifiants :
 ```
-Email     : admin@msfcongo.com
-Password  : admin123
+Email     : [VOTRE_EMAIL_ADMIN]
+Password  : [VOTRE_MOT_DE_PASSE]
 ```
 
-⚠️ **IMPORTANT** : Ces identifiants sont pour la démo uniquement.  
-En production, vous devrez les changer !
+⚠️ **IMPORTANT** : Configurez vos identifiants administrateur dans Supabase.  
+N'utilisez jamais de mots de passe faibles en production !
 
 ---
 
@@ -104,9 +104,7 @@ Cela permet au routing de fonctionner correctement.
 ### ❌ Problème : Login ne fonctionne pas
 
 **Solution :**
-1. Vérifiez les identifiants :
-   - Email : `admin@msfcongo.com`
-   - Password : `admin123`
+1. Vérifiez vos identifiants configurés dans Supabase
 2. Vérifiez que vous êtes bien sur la page de login admin (fond sombre)
 
 ### ❌ Problème : Redirect vers la page d'accueil
@@ -201,8 +199,8 @@ Si vous avez des problèmes d'accès :
 ```
 👉 https://votre-site.netlify.app/admin
 
-📧 Email    : admin@msfcongo.com
-🔑 Password : admin123
+📧 Email    : [VOTRE_EMAIL_ADMIN]
+🔑 Password : [VOTRE_MOT_DE_PASSE]
 ```
 
 **C'est tout !** 🚀

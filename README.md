@@ -27,8 +27,8 @@ https://votre-site.netlify.app/admin
 ```
 
 **Identifiants Admin :**
-- Email : `admin@msfcongo.com`
-- Password : `admin123`
+- Email : `[VOTRE_EMAIL_ADMIN]`
+- Password : `[VOTRE_MOT_DE_PASSE]`
 
 📖 **Guide complet d'accès admin** : [ACCES_ADMIN.md](./ACCES_ADMIN.md)
 

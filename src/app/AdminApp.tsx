@@ -29,16 +29,16 @@ const adminRouter = createBrowserRouter([
   },
   {
     path: "/",
-    element: <Navigate to="/admin" replace />
-  },
-  {
-    path: "/",
     element: (
       <ProtectedAdminRoute>
         <AdminLayout />
       </ProtectedAdminRoute>
     ),
     children: [
+      {
+        index: true,
+        element: <Navigate to="/dashboard" replace />
+      },
       {
         path: "dashboard",
         Component: AdminDashboard

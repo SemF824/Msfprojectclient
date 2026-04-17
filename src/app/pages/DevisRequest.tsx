@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { Link, useParams, useNavigate } from "react-router";
-import { 
-  ArrowLeft, FileText, User, Mail, Phone, MapPin, 
+import {
+  ArrowLeft, FileText, User, Mail, Phone, MapPin,
   Building2, Calendar, MessageSquare, Send, CheckCircle2,
   Bed, Bath, Square, Home, Briefcase, CreditCard, Users
 } from "lucide-react";
+import { supabase } from "../../hooks/useSupabaseAuth";
 
 export default function DevisRequest() {
   const { propertyId } = useParams();
   const navigate = useNavigate();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Mock property data
   const property = {
@@ -67,19 +70,58 @@ export default function DevisRequest() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // In production: Send to backend
-    console.log("Devis Request:", formData);
-    
-    // Show success
-    setIsSubmitted(true);
-    
-    // Redirect after 3 seconds
-    setTimeout(() => {
-      navigate("/dashboard");
-    }, 3000);
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      // Insert into Supabase
+      const { error } = await supabase
+        .from('devis_requests')
+        .insert([{
+          client_first_name: formData.firstName,
+          client_last_name: formData.lastName,
+          client_email: formData.email,
+          client_phone: formData.phone,
+          client_alternate_phone: formData.alternatePhone || null,
+          client_address: formData.address,
+          client_city: formData.city,
+          client_country: formData.country,
+          client_profession: formData.profession,
+          client_company: formData.company || null,
+          property_id: property.id,
+          property_name: property.title,
+          property_price: property.price,
+          request_type: formData.requestType,
+          financing_needed: formData.financingNeeded,
+          down_payment_amount: formData.downPaymentAmount
+            ? parseInt(formData.downPaymentAmount) : null,
+          visit_date: formData.visitDate || null,
+          visit_time: formData.visitTime || null,
+          number_of_persons: parseInt(formData.numberOfPersons),
+          message: formData.message || null,
+          status: 'nouveau',
+          priority: 'normale',
+          terms_accepted: formData.acceptTerms,
+          contact_accepted: formData.acceptContact
+        }]);
+
+      if (error) throw error;
+
+      // Show success
+      setIsSubmitted(true);
+
+      // Redirect after 3 seconds
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 3000);
+    } catch (error) {
+      console.error('Error submitting devis:', error);
+      setSubmitError('Une erreur est survenue lors de l\'envoi de votre demande. Veuillez réessayer.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSubmitted) {
@@ -524,12 +566,27 @@ export default function DevisRequest() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
               >
+                {submitError && (
+                  <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                    {submitError}
+                  </div>
+                )}
                 <button
                   type="submit"
-                  className="w-full py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all font-semibold text-lg flex items-center justify-center gap-2"
+                  disabled={isSubmitting}
+                  className="w-full py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all font-semibold text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Send className="w-5 h-5" />
-                  <span>Envoyer la Demande de Devis</span>
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-[#0a0f1e] border-t-transparent rounded-full animate-spin"></div>
+                      <span>Envoi en cours...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5" />
+                      <span>Envoyer la Demande de Devis</span>
+                    </>
+                  )}
                 </button>
               </motion.div>
             </form>

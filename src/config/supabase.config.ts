@@ -1,60 +1,60 @@
 /**
  * MSF CONGO - Configuration Supabase Partagée
- * 
+ *
  * Ce fichier contient la configuration commune pour :
  * - CLIENT APP (demandes de devis, profils utilisateurs)
  * - ADMIN APP (gestion demandes, validation documents)
- * 
+ *
  * Les deux applications se connectent à la MÊME base de données
  * mais avec des permissions différentes selon le rôle utilisateur.
  */
 
 // Use environment variables for security
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://kkrfqweqapnhcnjlzmvm.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrcmZxd2VxYXBuaGNuamx6bXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNzg1NzEsImV4cCI6MjA5MTg1NDU3MX0.pz2EkX-xNE2NFtCaUMNKR6BinqJnZLM61K1QUs-g4ZM';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabaseConfig = {
   url: supabaseUrl,
   anonKey: supabaseKey,
-  
+
   // Tables partagées
   tables: {
     // Demandes de devis (partagée client + admin)
-    devisRequests: 'devis_requests',
-    
+    devisRequests: "devis_requests",
+
     // Utilisateurs clients
-    users: 'users',
-    
+    users: "users",
+
     // Propriétés
-    properties: 'kv_store_3c1961a2', // Using KV store
-    
+    properties: "kv_store_3c1961a2", // Using KV store
+
     // Documents
-    documents: 'documents',
-    
+    documents: "documents",
+
     // Transactions
-    transactions: 'transactions',
-    
+    transactions: "transactions",
+
     // Notes internes (admin uniquement)
-    adminNotes: 'admin_notes',
-    
+    adminNotes: "admin_notes",
+
     // Timeline/historique
-    timeline: 'timeline_events'
+    timeline: "timeline_events",
   },
-  
+
   // Buckets de stockage
   storage: {
-    documents: 'make-3c1961a2-documents',
-    properties: 'make-3c1961a2-properties',
-    avatars: 'make-3c1961a2-avatars'
+    documents: "make-3c1961a2-documents",
+    properties: "make-3c1961a2-properties",
+    avatars: "make-3c1961a2-avatars",
   },
-  
+
   // Rôles utilisateurs
   roles: {
-    client: 'client',
-    admin: 'admin',
-    agent: 'agent',
-    superadmin: 'superadmin'
-  }
+    client: "client",
+    admin: "admin",
+    agent: "agent",
+    superadmin: "superadmin",
+  },
 };
 
 // Types TypeScript pour les données
@@ -62,7 +62,7 @@ export interface DevisRequest {
   id: string;
   created_at: string;
   updated_at: string;
-  
+
   // Client info
   client_id?: string;
   client_first_name: string;
@@ -76,30 +76,35 @@ export interface DevisRequest {
   client_profession: string;
   client_company?: string;
   client_monthly_income?: string;
-  
+
   // Property info
   property_id: string;
   property_name: string;
   property_price: number;
-  
+
   // Request details
-  request_type: 'achat' | 'location' | 'information';
-  financing_needed: 'oui' | 'non' | 'peut-etre';
+  request_type: "achat" | "location" | "information";
+  financing_needed: "oui" | "non" | "peut-etre";
   down_payment_amount?: number;
-  
+
   // Visit
   visit_date?: string;
   visit_time?: string;
   number_of_persons?: number;
-  
+
   // Message
   message?: string;
-  
+
   // Status
-  status: 'nouveau' | 'en_cours' | 'documents' | 'approuve' | 'rejete';
-  priority: 'haute' | 'moyenne' | 'basse';
+  status:
+    | "nouveau"
+    | "en_cours"
+    | "documents"
+    | "approuve"
+    | "rejete";
+  priority: "haute" | "moyenne" | "basse";
   assigned_to?: string;
-  
+
   // Metadata
   terms_accepted: boolean;
   contact_accepted: boolean;
@@ -113,7 +118,7 @@ export interface Document {
   size: number;
   storage_path: string;
   uploaded_at: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
   reviewed_by?: string;
   reviewed_at?: string;
 }
@@ -141,31 +146,32 @@ export const formatPrice = (price: number): string => {
 };
 
 export const formatDate = (date: string): string => {
-  return new Date(date).toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+  return new Date(date).toLocaleDateString("fr-FR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
 export const getStatusColor = (status: string): string => {
   const colors: Record<string, string> = {
-    nouveau: 'bg-blue-100 text-blue-700 border-blue-200',
-    en_cours: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-    documents: 'bg-purple-100 text-purple-700 border-purple-200',
-    approuve: 'bg-green-100 text-green-700 border-green-200',
-    rejete: 'bg-red-100 text-red-700 border-red-200'
+    nouveau: "bg-blue-100 text-blue-700 border-blue-200",
+    en_cours: "bg-yellow-100 text-yellow-700 border-yellow-200",
+    documents:
+      "bg-purple-100 text-purple-700 border-purple-200",
+    approuve: "bg-green-100 text-green-700 border-green-200",
+    rejete: "bg-red-100 text-red-700 border-red-200",
   };
   return colors[status] || colors.nouveau;
 };
 
 export const getPriorityColor = (priority: string): string => {
   const colors: Record<string, string> = {
-    haute: 'text-red-600 font-semibold',
-    moyenne: 'text-orange-600 font-medium',
-    basse: 'text-gray-600'
+    haute: "text-red-600 font-semibold",
+    moyenne: "text-orange-600 font-medium",
+    basse: "text-gray-600",
   };
   return colors[priority] || colors.moyenne;
 };

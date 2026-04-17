@@ -1,11 +1,13 @@
 import { Building2, Menu, Search, User, ChevronDown, Bell, Heart, Settings, CreditCard, LogOut } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router";
+import { useSupabaseAuth } from "../../hooks/useSupabaseAuth";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // Change to true to show user menu
+  const { user, signOut } = useSupabaseAuth();
+  const isLoggedIn = !!user;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-sm">
@@ -67,7 +69,7 @@ export function Header() {
                     <div className="w-8 h-8 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-full flex items-center justify-center">
                       <User className="w-4 h-4 text-[#0a0f1e]" />
                     </div>
-                    <span className="text-sm text-[#0a0f1e] font-medium">Jean D.</span>
+                    <span className="text-sm text-[#0a0f1e] font-medium">{user?.email?.split('@')[0] ?? 'Mon compte'}</span>
                     <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
 
@@ -75,8 +77,8 @@ export function Header() {
                   {isUserMenuOpen && (
                     <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl border border-gray-200 shadow-xl py-2">
                       <div className="px-4 py-3 border-b border-gray-200">
-                        <p className="text-[#0a0f1e] font-semibold">Jean Dupont</p>
-                        <p className="text-sm text-gray-600">jean.dupont@email.com</p>
+                        <p className="text-[#0a0f1e] font-semibold">{user?.email?.split('@')[0] ?? 'Utilisateur'}</p>
+                        <p className="text-sm text-gray-600">{user?.email ?? ''}</p>
                       </div>
                       
                       <div className="py-2">
@@ -131,17 +133,16 @@ export function Header() {
                       </div>
 
                       <div className="border-t border-gray-200 pt-2">
-                        <Link
-                          to="/connexion"
-                          className="flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
-                          onClick={() => {
+                        <button
+                          className="w-full flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
+                          onClick={async () => {
+                            await signOut();
                             setIsUserMenuOpen(false);
-                            setIsLoggedIn(false);
                           }}
                         >
                           <LogOut className="w-4 h-4" />
                           <span className="text-sm">Déconnexion</span>
-                        </Link>
+                        </button>
                       </div>
                     </div>
                   )}

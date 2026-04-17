@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router";
+import { Navigate } from "react-router";
 import { useSupabaseAuth } from "../../hooks/useSupabaseAuth";
 
 interface ProtectedAdminRouteProps {
@@ -8,14 +7,6 @@ interface ProtectedAdminRouteProps {
 
 export default function ProtectedAdminRoute({ children }: ProtectedAdminRouteProps) {
   const { user, isAdmin, isLoading } = useSupabaseAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!isLoading && (!user || !isAdmin)) {
-      // Redirect to admin login if not authenticated or not admin
-      navigate("/admin", { replace: true });
-    }
-  }, [user, isAdmin, isLoading, navigate]);
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -29,9 +20,9 @@ export default function ProtectedAdminRoute({ children }: ProtectedAdminRoutePro
     );
   }
 
-  // Only render children if user is authenticated and is admin
+  // Redirect to admin login if not authenticated or not admin
   if (!user || !isAdmin) {
-    return null;
+    return <Navigate to="/admin" replace />;
   }
 
   return <>{children}</>;
