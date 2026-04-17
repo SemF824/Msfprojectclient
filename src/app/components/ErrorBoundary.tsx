@@ -45,10 +45,17 @@ export default class ErrorBoundary extends Component<Props, State> {
               <p className="text-gray-600 mb-6">
                 Désolé, quelque chose s'est mal passé. Veuillez réessayer.
               </p>
-              {this.state.error && (
+              {this.state.error && import.meta.env.DEV && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-left">
                   <p className="text-sm text-red-700 font-mono break-words">
                     {this.state.error.message}
+                  </p>
+                </div>
+              )}
+              {this.state.error && !import.meta.env.DEV && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-left">
+                  <p className="text-sm text-red-700">
+                    Une erreur interne inattendue est survenue. L'équipe technique a été notifiée.
                   </p>
                 </div>
               )}

@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { projectId, publicAnonKey } from '../../utils/supabase/info';
 
-// Initialize Supabase client
-const supabaseUrl = `https://${projectId}.supabase.co`;
-const supabase = createClient(supabaseUrl, publicAnonKey);
+// Initialize Supabase client using environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://kkrfqweqapnhcnjlzmvm.supabase.co';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrcmZxd2VxYXBuaGNuamx6bXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNzg1NzEsImV4cCI6MjA5MTg1NDU3MX0.pz2EkX-xNE2NFtCaUMNKR6BinqJnZLM61K1QUs-g4ZM';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface User {
   id: string;

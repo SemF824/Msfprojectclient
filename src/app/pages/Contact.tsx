@@ -5,8 +5,29 @@ import {
   Building2, MessageSquare, User, DollarSign,
   Home, CheckCircle2, Users, AlertCircle
 } from "lucide-react";
+import { z } from "zod";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { supabase } from "../../hooks/useSupabaseAuth";
+
+// Validation schema avec Zod
+const contactFormSchema = z.object({
+  name: z.string()
+    .min(2, "Le nom doit contenir au moins 2 caractères")
+    .max(100, "Le nom ne peut pas dépasser 100 caractères"),
+  email: z.string()
+    .email("Format d'email invalide")
+    .max(255, "L'email ne peut pas dépasser 255 caractères"),
+  phone: z.string()
+    .min(8, "Numéro de téléphone invalide")
+    .max(20, "Numéro de téléphone trop long"),
+  subject: z.string()
+    .min(1, "Veuillez sélectionner un sujet"),
+  propertyType: z.string().optional(),
+  budget: z.string().optional(),
+  message: z.string()
+    .min(10, "Le message doit contenir au moins 10 caractères")
+    .max(1000, "Le message ne peut pas dépasser 1000 caractères")
+});
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -29,6 +50,18 @@ export default function Contact() {
     setIsSubmitting(true);
 
     try {
+      // Validation stricte avec Zod AVANT l'insertion
+      const validationResult = contactFormSchema.safeParse(formData);
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        setSubmitError(firstError.message);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // TODO: Intégrer un token reCAPTCHA v3/Turnstile ici avant l'insertion Supabase
+
       // Insert contact request into Supabase
       const { error } = await supabase
         .from('contact_requests')

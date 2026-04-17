@@ -143,6 +143,9 @@ export function FeaturedProperties() {
                 <img
                   src={property.image}
                   alt={property.title}
+                  loading="lazy"
+                  width="800"
+                  height="600"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e] via-transparent to-transparent opacity-60" />
