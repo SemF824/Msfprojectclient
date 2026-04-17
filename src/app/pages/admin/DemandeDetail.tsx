@@ -115,28 +115,32 @@ export default function DemandeDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-6 py-6">
-          <Link 
-            to="/admin/demandes"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-[#d4af37] transition-colors mb-3"
+    <div className="min-h-screen p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header with Back Button */}
+        <div className="mb-8">
+          <Link
+            to="/demandes"
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-[#d4af37] transition-colors mb-4 group"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm">Retour aux demandes</span>
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            <span className="text-sm font-medium">Retour aux demandes</span>
           </Link>
-          <div className="flex items-start justify-between">
+          
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl text-[#0a0f1e] font-bold">
-                  Demande <span className="text-[#d4af37]">{request.id}</span>
-                </h1>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusLabel(status).color}`}>
-                  {getStatusLabel(status).text}
-                </span>
-              </div>
-              <p className="text-gray-600">Soumise le {request.date}</p>
+              <h1 className="text-3xl text-[#0a0f1e] mb-2 font-bold">
+                Demande {request.id}
+              </h1>
+              <p className="text-gray-600">
+                Reçue le {new Date(request.date).toLocaleDateString('fr-FR', { 
+                  day: 'numeric', 
+                  month: 'long', 
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -149,9 +153,7 @@ export default function DemandeDetail() {
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="container mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">

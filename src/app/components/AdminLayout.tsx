@@ -79,25 +79,28 @@ export default function AdminLayout() {
               </button>
 
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl border border-gray-200 shadow-xl py-2">
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl border border-gray-200 shadow-xl py-2 z-50">
                   <div className="px-4 py-3 border-b border-gray-200">
                     <p className="text-[#0a0f1e] font-semibold">Admin Roger</p>
                     <p className="text-sm text-gray-600">admin@msfcongo.com</p>
                   </div>
                   <Link
-                    to="/"
+                    to="/parametres"
                     className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
                   >
-                    <Home className="w-4 h-4 text-[#d4af37]" />
-                    <span className="text-sm">Voir le site client</span>
+                    <Settings className="w-4 h-4 text-[#d4af37]" />
+                    <span className="text-sm">Paramètres</span>
                   </Link>
-                  <Link
-                    to="/connexion"
-                    className="flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors mt-2 border-t border-gray-200"
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem('adminAuth');
+                      window.location.href = '/admin';
+                    }}
+                    className="flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors w-full mt-2 border-t border-gray-200"
                   >
                     <LogOut className="w-4 h-4" />
                     <span className="text-sm">Déconnexion</span>
-                  </Link>
+                  </button>
                 </div>
               )}
             </div>

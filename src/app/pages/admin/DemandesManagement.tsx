@@ -261,36 +261,32 @@ export default function DemandesManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <Link 
-                to="/admin/dashboard"
-                className="inline-flex items-center gap-2 text-gray-600 hover:text-[#d4af37] transition-colors mb-3"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <span className="text-sm">Retour au Dashboard</span>
-              </Link>
-              <h1 className="text-3xl text-[#0a0f1e] font-bold mb-2">
-                Gestion des <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">Demandes de Devis</span>
+              <h1 className="text-3xl text-[#0a0f1e] mb-2 font-bold">
+                Demandes de Devis
               </h1>
-              <p className="text-gray-600">{filteredRequests.length} demandes au total</p>
+              <p className="text-gray-600">
+                Gérer et suivre toutes les demandes de devis clients
+              </p>
             </div>
-            <button 
-              onClick={exportToCSV}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-lg transition-all font-medium"
-            >
-              <Download className="w-5 h-5" />
-              Exporter CSV
-            </button>
+            <div className="flex items-center gap-3">
+              <button className="flex items-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-[#0a0f1e] rounded-xl transition-colors">
+                <Download className="w-5 h-5" />
+                <span className="hidden md:inline">Exporter</span>
+              </button>
+              <button className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-lg transition-all font-medium">
+                <FileText className="w-5 h-5" />
+                <span className="hidden md:inline">Nouvelle Demande</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="container mx-auto px-6 py-8">
         {/* Filters */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -444,10 +440,10 @@ export default function DemandesManagement() {
                       </td>
                       <td className="py-4 px-6">
                         <Link
-                          to={`/admin/demandes/${request.id}`}
-                          className="inline-flex items-center gap-2 px-3 py-2 bg-[#d4af37]/10 hover:bg-[#d4af37]/20 text-[#d4af37] rounded-lg transition-colors text-sm font-medium"
+                          to={`/demandes/${request.id}`}
+                          className="inline-flex items-center gap-2 px-3 py-2 bg-[#d4af37]/10 hover:bg-[#d4af37]/20 text-[#d4af37] rounded-lg transition-colors text-sm font-medium group"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-4 h-4 group-hover:scale-110 transition-transform" />
                           Voir
                         </Link>
                       </td>
