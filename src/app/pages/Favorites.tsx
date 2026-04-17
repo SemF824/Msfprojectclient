@@ -151,13 +151,13 @@ export default function Favorites() {
       <div className="container mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-[#d4af37] transition-colors mb-4"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Retour au Dashboard</span>
-          </Link>
+          <div className="flex items-center gap-2 mb-4 text-sm text-gray-500">
+            <Link to="/" className="hover:text-[#d4af37] transition-colors">Accueil</Link>
+            <span>/</span>
+            <Link to="/dashboard" className="hover:text-[#d4af37] transition-colors">Dashboard</Link>
+            <span>/</span>
+            <span className="text-[#0a0f1e]">Favoris</span>
+          </div>
           <div className="flex items-start justify-between flex-wrap gap-4">
             <div>
               <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mb-2">

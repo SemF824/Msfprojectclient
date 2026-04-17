@@ -1,25 +1,35 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { Link, useNavigate } from "react-router";
-import { 
-  Home, Heart, Calendar, FileText, Calculator, LogOut, 
-  Bell, Settings, User, Eye, Clock, CheckCircle2, 
+import {
+  Home, Heart, Calendar, FileText, Calculator, LogOut,
+  Bell, Settings, User, Eye, Clock, CheckCircle2,
   AlertCircle, Download, MapPin, TrendingUp,
   Building2, Bed, Bath, Square, Phone, Mail, CreditCard
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { useSupabaseAuth } from "../../hooks/useSupabaseAuth";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
+  const { user: authUser, isLoading } = useSupabaseAuth();
 
-  // Mock user data
-  const user = {
-    name: "Jean Dupont",
-    email: "jean.dupont@email.com",
-    phone: "+242 06 XXX XXXX",
-    avatar: ""
-  };
+  const displayName = authUser?.user_metadata?.full_name
+    || authUser?.email?.split('@')[0]
+    || 'Utilisateur';
+  const displayEmail = authUser?.email || '';
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 pt-20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-gray-500 text-sm">Chargement de votre espace...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Mock data
   const stats = [
@@ -157,9 +167,17 @@ export default function Dashboard() {
                 <div className="w-20 h-20 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-full flex items-center justify-center mx-auto mb-3">
                   <User className="w-10 h-10 text-[#0a0f1e]" />
                 </div>
-                <h3 className="text-[#0a0f1e] text-lg font-semibold">{user.name}</h3>
-                <p className="text-gray-600 text-sm">{user.email}</p>
+                <h3 className="text-[#0a0f1e] text-lg font-semibold">{displayName}</h3>
+                <p className="text-gray-600 text-sm">{displayEmail}</p>
               </div>
+
+              <Link
+                to="/"
+                className="flex items-center gap-2 px-4 py-2 mb-4 text-sm text-gray-500 hover:text-[#d4af37] transition-colors border border-gray-200 rounded-xl hover:border-[#d4af37]/50"
+              >
+                <Home className="w-4 h-4" />
+                <span>Retour au site</span>
+              </Link>
 
               {/* Navigation */}
               <nav className="space-y-2 mb-6">
@@ -289,7 +307,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mb-2">
-                  Bonjour, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">{user.name.split(' ')[0]}</span>
+                  Bonjour, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">{displayName.split(' ')[0]}</span>
                 </h1>
                 <p className="text-gray-600">Voici un aperçu de votre activité</p>
               </div>

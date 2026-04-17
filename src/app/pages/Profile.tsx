@@ -1,28 +1,42 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { Link } from "react-router";
-import { 
+import {
   ArrowLeft, User, Mail, Phone, MapPin, Calendar,
   Edit2, Save, X, Camera, Shield, Award, TrendingUp,
   Home, CreditCard, Bell, Settings
 } from "lucide-react";
+import { useSupabaseAuth } from "../../hooks/useSupabaseAuth";
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
+  const { user: authUser, isLoading } = useSupabaseAuth();
+
   const [formData, setFormData] = useState({
-    firstName: "Jean",
-    lastName: "Dupont",
-    email: "jean.dupont@email.com",
-    phone: "+242 06 458 86 18",
-    alternatePhone: "+242 05 587 73 24",
-    address: "Avenue de l'Indépendance, Pointe-Noire",
-    city: "Pointe-Noire",
+    firstName: authUser?.user_metadata?.first_name || "",
+    lastName: authUser?.user_metadata?.last_name || "",
+    email: authUser?.email || "",
+    phone: authUser?.user_metadata?.phone || "",
+    alternatePhone: "",
+    address: "",
+    city: "",
     country: "Congo-Brazzaville",
-    profession: "Entrepreneur",
-    company: "Congo Business Solutions",
-    dateOfBirth: "1985-05-15",
-    idNumber: "CG-PNR-19850515-001",
+    profession: "",
+    company: "",
+    dateOfBirth: "",
+    idNumber: "",
   });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 pt-20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-gray-500 text-sm">Chargement de votre espace...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -45,13 +59,13 @@ export default function Profile() {
       <div className="container mx-auto px-6 py-8 max-w-6xl">
         {/* Header */}
         <div className="mb-8">
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-[#d4af37] transition-colors mb-4"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Retour au Dashboard</span>
-          </Link>
+          <div className="flex items-center gap-2 mb-4 text-sm text-gray-500">
+            <Link to="/" className="hover:text-[#d4af37] transition-colors">Accueil</Link>
+            <span>/</span>
+            <Link to="/dashboard" className="hover:text-[#d4af37] transition-colors">Dashboard</Link>
+            <span>/</span>
+            <span className="text-[#0a0f1e]">Profil</span>
+          </div>
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mb-2">
@@ -109,7 +123,7 @@ export default function Profile() {
                   )}
                 </div>
                 <h3 className="text-2xl text-[#0a0f1e] font-semibold mb-1">
-                  {formData.firstName} {formData.lastName}
+                  {formData.firstName || authUser?.email?.split('@')[0] || 'Utilisateur'} {formData.lastName}
                 </h3>
                 <p className="text-gray-600 mb-1">{formData.profession}</p>
                 <p className="text-sm text-gray-500">{formData.company}</p>
@@ -118,7 +132,7 @@ export default function Profile() {
               <div className="pt-6 border-t border-gray-200 space-y-4">
                 <div className="flex items-center gap-3 text-gray-700">
                   <Mail className="w-5 h-5 text-[#d4af37]" />
-                  <span className="text-sm">{formData.email}</span>
+                  <span className="text-sm">{formData.email || authUser?.email}</span>
                 </div>
                 <div className="flex items-center gap-3 text-gray-700">
                   <Phone className="w-5 h-5 text-[#d4af37]" />

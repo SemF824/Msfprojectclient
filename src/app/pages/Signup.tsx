@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { Link, useNavigate } from "react-router";
 import { Mail, Lock, User, Phone, MapPin, ArrowRight, Home as HomeIcon, Eye, EyeOff } from "lucide-react";
+import { supabase } from "../../hooks/useSupabaseAuth";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -18,10 +19,27 @@ export default function Signup() {
     acceptTerms: false
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulation d'inscription - redirection vers le dashboard
-    navigate("/dashboard");
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: `${formData.firstName} ${formData.lastName}`,
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            phone: formData.phone,
+            city: formData.city,
+          }
+        }
+      });
+      if (error) throw error;
+      navigate("/dashboard");
+    } catch (error: any) {
+      console.error('Signup error:', error.message);
+    }
   };
 
   return (
