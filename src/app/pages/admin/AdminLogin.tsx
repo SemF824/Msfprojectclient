@@ -2,9 +2,11 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router";
 import { Building2, Lock, Mail, AlertCircle, Shield } from "lucide-react";
+import { useSupabaseAuth } from "../../../hooks/useSupabaseAuth";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
+  const { signIn } = useSupabaseAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: ""
@@ -17,18 +19,23 @@ export default function AdminLogin() {
     setError("");
     setIsLoading(true);
 
-    // Simulate authentication
-    setTimeout(() => {
-      // Demo credentials
-      if (formData.email === "admin@msfcongo.com" && formData.password === "admin123") {
-        // In production: Use Supabase auth with admin role check
-        localStorage.setItem("adminAuth", "true");
-        navigate("/dashboard");
-      } else {
+    try {
+      const { error: authError } = await signIn(formData.email, formData.password);
+
+      if (authError) {
         setError("Identifiants incorrects. Accès admin uniquement.");
+        setIsLoading(false);
+        return;
       }
+
+      // Verify admin role - the hook will check user_metadata.role
+      // If user is admin, redirect to dashboard
+      navigate("/dashboard");
+    } catch (err) {
+      setError("Erreur de connexion. Veuillez réessayer.");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -85,11 +92,10 @@ export default function AdminLogin() {
             </motion.div>
           )}
 
-          {/* Demo Credentials Info */}
+          {/* Info Security */}
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-            <p className="text-blue-800 font-medium mb-2 text-sm">🔐 Démo - Identifiants Admin :</p>
-            <p className="text-blue-700 text-xs font-mono">Email : admin@msfcongo.com</p>
-            <p className="text-blue-700 text-xs font-mono">Mot de passe : admin123</p>
+            <p className="text-blue-800 font-medium mb-2 text-sm">🔐 Accès Sécurisé :</p>
+            <p className="text-blue-700 text-xs">Connexion via Supabase Auth avec vérification du rôle administrateur.</p>
           </div>
 
           {/* Login Form */}

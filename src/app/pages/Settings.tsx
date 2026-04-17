@@ -156,6 +156,9 @@ export default function Settings() {
                       </div>
                       <button
                         onClick={() => setEmailNotifications(!emailNotifications)}
+                        role="switch"
+                        aria-checked={emailNotifications}
+                        aria-label="Activer ou désactiver les notifications email"
                         className={`relative w-14 h-8 rounded-full transition-colors ${
                           emailNotifications ? "bg-[#d4af37]" : "bg-gray-300"
                         }`}
@@ -175,6 +178,9 @@ export default function Settings() {
                       </div>
                       <button
                         onClick={() => setSmsNotifications(!smsNotifications)}
+                        role="switch"
+                        aria-checked={smsNotifications}
+                        aria-label="Activer ou désactiver les notifications SMS"
                         className={`relative w-14 h-8 rounded-full transition-colors ${
                           smsNotifications ? "bg-[#d4af37]" : "bg-gray-300"
                         }`}
@@ -194,6 +200,9 @@ export default function Settings() {
                       </div>
                       <button
                         onClick={() => setPushNotifications(!pushNotifications)}
+                        role="switch"
+                        aria-checked={pushNotifications}
+                        aria-label="Activer ou désactiver les notifications push"
                         className={`relative w-14 h-8 rounded-full transition-colors ${
                           pushNotifications ? "bg-[#d4af37]" : "bg-gray-300"
                         }`}
@@ -213,6 +222,9 @@ export default function Settings() {
                       </div>
                       <button
                         onClick={() => setMarketingEmails(!marketingEmails)}
+                        role="switch"
+                        aria-checked={marketingEmails}
+                        aria-label="Activer ou désactiver les emails marketing"
                         className={`relative w-14 h-8 rounded-full transition-colors ${
                           marketingEmails ? "bg-[#d4af37]" : "bg-gray-300"
                         }`}
@@ -250,6 +262,9 @@ export default function Settings() {
                     </div>
                     <button
                       onClick={() => setNotifTransactions(!notifTransactions)}
+                      role="switch"
+                      aria-checked={notifTransactions}
+                      aria-label="Activer ou désactiver les notifications de transactions"
                       className={`relative w-14 h-8 rounded-full transition-colors ${
                         notifTransactions ? "bg-[#d4af37]" : "bg-gray-300"
                       }`}
@@ -272,6 +287,9 @@ export default function Settings() {
                     </div>
                     <button
                       onClick={() => setNotifProperties(!notifProperties)}
+                      role="switch"
+                      aria-checked={notifProperties}
+                      aria-label="Activer ou désactiver les notifications de nouvelles propriétés"
                       className={`relative w-14 h-8 rounded-full transition-colors ${
                         notifProperties ? "bg-[#d4af37]" : "bg-gray-300"
                       }`}
@@ -294,6 +312,9 @@ export default function Settings() {
                     </div>
                     <button
                       onClick={() => setNotifAppointments(!notifAppointments)}
+                      role="switch"
+                      aria-checked={notifAppointments}
+                      aria-label="Activer ou désactiver les notifications de rendez-vous"
                       className={`relative w-14 h-8 rounded-full transition-colors ${
                         notifAppointments ? "bg-[#d4af37]" : "bg-gray-300"
                       }`}
@@ -316,6 +337,9 @@ export default function Settings() {
                     </div>
                     <button
                       onClick={() => setNotifMessages(!notifMessages)}
+                      role="switch"
+                      aria-checked={notifMessages}
+                      aria-label="Activer ou désactiver les notifications de messages"
                       className={`relative w-14 h-8 rounded-full transition-colors ${
                         notifMessages ? "bg-[#d4af37]" : "bg-gray-300"
                       }`}
@@ -338,6 +362,9 @@ export default function Settings() {
                     </div>
                     <button
                       onClick={() => setNotifPriceAlerts(!notifPriceAlerts)}
+                      role="switch"
+                      aria-checked={notifPriceAlerts}
+                      aria-label="Activer ou désactiver les alertes de prix"
                       className={`relative w-14 h-8 rounded-full transition-colors ${
                         notifPriceAlerts ? "bg-[#d4af37]" : "bg-gray-300"
                       }`}
@@ -435,6 +462,9 @@ export default function Settings() {
                     </div>
                     <button
                       onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
+                      role="switch"
+                      aria-checked={twoFactorEnabled}
+                      aria-label="Activer ou désactiver l'authentification à deux facteurs"
                       className={`relative w-14 h-8 rounded-full transition-colors ${
                         twoFactorEnabled ? "bg-[#d4af37]" : "bg-gray-300"
                       }`}
@@ -493,6 +523,9 @@ export default function Settings() {
                       </div>
                       <button
                         onClick={() => setProfilePublic(!profilePublic)}
+                        role="switch"
+                        aria-checked={profilePublic}
+                        aria-label="Activer ou désactiver le profil public"
                         className={`relative w-14 h-8 rounded-full transition-colors ${
                           profilePublic ? "bg-[#d4af37]" : "bg-gray-300"
                         }`}
@@ -512,6 +545,9 @@ export default function Settings() {
                       </div>
                       <button
                         onClick={() => setShowEmail(!showEmail)}
+                        role="switch"
+                        aria-checked={showEmail}
+                        aria-label="Afficher ou masquer l'email"
                         className={`relative w-14 h-8 rounded-full transition-colors ${
                           showEmail ? "bg-[#d4af37]" : "bg-gray-300"
                         }`}
@@ -531,6 +567,9 @@ export default function Settings() {
                       </div>
                       <button
                         onClick={() => setShowPhone(!showPhone)}
+                        role="switch"
+                        aria-checked={showPhone}
+                        aria-label="Afficher ou masquer le téléphone"
                         className={`relative w-14 h-8 rounded-full transition-colors ${
                           showPhone ? "bg-[#d4af37]" : "bg-gray-300"
                         }`}

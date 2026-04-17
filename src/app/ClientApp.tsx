@@ -1,20 +1,35 @@
+import { lazy, Suspense } from "react";
 import { RouterProvider, createBrowserRouter } from "react-router";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Layout from "./components/Layout";
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import Dashboard from "./pages/Dashboard";
-import PropertyDetails from "./pages/PropertyDetails";
-import ProjectDetail from "./pages/ProjectDetail";
-import Services from "./pages/Services";
-import Contact from "./pages/Contact";
-import Transactions from "./pages/Transactions";
-import TransactionDetail from "./pages/TransactionDetail";
-import DevisRequest from "./pages/DevisRequest";
-import Profile from "./pages/Profile";
-import Favorites from "./pages/Favorites";
-import Notifications from "./pages/Notifications";
-import Settings from "./pages/Settings";
+
+// Lazy load all pages for better performance
+const Home = lazy(() => import("./pages/Home"));
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const PropertyDetails = lazy(() => import("./pages/PropertyDetails"));
+const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
+const Services = lazy(() => import("./pages/Services"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Transactions = lazy(() => import("./pages/Transactions"));
+const TransactionDetail = lazy(() => import("./pages/TransactionDetail"));
+const DevisRequest = lazy(() => import("./pages/DevisRequest"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Favorites = lazy(() => import("./pages/Favorites"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const Settings = lazy(() => import("./pages/Settings"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Loading component
+const LoadingScreen = () => (
+  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 flex items-center justify-center">
+    <div className="text-center">
+      <div className="w-16 h-16 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <p className="text-gray-600">Chargement...</p>
+    </div>
+  </div>
+);
 
 // CLIENT ROUTES - Site public MSF Congo
 const clientRouter = createBrowserRouter([
@@ -69,6 +84,10 @@ const clientRouter = createBrowserRouter([
       {
         path: "settings",
         Component: Settings
+      },
+      {
+        path: "*",
+        Component: NotFound
       }
     ]
   },
@@ -83,9 +102,19 @@ const clientRouter = createBrowserRouter([
   {
     path: "/dashboard",
     Component: Dashboard
+  },
+  {
+    path: "*",
+    Component: NotFound
   }
 ]);
 
 export default function ClientApp() {
-  return <RouterProvider router={clientRouter} />;
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<LoadingScreen />}>
+        <RouterProvider router={clientRouter} />
+      </Suspense>
+    </ErrorBoundary>
+  );
 }

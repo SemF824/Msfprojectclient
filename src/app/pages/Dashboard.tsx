@@ -105,12 +105,25 @@ export default function Dashboard() {
   const [loanTerm, setLoanTerm] = useState(20);
   const [interestRate, setInterestRate] = useState(7.5);
 
-  // Calculate monthly payment
+  // Calculate monthly payment with validation
   const calculateMonthlyPayment = () => {
     const principal = loanAmount - downPayment;
+
+    // Validation: prevent division by zero and negative values
+    if (principal <= 0 || loanTerm <= 0 || interestRate < 0) {
+      return 0;
+    }
+
+    // If interest rate is 0, calculate simple division
+    if (interestRate === 0) {
+      const numberOfPayments = loanTerm * 12;
+      return (principal / numberOfPayments).toFixed(2);
+    }
+
     const monthlyRate = interestRate / 100 / 12;
     const numberOfPayments = loanTerm * 12;
     const monthlyPayment = principal * (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+
     return monthlyPayment.toFixed(2);
   };
 

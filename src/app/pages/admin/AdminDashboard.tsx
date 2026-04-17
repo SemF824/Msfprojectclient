@@ -285,7 +285,7 @@ export default function AdminDashboard() {
                           </td>
                           <td className="py-4 px-4">
                             <Link
-                              to={`/admin/demandes/${request.id}`}
+                              to={`/demandes/${request.id}`}
                               className="flex items-center gap-1 text-[#d4af37] hover:text-[#b8941f] text-sm"
                             >
                               <Eye className="w-4 h-4" />
@@ -309,8 +309,8 @@ export default function AdminDashboard() {
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl text-[#0a0f1e] font-semibold">Propriétés les Plus Demandées</h2>
-                <Link 
-                  to="/admin/statistiques"
+                <Link
+                  to="/statistiques"
                   className="text-[#d4af37] hover:text-[#b8941f] text-sm font-medium"
                 >
                   Analytics →
@@ -351,7 +351,7 @@ export default function AdminDashboard() {
               <h2 className="text-xl text-[#0a0f1e] font-semibold mb-4">Actions Rapides</h2>
               <div className="space-y-3">
                 <Link
-                  to="/admin/demandes"
+                  to="/demandes"
                   className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
                 >
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -360,7 +360,7 @@ export default function AdminDashboard() {
                   <span className="text-[#0a0f1e] font-medium">Demandes de Devis</span>
                 </Link>
                 <Link
-                  to="/admin/proprietes"
+                  to="/proprietes"
                   className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
                 >
                   <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -369,7 +369,7 @@ export default function AdminDashboard() {
                   <span className="text-[#0a0f1e] font-medium">Gérer Propriétés</span>
                 </Link>
                 <Link
-                  to="/admin/clients"
+                  to="/clients"
                   className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
                 >
                   <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -378,7 +378,7 @@ export default function AdminDashboard() {
                   <span className="text-[#0a0f1e] font-medium">Base Clients</span>
                 </Link>
                 <Link
-                  to="/admin/statistiques"
+                  to="/statistiques"
                   className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
                 >
                   <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">

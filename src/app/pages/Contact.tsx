@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { 
-  MapPin, Phone, Mail, Clock, Send, 
+import {
+  MapPin, Phone, Mail, Clock, Send,
   Building2, MessageSquare, User, DollarSign,
-  Home, CheckCircle2, Users
+  Home, CheckCircle2, Users, AlertCircle
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { supabase } from "../../hooks/useSupabaseAuth";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -19,12 +20,53 @@ export default function Contact() {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simuler l'envoi du formulaire
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 5000);
+    setSubmitError("");
+    setIsSubmitting(true);
+
+    try {
+      // Insert contact request into Supabase
+      const { error } = await supabase
+        .from('contact_requests')
+        .insert([
+          {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            subject: formData.subject,
+            property_type: formData.propertyType || null,
+            budget: formData.budget || null,
+            message: formData.message,
+            created_at: new Date().toISOString(),
+          }
+        ]);
+
+      if (error) {
+        throw error;
+      }
+
+      // Success
+      setSubmitted(true);
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        subject: "",
+        propertyType: "",
+        budget: "",
+        message: ""
+      });
+      setTimeout(() => setSubmitted(false), 5000);
+    } catch (error: any) {
+      console.error('Error submitting contact form:', error);
+      setSubmitError("Erreur lors de l'envoi du formulaire. Veuillez réessayer ou nous contacter directement.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -211,6 +253,17 @@ export default function Contact() {
                 </motion.div>
               )}
 
+              {submitError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3"
+                >
+                  <AlertCircle className="w-5 h-5 text-red-600" />
+                  <p className="text-red-700">{submitError}</p>
+                </motion.div>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Name */}
                 <div>
@@ -352,10 +405,20 @@ export default function Contact() {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  className="w-full py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all flex items-center justify-center gap-2"
+                  disabled={isSubmitting}
+                  className="w-full py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Send className="w-5 h-5" />
-                  Envoyer le Message
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-[#0a0f1e] border-t-transparent rounded-full animate-spin"></div>
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5" />
+                      Envoyer le Message
+                    </>
+                  )}
                 </button>
               </form>
             </motion.div>

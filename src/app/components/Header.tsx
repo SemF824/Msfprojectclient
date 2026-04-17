@@ -159,6 +159,9 @@ export function Header() {
             
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-expanded={isMenuOpen}
+              aria-controls="mobile-menu"
+              aria-label="Toggle navigation menu"
               className="lg:hidden p-2 text-gray-600 hover:text-[#d4af37] transition-colors"
             >
               <Menu className="w-6 h-6" />
@@ -168,7 +171,7 @@ export function Header() {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-gray-200">
+          <div id="mobile-menu" className="lg:hidden py-4 border-t border-gray-200">
             <nav className="flex flex-col gap-4">
               <Link to="/" className="text-sm text-gray-600 hover:text-[#d4af37] transition-colors">
                 Accueil

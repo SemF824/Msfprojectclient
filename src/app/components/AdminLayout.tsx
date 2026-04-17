@@ -1,15 +1,18 @@
 import { useState } from "react";
-import { Outlet, Link, useLocation } from "react-router";
-import { 
+import { Outlet, Link, useLocation, useNavigate } from "react-router";
+import {
   Building2, LayoutDashboard, FileText, Users, Home,
   BarChart3, Settings, LogOut, Menu, X, Bell, Search,
   ChevronDown
 } from "lucide-react";
+import { useSupabaseAuth } from "../../hooks/useSupabaseAuth";
 
 export default function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useSupabaseAuth();
 
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -72,17 +75,23 @@ export default function AdminLayout() {
                 className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <div className="w-8 h-8 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-full flex items-center justify-center">
-                  <span className="text-[#0a0f1e] font-semibold text-sm">AR</span>
+                  <span className="text-[#0a0f1e] font-semibold text-sm">
+                    {user?.email?.substring(0, 2).toUpperCase() || "AD"}
+                  </span>
                 </div>
-                <span className="hidden md:block text-sm text-[#0a0f1e] font-medium">Admin Roger</span>
+                <span className="hidden md:block text-sm text-[#0a0f1e] font-medium">
+                  {user?.email || "Administrateur"}
+                </span>
                 <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {isUserMenuOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl border border-gray-200 shadow-xl py-2 z-50">
                   <div className="px-4 py-3 border-b border-gray-200">
-                    <p className="text-[#0a0f1e] font-semibold">Admin Roger</p>
-                    <p className="text-sm text-gray-600">admin@msfcongo.com</p>
+                    <p className="text-[#0a0f1e] font-semibold">
+                      {user?.user_metadata?.name || "Administrateur"}
+                    </p>
+                    <p className="text-sm text-gray-600">{user?.email || ""}</p>
                   </div>
                   <Link
                     to="/parametres"
@@ -92,9 +101,9 @@ export default function AdminLayout() {
                     <span className="text-sm">Paramètres</span>
                   </Link>
                   <button
-                    onClick={() => {
-                      localStorage.removeItem('adminAuth');
-                      window.location.href = '/admin';
+                    onClick={async () => {
+                      await signOut();
+                      navigate('/admin', { replace: true });
                     }}
                     className="flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors w-full mt-2 border-t border-gray-200"
                   >
