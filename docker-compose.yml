@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: msf_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: msf_root_2024
+      MYSQL_DATABASE: msf_congo
+      MYSQL_USER: msf_admin
+      MYSQL_PASSWORD: msf_admin_2024
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - msf_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # phpMyAdmin - Interface Web MySQL
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: msf_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: msf_admin
+      PMA_PASSWORD: msf_admin_2024
+      UPLOAD_LIMIT: 50M
+    ports:
+      - "8080:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - msf_network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  msf_network:
+    driver: bridge

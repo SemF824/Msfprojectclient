@@ -36,7 +36,7 @@ export default function AdminLayout() {
               {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
             
-            <Link to="/admin/dashboard" className="flex items-center gap-3">
+            <Link to="/dashboard" className="flex items-center gap-3">
               <div className="w-8 h-8 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-lg flex items-center justify-center">
                 <Building2 className="w-5 h-5 text-[#0a0f1e]" />
               </div>

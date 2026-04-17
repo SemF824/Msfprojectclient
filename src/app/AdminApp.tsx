@@ -8,12 +8,12 @@ import AdminLogin from "./pages/admin/AdminLogin";
 // ADMIN ROUTES - BackOffice MSF Congo
 const adminRouter = createBrowserRouter([
   {
-    path: "/",
-    element: <Navigate to="/dashboard" replace />
+    path: "/admin",
+    Component: AdminLogin
   },
   {
-    path: "/login",
-    Component: AdminLogin
+    path: "/",
+    element: <Navigate to="/admin" replace />
   },
   {
     path: "/",
