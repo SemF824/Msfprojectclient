@@ -154,6 +154,9 @@ export function Footer() {
               <a href="#" className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors">
                 Mentions Légales
               </a>
+              <a href="/admin" className="text-[#d4af37]/70 text-sm hover:text-[#d4af37] transition-colors">
+                Admin
+              </a>
             </div>
           </div>
         </div>

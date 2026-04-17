@@ -9,13 +9,13 @@ import AdminApp from "./AdminApp";
  * - CLIENT APP : Site public (www.msfcongo.com ou msfcongo.com)
  * - ADMIN APP : BackOffice (admin.msfcongo.com)
  * 
- * En développement local :
- * - http://localhost:5173/ → CLIENT APP
- * - http://localhost:5173/?admin=true → ADMIN APP
+ * Accès ADMIN APP :
+ * - http://votre-site.com/admin → ADMIN APP
+ * - http://votre-site.com/?admin=true → ADMIN APP
+ * - http://admin.votre-site.com → ADMIN APP
  * 
- * En production :
- * - Déployer CLIENT APP sur : msfcongo.com
- * - Déployer ADMIN APP sur : admin.msfcongo.com
+ * Accès CLIENT APP :
+ * - http://votre-site.com/ → CLIENT APP
  */
 
 export default function App() {
@@ -24,13 +24,18 @@ export default function App() {
   useEffect(() => {
     // Détection de l'application à charger
     const hostname = window.location.hostname;
+    const pathname = window.location.pathname;
     const searchParams = new URLSearchParams(window.location.search);
     
-    // En production : Détecter par sous-domaine
+    // Méthode 1 : Sous-domaine admin.msfcongo.com
     if (hostname.startsWith('admin.')) {
       setAppType('admin');
     }
-    // En développement : Détecter par query param
+    // Méthode 2 : Chemin /admin
+    else if (pathname.startsWith('/admin')) {
+      setAppType('admin');
+    }
+    // Méthode 3 : Query param ?admin=true
     else if (searchParams.get('admin') === 'true') {
       setAppType('admin');
     }
