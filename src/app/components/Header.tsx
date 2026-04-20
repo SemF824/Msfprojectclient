@@ -69,12 +69,7 @@ export function Header() {
                     <div className="w-8 h-8 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-full flex items-center justify-center">
                       <User className="w-4 h-4 text-[#0a0f1e]" />
                     </div>
-                    <span className="text-sm text-[#0a0f1e] font-medium">
-                      {user?.user_metadata?.full_name
-                        || user?.user_metadata?.first_name
-                        || user?.email?.split('@')[0]
-                        || 'Mon compte'}
-                    </span>
+                    <span className="text-sm text-[#0a0f1e] font-medium">{user?.email?.split('@')[0] ?? 'Mon compte'}</span>
                     <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
 
@@ -82,12 +77,7 @@ export function Header() {
                   {isUserMenuOpen && (
                     <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl border border-gray-200 shadow-xl py-2">
                       <div className="px-4 py-3 border-b border-gray-200">
-                        <p className="text-[#0a0f1e] font-semibold">
-                          {user?.user_metadata?.full_name
-                            || user?.user_metadata?.first_name
-                            || user?.email?.split('@')[0]
-                            || 'Utilisateur'}
-                        </p>
+                        <p className="text-[#0a0f1e] font-semibold">{user?.email?.split('@')[0] ?? 'Utilisateur'}</p>
                         <p className="text-sm text-gray-600">{user?.email ?? ''}</p>
                       </div>
                       

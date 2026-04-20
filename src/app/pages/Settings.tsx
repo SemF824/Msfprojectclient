@@ -54,13 +54,13 @@ export default function Settings() {
       <div className="container mx-auto px-6 py-8 max-w-6xl">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4 text-sm text-gray-500">
-            <Link to="/" className="hover:text-[#d4af37] transition-colors">Accueil</Link>
-            <span>/</span>
-            <Link to="/dashboard" className="hover:text-[#d4af37] transition-colors">Dashboard</Link>
-            <span>/</span>
-            <span className="text-[#0a0f1e]">Paramètres</span>
-          </div>
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-[#d4af37] transition-colors mb-4"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Retour au Dashboard</span>
+          </Link>
           <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mb-2">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">Paramètres</span>
           </h1>
