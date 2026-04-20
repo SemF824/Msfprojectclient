@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { projectId, publicAnonKey } from '../../utils/supabase/info';
 
 // Initialize Supabase client using environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Variables VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY requises');
-}
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || `https://${projectId}.supabase.co`;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || publicAnonKey;
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -58,8 +55,10 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
     };
   }, []);
 
-  // Check if user is admin based on role in user_metadata
-  const isAdmin = user?.user_metadata?.role === 'admin';
+  // SÉCURITÉ : isAdmin vérifie user_metadata.role pour l'UI (côté client)
+  // Les policies Supabase (RLS) vérifient public.user_roles pour la sécurité réelle
+  // Les deux doivent être synchronisés via le script database/security_fix.sql
+  const isAdmin = user?.user_metadata?.role === 'admin' || user?.user_metadata?.role === 'superadmin';
 
   const signOut = async () => {
     try {

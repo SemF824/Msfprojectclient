@@ -134,9 +134,9 @@ export function FeaturedProperties() {
               key={property.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className="group relative bg-white/5 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 hover:border-[#d4af37]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#d4af37]/20"
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ delay: index * 0.1, duration: 0.4 }}
+              className="group relative bg-white/5 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 hover:border-[#d4af37]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#d4af37]/20 will-change-transform"
             >
               {/* Property Image */}
               <div className="relative h-64 overflow-hidden">

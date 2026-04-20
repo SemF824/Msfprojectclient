@@ -1,11 +1,30 @@
-# 🚀 Guide de Déploiement MSF Congo sur Netlify
+# 🚀 Guide de Déploiement MSF Congo sur Netlify/Vercel
 
 ## 📋 Prérequis
 
 - [x] Compte GitHub
-- [x] Compte Netlify (gratuit)
+- [x] Compte Netlify ou Vercel (gratuit)
 - [x] Code MSF Congo prêt
 - [x] Git installé localement
+
+---
+
+## 🔑 Variables d'Environnement Vercel
+
+Dans Vercel > Settings > Environment Variables, ajouter :
+
+| Variable | Valeur | Environnements |
+|----------|--------|----------------|
+| VITE_SUPABASE_URL | https://kkrfqweqapnhcnjlzmvm.supabase.co | Production, Preview, Dev |
+| VITE_SUPABASE_ANON_KEY | votre_clé_anon | Production, Preview, Dev |
+| VITE_GOOGLE_MAPS_API_KEY | votre_clé_google_maps | Production, Preview, Dev |
+
+### Pour Google Maps API :
+1. Aller sur https://console.cloud.google.com
+2. Activer l'API "Maps Embed API"
+3. Créer une clé API
+4. Restreindre la clé à votre domaine Vercel (*.vercel.app + votre domaine custom)
+5. Copier la clé dans la variable VITE_GOOGLE_MAPS_API_KEY sur Vercel
 
 ---
 

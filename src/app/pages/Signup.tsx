@@ -2,11 +2,14 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { Link, useNavigate } from "react-router";
 import { Mail, Lock, User, Phone, MapPin, ArrowRight, Home as HomeIcon, Eye, EyeOff } from "lucide-react";
+import { supabase } from "../../hooks/useSupabaseAuth";
 
 export default function Signup() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -18,10 +21,43 @@ export default function Signup() {
     acceptTerms: false
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulation d'inscription - redirection vers le dashboard
-    navigate("/dashboard");
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Les mots de passe ne correspondent pas");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: `${formData.firstName} ${formData.lastName}`,
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            phone: formData.phone,
+            city: formData.city,
+          }
+        }
+      });
+
+      if (signUpError) {
+        setError(signUpError.message);
+        return;
+      }
+
+      navigate("/dashboard");
+    } catch (err: any) {
+      setError("Erreur lors de l'inscription. Veuillez réessayer.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -248,13 +284,30 @@ export default function Signup() {
               </label>
             </div>
 
+            {/* Error Display */}
+            {error && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                {error}
+              </div>
+            )}
+
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all group"
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span className="font-medium">Créer mon Compte</span>
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              {isLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-[#0a0f1e] border-t-transparent rounded-full animate-spin"></div>
+                  Création en cours...
+                </>
+              ) : (
+                <>
+                  <span className="font-medium">Créer mon Compte</span>
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
             </button>
           </form>
 

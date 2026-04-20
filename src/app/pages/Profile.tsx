@@ -1,28 +1,52 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Link } from "react-router";
-import { 
+import {
   ArrowLeft, User, Mail, Phone, MapPin, Calendar,
   Edit2, Save, X, Camera, Shield, Award, TrendingUp,
   Home, CreditCard, Bell, Settings
 } from "lucide-react";
+import { useSupabaseAuth } from "../../hooks/useSupabaseAuth";
 
 export default function Profile() {
+  const { user: authUser, isLoading } = useSupabaseAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: "Jean",
-    lastName: "Dupont",
-    email: "jean.dupont@email.com",
-    phone: "+242 06 458 86 18",
-    alternatePhone: "+242 05 587 73 24",
-    address: "Avenue de l'Indépendance, Pointe-Noire",
-    city: "Pointe-Noire",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    alternatePhone: "",
+    address: "",
+    city: "",
     country: "Congo-Brazzaville",
-    profession: "Entrepreneur",
-    company: "Congo Business Solutions",
-    dateOfBirth: "1985-05-15",
-    idNumber: "CG-PNR-19850515-001",
+    profession: "",
+    company: "",
+    dateOfBirth: "",
+    idNumber: "",
   });
+
+  // Pré-remplir avec les données Supabase quand disponibles
+  useEffect(() => {
+    if (authUser) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: authUser.user_metadata?.first_name || "",
+        lastName: authUser.user_metadata?.last_name || "",
+        email: authUser.email || "",
+        phone: authUser.user_metadata?.phone || "",
+        city: authUser.user_metadata?.city || "",
+      }));
+    }
+  }, [authUser]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 pt-20 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -109,9 +133,9 @@ export default function Profile() {
                   )}
                 </div>
                 <h3 className="text-2xl text-[#0a0f1e] font-semibold mb-1">
-                  {formData.firstName} {formData.lastName}
+                  {formData.firstName || authUser?.email?.split('@')[0] || 'Utilisateur'} {formData.lastName}
                 </h3>
-                <p className="text-gray-600 mb-1">{formData.profession}</p>
+                <p className="text-gray-600 mb-1">{formData.profession || 'Profil à compléter'}</p>
                 <p className="text-sm text-gray-500">{formData.company}</p>
               </div>
 

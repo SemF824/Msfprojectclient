@@ -47,11 +47,12 @@ export function Statistics() {
             return (
               <motion.div
                 key={index}
+                layout="position"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="relative group h-full"
+                className="relative group h-full will-change-transform"
               >
                 <div className="relative bg-white backdrop-blur-xl rounded-2xl p-8 border border-gray-200 hover:border-[#d4af37]/50 transition-all duration-500 hover:shadow-xl hover:shadow-[#d4af37]/20 h-full flex flex-col">
                   {/* Icon */}

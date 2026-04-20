@@ -64,6 +64,37 @@ export default function PropertyDetails() {
     ]
   };
 
+  const PropertyMap = ({ location }: { location: string }) => {
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+    if (!apiKey) {
+      return (
+        <div className="h-64 bg-gray-100 rounded-xl relative overflow-hidden border border-gray-200 flex items-center justify-center">
+          <div className="text-center">
+            <MapIcon className="w-12 h-12 text-[#d4af37] mx-auto mb-2" />
+            <p className="text-gray-600">Carte Interactive</p>
+            <p className="text-sm text-gray-500">{location}</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="h-64 rounded-xl overflow-hidden border border-gray-200">
+        <iframe
+          width="100%"
+          height="100%"
+          frameBorder="0"
+          style={{ border: 0 }}
+          referrerPolicy="no-referrer-when-downgrade"
+          src={`https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(location + ' Pointe-Noire Congo')}&zoom=14&language=fr`}
+          allowFullScreen
+          title={`Localisation ${location}`}
+        />
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 pt-20">
       {/* Back Button */}
@@ -282,15 +313,9 @@ export default function PropertyDetails() {
             >
               <h2 className="text-2xl text-[#0a0f1e] mb-6">Localisation & Quartier</h2>
               
-              {/* Map Placeholder */}
-              <div className="h-64 bg-gray-100 rounded-xl mb-6 relative overflow-hidden border border-gray-200">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <MapIcon className="w-12 h-12 text-[#d4af37] mx-auto mb-2" />
-                    <p className="text-gray-600">Carte Interactive</p>
-                    <p className="text-sm text-gray-500">Tchikobo, Pointe-Noire</p>
-                  </div>
-                </div>
+              {/* Google Map */}
+              <div className="mb-6">
+                <PropertyMap location={property.location} />
               </div>
 
               {/* Nearby Places */}

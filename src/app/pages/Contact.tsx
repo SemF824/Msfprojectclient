@@ -203,6 +203,43 @@ export default function Contact() {
     }
   ];
 
+  const GoogleMap = () => {
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+    if (!apiKey) {
+      return (
+        <div className="h-80 bg-gray-100 relative flex items-center justify-center rounded-xl">
+          <div className="text-center">
+            <MapPin className="w-16 h-16 text-[#d4af37] mx-auto mb-4" />
+            <p className="text-[#0a0f1e] mb-2 font-medium">Carte Interactive</p>
+            <p className="text-sm text-gray-600">1 place Antonetti, 7ème étage</p>
+            <p className="text-sm text-gray-600">Pointe-Noire, Congo</p>
+            <p className="text-xs text-gray-400 mt-2">Configurez VITE_GOOGLE_MAPS_API_KEY pour activer</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Coordonnées de la Place Antonetti, Pointe-Noire
+    const lat = -4.7759;
+    const lng = 11.8634;
+
+    return (
+      <div className="h-80 rounded-xl overflow-hidden border border-gray-200">
+        <iframe
+          width="100%"
+          height="100%"
+          frameBorder="0"
+          style={{ border: 0 }}
+          referrerPolicy="no-referrer-when-downgrade"
+          src={`https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=Place+Antonetti+Pointe-Noire+Congo&zoom=15&language=fr`}
+          allowFullScreen
+          title="Localisation MSF Congo"
+        />
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50">
       {/* Hero Section */}
@@ -476,19 +513,9 @@ export default function Contact() {
               transition={{ duration: 0.6 }}
               className="space-y-6"
             >
-              {/* Map Placeholder */}
+              {/* Google Map */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-                <div className="h-80 bg-gray-100 relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <MapPin className="w-16 h-16 text-[#d4af37] mx-auto mb-4" />
-                      <p className="text-[#0a0f1e] mb-2">Carte Interactive</p>
-                      <p className="text-sm text-gray-600">1 place Antonetti, 7ème étage</p>
-                      <p className="text-sm text-gray-600">Pointe-Noire, Congo</p>
-                    </div>
-                  </div>
-                  {/* In production, replace with Google Maps iframe */}
-                </div>
+                <GoogleMap />
               </div>
 
               {/* Office Image */}
