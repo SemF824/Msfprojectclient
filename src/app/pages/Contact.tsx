@@ -212,8 +212,8 @@ export default function Contact() {
           <div className="text-center">
             <MapPin className="w-16 h-16 text-[#d4af37] mx-auto mb-4" />
             <p className="text-[#0a0f1e] mb-2 font-medium">Carte Interactive</p>
-            <p className="text-sm text-gray-600">1 place Antonetti, 7ème étage</p>
-            <p className="text-sm text-gray-600">Pointe-Noire, Congo</p>
+            <p className="text-sm text-gray-600">6R2W+J28, Pointe-Noire</p>
+            <p className="text-sm text-gray-600">Congo-Brazzaville</p>
             <p className="text-xs text-gray-400 mt-2">Configurez VITE_GOOGLE_MAPS_API_KEY pour activer</p>
           </div>
         </div>
@@ -232,7 +232,7 @@ export default function Contact() {
           frameBorder="0"
           style={{ border: 0 }}
           referrerPolicy="no-referrer-when-downgrade"
-          src={`https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=Place+Antonetti+Pointe-Noire+Congo&zoom=15&language=fr`}
+          src={`https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=6R2W%2BJ28+Pointe-Noire+Congo-Brazzaville&zoom=16&language=fr`}
           allowFullScreen
           title="Localisation MSF Congo"
         />
