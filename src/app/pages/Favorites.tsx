@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { Link } from "react-router";
-import { 
-  ArrowLeft, Heart, Bed, Bath, Square, MapPin, 
+import {
+  Heart, Bed, Bath, Square, MapPin,
   TrendingUp, Filter, Grid3x3, List, Trash2,
   Share2, Eye, Calendar, Search
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import Breadcrumb from "../components/Breadcrumb";
 
 interface FavoriteProperty {
   id: string;
@@ -151,13 +152,10 @@ export default function Favorites() {
       <div className="container mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-[#d4af37] transition-colors mb-4"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Retour au Dashboard</span>
-          </Link>
+          <Breadcrumb items={[
+            { label: "Dashboard", path: "/dashboard" },
+            { label: "Favoris", path: "/favorites" }
+          ]} />
           <div className="flex items-start justify-between flex-wrap gap-4">
             <div>
               <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mb-2">

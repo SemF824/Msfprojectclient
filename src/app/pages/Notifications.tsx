@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { Link } from "react-router";
-import { 
-  ArrowLeft, Bell, Check, Trash2, Filter, 
-  Home, CreditCard, Calendar, MessageSquare, 
+import {
+  Bell, Check, Trash2, Filter,
+  Home, CreditCard, Calendar, MessageSquare,
   TrendingUp, AlertCircle, CheckCircle2, Info,
   X, Settings
 } from "lucide-react";
+import Breadcrumb from "../components/Breadcrumb";
 
 type NotificationType = "transaction" | "property" | "appointment" | "message" | "alert" | "success" | "info";
 
@@ -146,13 +147,10 @@ export default function Notifications() {
       <div className="container mx-auto px-6 py-8 max-w-4xl">
         {/* Header */}
         <div className="mb-8">
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-[#d4af37] transition-colors mb-4"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Retour au Dashboard</span>
-          </Link>
+          <Breadcrumb items={[
+            { label: "Dashboard", path: "/dashboard" },
+            { label: "Notifications", path: "/notifications" }
+          ]} />
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mb-2">

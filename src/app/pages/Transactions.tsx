@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { Link } from "react-router";
-import { 
-  ArrowLeft, Download, Filter, Search, 
+import {
+  Download, Filter, Search,
   CheckCircle2, Clock, XCircle, AlertCircle,
   Calendar, CreditCard, Smartphone, Building2, TrendingUp
 } from "lucide-react";
+import Breadcrumb from "../components/Breadcrumb";
 
 type TransactionStatus = "completed" | "pending" | "failed" | "processing";
 type PaymentMethod = "mobile_money" | "bank_transfer" | "card" | "cash";
@@ -190,13 +191,10 @@ export default function Transactions() {
       <div className="container mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-[#d4af37] transition-colors mb-4"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Retour au Tableau de Bord</span>
-          </Link>
+          <Breadcrumb items={[
+            { label: "Dashboard", path: "/dashboard" },
+            { label: "Transactions", path: "/transactions" }
+          ]} />
           <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mb-2">
             Mes <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">Transactions</span>
           </h1>

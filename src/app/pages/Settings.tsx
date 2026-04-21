@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { Link } from "react-router";
-import { 
-  ArrowLeft, User, Bell, Shield, Globe, 
+import {
+  User, Bell, Shield, Globe,
   Lock, Mail, Smartphone, Eye, EyeOff,
   Check, X, ChevronRight, LogOut, Trash2,
   Download, Moon, Sun, CreditCard, AlertCircle
 } from "lucide-react";
+import Breadcrumb from "../components/Breadcrumb";
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("account");
@@ -54,13 +55,10 @@ export default function Settings() {
       <div className="container mx-auto px-6 py-8 max-w-6xl">
         {/* Header */}
         <div className="mb-8">
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-[#d4af37] transition-colors mb-4"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Retour au Dashboard</span>
-          </Link>
+          <Breadcrumb items={[
+            { label: "Dashboard", path: "/dashboard" },
+            { label: "Paramètres", path: "/settings" }
+          ]} />
           <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mb-2">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">Paramètres</span>
           </h1>

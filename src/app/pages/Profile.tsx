@@ -2,15 +2,19 @@ import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Link } from "react-router";
 import {
-  ArrowLeft, User, Mail, Phone, MapPin, Calendar,
+  User, Mail, Phone, MapPin, Calendar,
   Edit2, Save, X, Camera, Shield, Award, TrendingUp,
   Home, CreditCard, Bell, Settings
 } from "lucide-react";
 import { useSupabaseAuth } from "../../hooks/useSupabaseAuth";
+import { supabase } from "../../hooks/useSupabaseAuth";
+import Breadcrumb from "../components/Breadcrumb";
 
 export default function Profile() {
   const { user: authUser, isLoading } = useSupabaseAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -52,9 +56,38 @@ export default function Profile() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    // In production, save to backend
-    setIsEditing(false);
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaveMessage(null);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          phone: formData.phone,
+          alternate_phone: formData.alternatePhone,
+          address: formData.address,
+          city: formData.city,
+          country: formData.country,
+          profession: formData.profession,
+          company: formData.company,
+          date_of_birth: formData.dateOfBirth,
+          id_number: formData.idNumber,
+        }
+      });
+
+      if (error) throw error;
+
+      setSaveMessage({ type: 'success', text: 'Profil mis à jour avec succès !' });
+      setIsEditing(false);
+    } catch (error: any) {
+      console.error('Error saving profile:', error);
+      setSaveMessage({ type: 'error', text: error.message || 'Erreur lors de la sauvegarde' });
+    } finally {
+      setIsSaving(false);
+      setTimeout(() => setSaveMessage(null), 5000);
+    }
   };
 
   const stats = [
@@ -69,13 +102,25 @@ export default function Profile() {
       <div className="container mx-auto px-6 py-8 max-w-6xl">
         {/* Header */}
         <div className="mb-8">
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-[#d4af37] transition-colors mb-4"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Retour au Dashboard</span>
-          </Link>
+          <Breadcrumb items={[
+            { label: "Dashboard", path: "/dashboard" },
+            { label: "Profil", path: "/profile" }
+          ]} />
+
+          {saveMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`mb-4 p-4 rounded-xl ${
+                saveMessage.type === 'success'
+                  ? 'bg-green-50 border border-green-200 text-green-700'
+                  : 'bg-red-50 border border-red-200 text-red-700'
+              }`}
+            >
+              {saveMessage.text}
+            </motion.div>
+          )}
+
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mb-2">
@@ -102,10 +147,20 @@ export default function Profile() {
                 </button>
                 <button
                   onClick={handleSave}
-                  className="flex items-center gap-2 px-6 py-3 bg-[#d4af37] text-[#0a0f1e] rounded-xl hover:shadow-xl transition-all font-medium"
+                  disabled={isSaving}
+                  className="flex items-center gap-2 px-6 py-3 bg-[#d4af37] text-[#0a0f1e] rounded-xl hover:shadow-xl transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Save className="w-5 h-5" />
-                  <span>Enregistrer</span>
+                  {isSaving ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-[#0a0f1e] border-t-transparent rounded-full animate-spin"></div>
+                      <span>Sauvegarde...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-5 h-5" />
+                      <span>Enregistrer</span>
+                    </>
+                  )}
                 </button>
               </div>
             )}

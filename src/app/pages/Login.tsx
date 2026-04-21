@@ -1,20 +1,47 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Link, useNavigate } from "react-router";
-import { Mail, Lock, ArrowRight, Home as HomeIcon, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, ArrowRight, Home as HomeIcon, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { useSupabaseAuth } from "../../hooks/useSupabaseAuth";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { user, signIn } = useSupabaseAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Redirection automatique si l'utilisateur est déjà connecté
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulation de connexion - redirection vers le dashboard
-    navigate("/dashboard");
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { error: signInError } = await signIn(formData.email, formData.password);
+
+      if (signInError) {
+        setError(signInError.message || "Identifiants incorrects");
+        setIsLoading(false);
+        return;
+      }
+
+      // La redirection sera gérée par le useEffect
+      navigate("/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Une erreur est survenue");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -66,6 +93,18 @@ export default function Login() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Error Message */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700"
+              >
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <p className="text-sm">{error}</p>
+              </motion.div>
+            )}
+
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm text-gray-700 mb-2">
@@ -128,10 +167,20 @@ export default function Login() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all group"
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span className="font-medium">Se Connecter</span>
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              {isLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-[#0a0f1e] border-t-transparent rounded-full animate-spin"></div>
+                  <span className="font-medium">Connexion en cours...</span>
+                </>
+              ) : (
+                <>
+                  <span className="font-medium">Se Connecter</span>
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
             </button>
           </form>
 

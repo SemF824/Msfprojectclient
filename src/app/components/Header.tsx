@@ -6,7 +6,7 @@ import { useSupabaseAuth } from "../../hooks/useSupabaseAuth";
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const { user, signOut } = useSupabaseAuth();
+  const { user, isAdmin, signOut } = useSupabaseAuth();
   const isLoggedIn = !!user;
 
   return (
@@ -90,8 +90,18 @@ export function Header() {
                         </p>
                         <p className="text-sm text-gray-600">{user?.email ?? ''}</p>
                       </div>
-                      
+
                       <div className="py-2">
+                        {isAdmin && (
+                          <Link
+                            to="/admin"
+                            className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] font-semibold hover:shadow-lg transition-all mx-2 rounded-lg mb-2"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <Building2 className="w-4 h-4" />
+                            <span className="text-sm">Dashboard Admin</span>
+                          </Link>
+                        )}
                         <Link
                           to="/dashboard"
                           className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
@@ -203,6 +213,12 @@ export function Header() {
               {isLoggedIn ? (
                 <>
                   <div className="border-t border-gray-200 pt-4 mt-2">
+                    {isAdmin && (
+                      <Link to="/admin" className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-lg mb-3 font-semibold">
+                        <Building2 className="w-4 h-4" />
+                        <span className="text-sm">Dashboard Admin</span>
+                      </Link>
+                    )}
                     <Link to="/dashboard" className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#d4af37] transition-colors mb-3">
                       <Building2 className="w-4 h-4" />
                       <span>Dashboard</span>
