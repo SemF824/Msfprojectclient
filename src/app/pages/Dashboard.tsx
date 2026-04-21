@@ -1,14 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Link, useNavigate } from "react-router";
 import {
   Home, Heart, Calendar, FileText, Calculator, LogOut,
   Bell, Settings, User, Eye, Clock, CheckCircle2,
   AlertCircle, Download, MapPin, TrendingUp,
-  Building2, Bed, Bath, Square, Phone, Mail, CreditCard
+  Building2, Bed, Bath, Square, Phone, Mail, CreditCard, Inbox
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import { useSupabaseAuth } from "../../hooks/useSupabaseAuth";
+import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
+import { EmptyState } from "../components/EmptyState";
+import type {
+  Transaction,
+  Appointment,
+  Document,
+  Notification,
+  Favorite,
+  DevisRequest,
+  DashboardStats
+} from "../../types/database.types";
 
 export default function Dashboard() {
   const { user: authUser, isLoading, signOut } = useSupabaseAuth();
@@ -27,6 +37,15 @@ export default function Dashboard() {
     );
   }
 
+  // États pour les vraies données
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [favorites, setFavorites] = useState<Favorite[]>([]);
+  const [devisRequests, setDevisRequests] = useState<DevisRequest[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
   // Données dynamiques depuis Supabase
   const displayName = authUser?.user_metadata?.full_name
     || authUser?.user_metadata?.first_name
@@ -34,84 +53,93 @@ export default function Dashboard() {
     || 'Utilisateur';
   const displayEmail = authUser?.email || '';
 
-  // Mock data
+  // Statistiques calculées à partir des vraies données
   const stats = [
-    { label: "Demandes Actives", value: "3", icon: FileText, color: "from-blue-500 to-blue-600" },
-    { label: "Propriétés Favorites", value: "7", icon: Heart, color: "from-pink-500 to-pink-600" },
-    { label: "Visites Planifiées", value: "2", icon: Calendar, color: "from-green-500 to-green-600" },
-    { label: "Documents", value: "5", icon: FileText, color: "from-purple-500 to-purple-600" }
+    { label: "Demandes Actives", value: devisRequests.filter(r => r.status === 'nouveau' || r.status === 'en_cours').length.toString(), icon: FileText, color: "from-blue-500 to-blue-600" },
+    { label: "Propriétés Favorites", value: favorites.length.toString(), icon: Heart, color: "from-pink-500 to-pink-600" },
+    { label: "Visites Planifiées", value: appointments.filter(a => a.status === 'scheduled' || a.status === 'confirmed').length.toString(), icon: Calendar, color: "from-green-500 to-green-600" },
+    { label: "Documents", value: documents.length.toString(), icon: FileText, color: "from-purple-500 to-purple-600" }
   ];
 
-  const requests = [
-    {
-      id: 1,
-      property: "Villa Tchikobo Prestige",
-      location: "Tchikobo, Pointe-Noire",
-      status: "En cours",
-      date: "2026-04-10",
-      price: "295 200 000 FCFA"
-    },
-    {
-      id: 2,
-      property: "Appartement Résidences Caraïbes",
-      location: "Centre-Ville, Pointe-Noire",
-      status: "En attente",
-      date: "2026-04-08",
-      price: "118 080 000 FCFA"
-    },
-    {
-      id: 3,
-      property: "Penthouse Cité de 17",
-      location: "Brazzaville",
-      status: "Approuvée",
-      date: "2026-04-05",
-      price: "209 920 000 FCFA"
-    }
-  ];
+  // Fetching centralisé : récupération de toutes les données en parallèle
+  useEffect(() => {
+    if (!authUser) return;
 
-  const appointments = [
-    {
-      id: 1,
-      property: "Villa Tchikobo Prestige",
-      date: "2026-04-18",
-      time: "10:00",
-      agent: "Marie Kengué",
-      status: "Confirmé"
-    },
-    {
-      id: 2,
-      property: "Appartement Résidences Caraïbes",
-      date: "2026-04-20",
-      time: "14:30",
-      agent: "Paul Mbemba",
-      status: "En attente"
-    }
-  ];
+    const fetchAllData = async () => {
+      setIsDataLoading(true);
+      try {
+        const userId = authUser.id;
+        const userEmail = authUser.email || '';
 
-  const visitHistory = [
-    {
-      id: 1,
-      property: "Villa Oyo Gardens",
-      date: "2026-04-05",
-      rating: 5,
-      notes: "Très belle propriété, excellent emplacement"
-    },
-    {
-      id: 2,
-      property: "Terrain Sibiti",
-      date: "2026-03-28",
-      rating: 4,
-      notes: "Bon terrain, à considérer"
-    }
-  ];
+        // Promise.all pour exécuter toutes les requêtes en parallèle
+        const [
+          transactionsData,
+          appointmentsData,
+          documentsData,
+          favoritesData,
+          devisData,
+          notificationsData
+        ] = await Promise.all([
+          // Transactions
+          supabase
+            .from('transactions')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false }),
 
-  const documents = [
-    { id: 1, name: "Contrat Villa Tchikobo.pdf", type: "Contrat", date: "2026-04-12", size: "2.4 MB" },
-    { id: 2, name: "Plan Financement.xlsx", type: "Finance", date: "2026-04-10", size: "856 KB" },
-    { id: 3, name: "Certificat Propriété.pdf", type: "Certificat", date: "2026-04-08", size: "1.2 MB" },
-    { id: 4, name: "Attestation Visite.pdf", type: "Attestation", date: "2026-04-05", size: "456 KB" },
-    { id: 5, name: "Devis Travaux.pdf", type: "Devis", date: "2026-04-03", size: "1.8 MB" }
-  ];
+          // Rendez-vous
+          supabase
+            .from('appointments')
+            .select('*')
+            .eq('user_id', userId)
+            .order('date', { ascending: true }),
+
+          // Documents
+          supabase
+            .from('documents')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false }),
+
+          // Favoris
+          supabase
+            .from('favorites')
+            .select('*')
+            .eq('user_id', userId),
+
+          // Demandes de devis
+          supabase
+            .from('devis_requests')
+            .select('*')
+            .eq('client_email', userEmail)
+            .order('created_at', { ascending: false }),
+
+          // Notifications
+          supabase
+            .from('notifications')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(10)
+        ]);
+
+        // Mise à jour des états avec les données ou tableaux vides
+        setTransactions(transactionsData.data || []);
+        setAppointments(appointmentsData.data || []);
+        setDocuments(documentsData.data || []);
+        setFavorites(favoritesData.data || []);
+        setDevisRequests(devisData.data || []);
+        setNotifications(notificationsData.data || []);
+
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+      } finally {
+        setIsDataLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, [authUser]);
 
   const [loanAmount, setLoanAmount] = useState(450000);
   const [downPayment, setDownPayment] = useState(90000);
@@ -144,18 +172,80 @@ export default function Dashboard() {
     navigate("/connexion");
   };
 
-  const getStatusColor = (status: string) => {
+  // Fonction dynamique pour les couleurs de statut des transactions
+  const getTransactionStatusColor = (status: string) => {
     switch (status) {
-      case "En cours":
-      case "Confirmé":
+      case "in_progress":
+      case "pending":
         return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-      case "En attente":
-        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
-      case "Approuvée":
+      case "completed":
         return "bg-green-500/20 text-green-400 border-green-500/30";
+      case "cancelled":
+        return "bg-red-500/20 text-red-400 border-red-500/30";
       default:
         return "bg-gray-500/20 text-gray-400 border-gray-500/30";
     }
+  };
+
+  // Fonction dynamique pour les couleurs de statut des rendez-vous
+  const getAppointmentStatusColor = (status: string) => {
+    switch (status) {
+      case "scheduled":
+        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+      case "confirmed":
+        return "bg-green-500/20 text-green-400 border-green-500/30";
+      case "completed":
+        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+      case "cancelled":
+        return "bg-red-500/20 text-red-400 border-red-500/30";
+      default:
+        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+    }
+  };
+
+  // Fonction dynamique pour les labels de statut
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      // Transactions
+      'pending': 'En attente',
+      'in_progress': 'En cours',
+      'completed': 'Terminée',
+      'cancelled': 'Annulée',
+      // Appointments
+      'scheduled': 'Planifié',
+      'confirmed': 'Confirmé',
+      // Devis
+      'nouveau': 'Nouveau',
+      'en_cours': 'En cours',
+      'approuve': 'Approuvée',
+      'rejete': 'Rejetée'
+    };
+    return labels[status] || status;
+  };
+
+  // Fonction dynamique pour les icônes de notification
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'success':
+        return CheckCircle2;
+      case 'payment':
+        return CreditCard;
+      case 'document':
+        return FileText;
+      case 'appointment':
+        return Calendar;
+      case 'warning':
+        return AlertCircle;
+      default:
+        return Bell;
+    }
+  };
+
+  // Formater la taille de fichier
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
   return (
@@ -355,28 +445,40 @@ export default function Dashboard() {
                   className="bg-white backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-6"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl text-[#0a0f1e] font-semibold">Demandes Récentes</h2>
+                    <h2 className="text-xl text-[#0a0f1e] font-semibold">Transactions Récentes</h2>
                     <Link
                       to="/transactions"
                       className="text-sm text-[#d4af37] hover:underline flex items-center gap-1"
                     >
                       <CreditCard className="w-4 h-4" />
-                      <span>Voir Transactions</span>
+                      <span>Voir Tout</span>
                     </Link>
                   </div>
-                  <div className="space-y-3">
-                    {requests.slice(0, 3).map((request) => (
-                      <div key={request.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
-                        <div className="flex-1">
-                          <p className="text-[#0a0f1e] font-medium">{request.property}</p>
-                          <p className="text-sm text-gray-600">{request.location}</p>
+                  {isDataLoading ? (
+                    <div className="flex justify-center py-8">
+                      <div className="w-8 h-8 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  ) : transactions.length === 0 ? (
+                    <EmptyState
+                      icon={CreditCard}
+                      title="Aucune transaction"
+                      description="Vous n'avez pas encore de transaction en cours."
+                    />
+                  ) : (
+                    <div className="space-y-3">
+                      {transactions.slice(0, 3).map((transaction) => (
+                        <div key={transaction.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
+                          <div className="flex-1">
+                            <p className="text-[#0a0f1e] font-medium">{transaction.property_name}</p>
+                            <p className="text-sm text-gray-600">{transaction.amount.toLocaleString()} FCFA</p>
+                          </div>
+                          <span className={`px-3 py-1 text-xs rounded-full border ${getTransactionStatusColor(transaction.status)}`}>
+                            {getStatusLabel(transaction.status)}
+                          </span>
                         </div>
-                        <span className={`px-3 py-1 text-xs rounded-full border ${getStatusColor(request.status)}`}>
-                          {request.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
 
                 {/* Upcoming Appointments */}
@@ -387,22 +489,37 @@ export default function Dashboard() {
                   className="bg-white backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-6"
                 >
                   <h2 className="text-xl text-[#0a0f1e] font-semibold mb-4">Prochains Rendez-vous</h2>
-                  <div className="space-y-3">
-                    {appointments.map((apt) => (
-                      <div key={apt.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                        <div className="w-12 h-12 bg-[#d4af37]/20 rounded-xl flex items-center justify-center">
-                          <Calendar className="w-6 h-6 text-[#d4af37]" />
+                  {isDataLoading ? (
+                    <div className="flex justify-center py-8">
+                      <div className="w-8 h-8 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  ) : appointments.length === 0 ? (
+                    <EmptyState
+                      icon={Calendar}
+                      title="Aucun rendez-vous"
+                      description="Vous n'avez pas de rendez-vous planifié pour le moment."
+                    />
+                  ) : (
+                    <div className="space-y-3">
+                      {appointments.slice(0, 3).map((apt) => (
+                        <div key={apt.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                          <div className="w-12 h-12 bg-[#d4af37]/20 rounded-xl flex items-center justify-center">
+                            <Calendar className="w-6 h-6 text-[#d4af37]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-[#0a0f1e] font-medium">{apt.property_name}</p>
+                            <p className="text-sm text-gray-600">
+                              {new Date(apt.date).toLocaleDateString('fr-FR')} à {apt.time}
+                              {apt.agent_name && ` - ${apt.agent_name}`}
+                            </p>
+                          </div>
+                          <span className={`px-3 py-1 text-xs rounded-full border ${getAppointmentStatusColor(apt.status)}`}>
+                            {getStatusLabel(apt.status)}
+                          </span>
                         </div>
-                        <div className="flex-1">
-                          <p className="text-[#0a0f1e] font-medium">{apt.property}</p>
-                          <p className="text-sm text-gray-600">{apt.date} à {apt.time} - {apt.agent}</p>
-                        </div>
-                        <span className={`px-3 py-1 text-xs rounded-full border ${getStatusColor(apt.status)}`}>
-                          {apt.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               </div>
             )}
@@ -414,29 +531,44 @@ export default function Dashboard() {
                 animate={{ opacity: 1 }}
                 className="bg-white backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-6"
               >
-                <h2 className="text-2xl text-[#0a0f1e] font-semibold mb-6">Mes Demandes</h2>
-                <div className="space-y-4">
-                  {requests.map((request) => (
-                    <div key={request.id} className="p-6 bg-gray-50 rounded-xl border border-gray-200">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="text-[#0a0f1e] text-lg font-medium mb-1">{request.property}</h3>
-                          <p className="text-gray-600 text-sm flex items-center gap-2">
-                            <MapPin className="w-4 h-4" />
-                            {request.location}
+                <h2 className="text-2xl text-[#0a0f1e] font-semibold mb-6">Mes Demandes de Devis</h2>
+                {isDataLoading ? (
+                  <div className="flex justify-center py-12">
+                    <div className="w-12 h-12 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : devisRequests.length === 0 ? (
+                  <EmptyState
+                    icon={FileText}
+                    title="Aucune demande de devis"
+                    description="Vous n'avez pas encore soumis de demande de devis."
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    {devisRequests.map((request) => (
+                      <div key={request.id} className="p-6 bg-gray-50 rounded-xl border border-gray-200">
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            <h3 className="text-[#0a0f1e] text-lg font-medium mb-1">{request.property_name}</h3>
+                            <p className="text-gray-600 text-sm">
+                              Type: {request.request_type === 'achat' ? 'Achat' : request.request_type === 'location' ? 'Location' : 'Information'}
+                            </p>
+                          </div>
+                          <span className={`px-3 py-1 text-xs rounded-full border ${getTransactionStatusColor(request.status)}`}>
+                            {getStatusLabel(request.status)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                          <p className="text-gray-600 text-sm">
+                            Soumise le {new Date(request.created_at).toLocaleDateString('fr-FR')}
+                          </p>
+                          <p className="text-[#d4af37] font-medium">
+                            {request.property_price.toLocaleString()} FCFA
                           </p>
                         </div>
-                        <span className={`px-3 py-1 text-xs rounded-full border ${getStatusColor(request.status)}`}>
-                          {request.status}
-                        </span>
                       </div>
-                      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                        <p className="text-gray-600 text-sm">Soumise le {request.date}</p>
-                        <p className="text-[#d4af37] font-medium">{request.price}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </motion.div>
             )}
 
@@ -448,26 +580,89 @@ export default function Dashboard() {
                 className="bg-white backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-6"
               >
                 <h2 className="text-2xl text-[#0a0f1e] font-semibold mb-6">Mes Rendez-vous</h2>
-                <div className="space-y-4">
-                  {appointments.map((apt) => (
-                    <div key={apt.id} className="p-6 bg-gray-50 rounded-xl border border-gray-200">
-                      <div className="flex items-start gap-4">
-                        <div className="w-16 h-16 bg-[#d4af37]/20 rounded-xl flex flex-col items-center justify-center">
-                          <span className="text-[#d4af37] text-xs">{apt.date.split('-')[1]}</span>
-                          <span className="text-[#0a0f1e] text-xl font-semibold">{apt.date.split('-')[2]}</span>
+                {isDataLoading ? (
+                  <div className="flex justify-center py-12">
+                    <div className="w-12 h-12 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : appointments.length === 0 ? (
+                  <EmptyState
+                    icon={Calendar}
+                    title="Aucun rendez-vous"
+                    description="Vous n'avez pas encore de rendez-vous planifié."
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    {appointments.map((apt) => {
+                      const dateObj = new Date(apt.date);
+                      const day = dateObj.getDate();
+                      const month = dateObj.toLocaleDateString('fr-FR', { month: 'short' });
+
+                      return (
+                        <div key={apt.id} className="p-6 bg-gray-50 rounded-xl border border-gray-200">
+                          <div className="flex items-start gap-4">
+                            <div className="w-16 h-16 bg-[#d4af37]/20 rounded-xl flex flex-col items-center justify-center">
+                              <span className="text-[#d4af37] text-xs uppercase">{month}</span>
+                              <span className="text-[#0a0f1e] text-xl font-semibold">{day}</span>
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="text-[#0a0f1e] text-lg font-medium mb-1">{apt.property_name}</h3>
+                              <p className="text-gray-600 text-sm mb-2">Heure: {apt.time}</p>
+                              {apt.agent_name && (
+                                <p className="text-gray-600 text-sm">Agent: {apt.agent_name}</p>
+                              )}
+                              {apt.notes && (
+                                <p className="text-gray-500 text-sm mt-2 italic">{apt.notes}</p>
+                              )}
+                            </div>
+                            <span className={`px-3 py-1 text-xs rounded-full border ${getAppointmentStatusColor(apt.status)}`}>
+                              {getStatusLabel(apt.status)}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <h3 className="text-[#0a0f1e] text-lg font-medium mb-1">{apt.property}</h3>
-                          <p className="text-gray-600 text-sm mb-2">Heure: {apt.time}</p>
-                          <p className="text-gray-600 text-sm">Agent: {apt.agent}</p>
+                      );
+                    })}
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* Favorites Tab */}
+            {activeTab === "favorites" && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-white backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-6"
+              >
+                <h2 className="text-2xl text-[#0a0f1e] font-semibold mb-6">Mes Propriétés Favorites</h2>
+                {isDataLoading ? (
+                  <div className="flex justify-center py-12">
+                    <div className="w-12 h-12 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : favorites.length === 0 ? (
+                  <EmptyState
+                    icon={Heart}
+                    title="Aucune propriété favorite"
+                    description="Vous n'avez pas encore ajouté de propriété à vos favoris."
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    {favorites.map((fav) => (
+                      <div key={fav.id} className="p-6 bg-gray-50 rounded-xl border border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-[#0a0f1e] text-lg font-medium mb-1">
+                              Propriété ID: {fav.property_id}
+                            </h3>
+                            <p className="text-gray-600 text-sm">
+                              Ajoutée le {new Date(fav.created_at).toLocaleDateString('fr-FR')}
+                            </p>
+                          </div>
+                          <Heart className="w-6 h-6 text-pink-500 fill-pink-500" />
                         </div>
-                        <span className={`px-3 py-1 text-xs rounded-full border ${getStatusColor(apt.status)}`}>
-                          {apt.status}
-                        </span>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </motion.div>
             )}
 
@@ -478,25 +673,39 @@ export default function Dashboard() {
                 animate={{ opacity: 1 }}
                 className="bg-white backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-6"
               >
-                <h2 className="text-2xl text-[#0a0f1e] font-semibold mb-6">Historique des Visites</h2>
-                <div className="space-y-4">
-                  {visitHistory.map((visit) => (
-                    <div key={visit.id} className="p-6 bg-gray-50 rounded-xl border border-gray-200">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="text-[#0a0f1e] text-lg font-medium">{visit.property}</h3>
-                          <p className="text-gray-600 text-sm">Visitée le {visit.date}</p>
+                <h2 className="text-2xl text-[#0a0f1e] font-semibold mb-6">Historique des Transactions</h2>
+                {isDataLoading ? (
+                  <div className="flex justify-center py-12">
+                    <div className="w-12 h-12 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : transactions.filter(t => t.status === 'completed').length === 0 ? (
+                  <EmptyState
+                    icon={Clock}
+                    title="Aucun historique"
+                    description="Vous n'avez pas encore de transaction terminée."
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    {transactions.filter(t => t.status === 'completed').map((transaction) => (
+                      <div key={transaction.id} className="p-6 bg-gray-50 rounded-xl border border-gray-200">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h3 className="text-[#0a0f1e] text-lg font-medium">{transaction.property_name}</h3>
+                            <p className="text-gray-600 text-sm">
+                              Terminée le {new Date(transaction.updated_at).toLocaleDateString('fr-FR')}
+                            </p>
+                          </div>
+                          <span className="text-[#d4af37] font-semibold">
+                            {transaction.amount.toLocaleString()} FCFA
+                          </span>
                         </div>
-                        <div className="flex gap-1">
-                          {[...Array(5)].map((_, i) => (
-                            <span key={i} className={i < visit.rating ? "text-[#d4af37]" : "text-gray-300"}>★</span>
-                          ))}
-                        </div>
+                        <p className="text-gray-700 text-sm">
+                          Type: {transaction.transaction_type === 'purchase' ? 'Achat' : transaction.transaction_type === 'sale' ? 'Vente' : transaction.transaction_type === 'rental' ? 'Location' : 'Réservation'}
+                        </p>
                       </div>
-                      <p className="text-gray-700 text-sm">{visit.notes}</p>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </motion.div>
             )}
 
@@ -508,22 +717,41 @@ export default function Dashboard() {
                 className="bg-white backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-6"
               >
                 <h2 className="text-2xl text-[#0a0f1e] font-semibold mb-6">Mes Documents</h2>
-                <div className="space-y-3">
-                  {documents.map((doc) => (
-                    <div key={doc.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-[#d4af37]/50 transition-colors">
-                      <div className="w-12 h-12 bg-[#d4af37]/20 rounded-lg flex items-center justify-center">
-                        <FileText className="w-6 h-6 text-[#d4af37]" />
+                {isDataLoading ? (
+                  <div className="flex justify-center py-12">
+                    <div className="w-12 h-12 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : documents.length === 0 ? (
+                  <EmptyState
+                    icon={FileText}
+                    title="Aucun document"
+                    description="Vous n'avez pas encore de document disponible."
+                  />
+                ) : (
+                  <div className="space-y-3">
+                    {documents.map((doc) => (
+                      <div key={doc.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-[#d4af37]/50 transition-colors">
+                        <div className="w-12 h-12 bg-[#d4af37]/20 rounded-lg flex items-center justify-center">
+                          <FileText className="w-6 h-6 text-[#d4af37]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-[#0a0f1e] font-medium">{doc.name}</p>
+                          <p className="text-sm text-gray-600">
+                            {doc.type} • {formatFileSize(doc.size)} • {new Date(doc.uploaded_at).toLocaleDateString('fr-FR')}
+                          </p>
+                        </div>
+                        <a
+                          href={doc.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 text-gray-600 hover:text-[#d4af37] transition-colors"
+                        >
+                          <Download className="w-5 h-5" />
+                        </a>
                       </div>
-                      <div className="flex-1">
-                        <p className="text-[#0a0f1e] font-medium">{doc.name}</p>
-                        <p className="text-sm text-gray-600">{doc.type} • {doc.size} • {doc.date}</p>
-                      </div>
-                      <button className="p-2 text-gray-600 hover:text-[#d4af37] transition-colors">
-                        <Download className="w-5 h-5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </motion.div>
             )}
 

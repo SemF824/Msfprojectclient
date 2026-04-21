@@ -123,7 +123,18 @@ export default function AdminLayout() {
           isSidebarOpen ? 'w-64' : 'w-0'
         } overflow-hidden`}
       >
-        <nav className="p-4 space-y-2">
+        <div className="p-4">
+          {/* Bouton retour au site public */}
+          <Link
+            to="/"
+            className="flex items-center gap-3 px-4 py-3 mb-4 rounded-xl text-gray-700 bg-gray-50 hover:bg-gray-100 transition-all border border-gray-200"
+          >
+            <Home className="w-5 h-5 text-[#d4af37]" />
+            <span>← Site Public</span>
+          </Link>
+        </div>
+
+        <nav className="px-4 pb-4 space-y-2">
           {navigation.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
