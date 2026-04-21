@@ -254,4 +254,8 @@ Consultez le [Guide d'Accès Admin](./ACCES_ADMIN.md)
 
 ---
 
+<<<<<<< HEAD
 **Développé avec ❤️ pour MSF Congo** 🇨🇬. 
+=======
+**Développé avec ❤️ pour MSF Congo** 🇨🇬
+>>>>>>> b0da2c4 (Mise à jour via Figma IA (test affinés 3))

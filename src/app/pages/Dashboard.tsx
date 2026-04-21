@@ -57,7 +57,7 @@ export default function Dashboard() {
   const stats = [
     { label: "Demandes Actives", value: devisRequests.filter(r => r.status === 'nouveau' || r.status === 'en_cours').length.toString(), icon: FileText, color: "from-blue-500 to-blue-600" },
     { label: "Propriétés Favorites", value: favorites.length.toString(), icon: Heart, color: "from-pink-500 to-pink-600" },
-    { label: "Visites Planifiées", value: appointments.filter(a => a.status === 'scheduled' || a.status === 'confirmed').length.toString(), icon: Calendar, color: "from-green-500 to-green-600" },
+    { label: "Visites Planifiées", value: appointments.filter(a => a.status === 'planifie').length.toString(), icon: Calendar, color: "from-green-500 to-green-600" },
     { label: "Documents", value: documents.length.toString(), icon: FileText, color: "from-purple-500 to-purple-600" }
   ];
 
@@ -92,7 +92,7 @@ export default function Dashboard() {
             .from('appointments')
             .select('*')
             .eq('user_id', userId)
-            .order('date', { ascending: true }),
+            .order('appointment_date', { ascending: true }),
 
           // Documents
           supabase
@@ -175,12 +175,11 @@ export default function Dashboard() {
   // Fonction dynamique pour les couleurs de statut des transactions
   const getTransactionStatusColor = (status: string) => {
     switch (status) {
-      case "in_progress":
-      case "pending":
+      case "en_attente":
         return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-      case "completed":
+      case "complete":
         return "bg-green-500/20 text-green-400 border-green-500/30";
-      case "cancelled":
+      case "echoue":
         return "bg-red-500/20 text-red-400 border-red-500/30";
       default:
         return "bg-gray-500/20 text-gray-400 border-gray-500/30";
@@ -190,13 +189,11 @@ export default function Dashboard() {
   // Fonction dynamique pour les couleurs de statut des rendez-vous
   const getAppointmentStatusColor = (status: string) => {
     switch (status) {
-      case "scheduled":
+      case "planifie":
         return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-      case "confirmed":
+      case "termine":
         return "bg-green-500/20 text-green-400 border-green-500/30";
-      case "completed":
-        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
-      case "cancelled":
+      case "annule":
         return "bg-red-500/20 text-red-400 border-red-500/30";
       default:
         return "bg-gray-500/20 text-gray-400 border-gray-500/30";
@@ -207,13 +204,13 @@ export default function Dashboard() {
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
       // Transactions
-      'pending': 'En attente',
-      'in_progress': 'En cours',
-      'completed': 'Terminée',
-      'cancelled': 'Annulée',
+      'en_attente': 'En attente',
+      'complete': 'Terminée',
+      'echoue': 'Échouée',
       // Appointments
-      'scheduled': 'Planifié',
-      'confirmed': 'Confirmé',
+      'planifie': 'Planifié',
+      'termine': 'Terminé',
+      'annule': 'Annulé',
       // Devis
       'nouveau': 'Nouveau',
       'en_cours': 'En cours',
@@ -507,9 +504,9 @@ export default function Dashboard() {
                             <Calendar className="w-6 h-6 text-[#d4af37]" />
                           </div>
                           <div className="flex-1">
-                            <p className="text-[#0a0f1e] font-medium">{apt.property_name}</p>
+                            <p className="text-[#0a0f1e] font-medium">{apt.title}</p>
                             <p className="text-sm text-gray-600">
-                              {new Date(apt.date).toLocaleDateString('fr-FR')} à {apt.time}
+                              {new Date(apt.appointment_date || new Date()).toLocaleDateString('fr-FR')} à {apt.appointment_time}
                               {apt.agent_name && ` - ${apt.agent_name}`}
                             </p>
                           </div>
@@ -593,7 +590,7 @@ export default function Dashboard() {
                 ) : (
                   <div className="space-y-4">
                     {appointments.map((apt) => {
-                      const dateObj = new Date(apt.date);
+                      const dateObj = new Date(apt.appointment_date || new Date());
                       const day = dateObj.getDate();
                       const month = dateObj.toLocaleDateString('fr-FR', { month: 'short' });
 
@@ -605,8 +602,8 @@ export default function Dashboard() {
                               <span className="text-[#0a0f1e] text-xl font-semibold">{day}</span>
                             </div>
                             <div className="flex-1">
-                              <h3 className="text-[#0a0f1e] text-lg font-medium mb-1">{apt.property_name}</h3>
-                              <p className="text-gray-600 text-sm mb-2">Heure: {apt.time}</p>
+                              <h3 className="text-[#0a0f1e] text-lg font-medium mb-1">{apt.title}</h3>
+                              <p className="text-gray-600 text-sm mb-2">Heure: {apt.appointment_time}</p>
                               {apt.agent_name && (
                                 <p className="text-gray-600 text-sm">Agent: {apt.agent_name}</p>
                               )}
@@ -678,7 +675,7 @@ export default function Dashboard() {
                   <div className="flex justify-center py-12">
                     <div className="w-12 h-12 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
                   </div>
-                ) : transactions.filter(t => t.status === 'completed').length === 0 ? (
+                ) : transactions.filter(t => t.status === 'complete').length === 0 ? (
                   <EmptyState
                     icon={Clock}
                     title="Aucun historique"
@@ -686,22 +683,22 @@ export default function Dashboard() {
                   />
                 ) : (
                   <div className="space-y-4">
-                    {transactions.filter(t => t.status === 'completed').map((transaction) => (
+                    {transactions.filter(t => t.status === 'complete').map((transaction) => (
                       <div key={transaction.id} className="p-6 bg-gray-50 rounded-xl border border-gray-200">
                         <div className="flex items-start justify-between mb-3">
                           <div>
                             <h3 className="text-[#0a0f1e] text-lg font-medium">{transaction.property_name}</h3>
                             <p className="text-gray-600 text-sm">
-                              Terminée le {new Date(transaction.updated_at).toLocaleDateString('fr-FR')}
-                            </p>
-                          </div>
-                          <span className="text-[#d4af37] font-semibold">
-                            {transaction.amount.toLocaleString()} FCFA
-                          </span>
-                        </div>
-                        <p className="text-gray-700 text-sm">
-                          Type: {transaction.transaction_type === 'purchase' ? 'Achat' : transaction.transaction_type === 'sale' ? 'Vente' : transaction.transaction_type === 'rental' ? 'Location' : 'Réservation'}
-                        </p>
+                               Terminée le {new Date(transaction.created_at || new Date()).toLocaleDateString('fr-FR')}
+                             </p>
+                           </div>
+                           <span className="text-[#d4af37] font-semibold">
+                             {transaction.amount.toLocaleString()} FCFA
+                           </span>
+                         </div>
+                         <p className="text-gray-700 text-sm">
+                           Type: {transaction.transaction_type === 'acompte' ? 'Acompte' : transaction.transaction_type === 'mensualite' ? 'Mensualité' : transaction.transaction_type === 'frais' ? 'Frais' : transaction.transaction_type}
+                         </p>
                       </div>
                     ))}
                   </div>
@@ -737,7 +734,7 @@ export default function Dashboard() {
                         <div className="flex-1">
                           <p className="text-[#0a0f1e] font-medium">{doc.name}</p>
                           <p className="text-sm text-gray-600">
-                            {doc.type} • {formatFileSize(doc.size)} • {new Date(doc.uploaded_at).toLocaleDateString('fr-FR')}
+                            {doc.type} • {formatFileSize(doc.size)} • {new Date(doc.created_at || new Date()).toLocaleDateString('fr-FR')}
                           </p>
                         </div>
                         <a
