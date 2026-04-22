@@ -129,7 +129,7 @@ http://localhost:5173/?admin=true
 
 Configuration : [/src/config/supabase.config.ts](./src/config/supabase.config.ts)
 
----
+--- 
 
 ## 📱 Pages Disponibles
 
