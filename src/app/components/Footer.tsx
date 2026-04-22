@@ -41,27 +41,27 @@ export function Footer() {
             <h4 className="text-white mb-6">Liens Rapides</h4>
             <ul className="space-y-3">
               <li>
-                <Link to="/about" className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors">
+                <Link to="/#apropos" className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors">
                   À Propos
                 </Link>
               </li>
               <li>
-                <Link to="/properties" className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors">
+                <Link to="/#proprietes" className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors">
                   Propriétés
                 </Link>
               </li>
               <li>
-                <Link to="/projects" className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors">
+                <Link to="/#projets" className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors">
                   Projets
                 </Link>
               </li>
               <li>
-                <Link to="/investment" className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors">
+                <Link to="/services" className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors">
                   Investissement
                 </Link>
               </li>
               <li>
-                <Link to="/careers" className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors">
+                <Link to="/contact" className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors">
                   Carrières
                 </Link>
               </li>
@@ -154,9 +154,11 @@ export function Footer() {
               <a href="#" className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors">
                 Mentions Légales
               </a>
-              <Link to="/admin/login" className="text-gray-500 text-xs hover:text-[#d4af37] transition-colors opacity-60 hover:opacity-100">
+              {/* Lien admin : <a> natif obligatoire pour forcer un rechargement complet
+                  et déclencher correctement la détection d'App.tsx (pas de Link React Router) */}
+              <a href="/admin" className="text-gray-500 text-xs hover:text-[#d4af37] transition-colors opacity-60 hover:opacity-100">
                 Admin
-              </Link>
+              </a>
             </div>
           </div>
         </div>

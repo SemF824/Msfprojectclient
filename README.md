@@ -254,4 +254,4 @@ Consultez le [Guide d'Accès Admin](./ACCES_ADMIN.md)
 
 ---
 
-**Développé avec ❤️ pour MSF Congo** 🇨🇬 . 
+**Développé avec ❤️ pour MSF Congo** 🇨🇬

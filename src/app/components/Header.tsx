@@ -29,15 +29,15 @@ export function Header() {
             <Link to="/" className="text-sm text-gray-600 hover:text-[#d4af37] transition-colors">
               Accueil
             </Link>
-            <a href="/#proprietes" className="text-sm text-gray-600 hover:text-[#d4af37] transition-colors">
+            <Link to="/#proprietes" className="text-sm text-gray-600 hover:text-[#d4af37] transition-colors">
               Propriétés
-            </a>
+            </Link>
             <Link to="/services" className="text-sm text-gray-600 hover:text-[#d4af37] transition-colors">
               Services
             </Link>
-            <a href="/#apropos" className="text-sm text-gray-600 hover:text-[#d4af37] transition-colors">
+            <Link to="/#apropos" className="text-sm text-gray-600 hover:text-[#d4af37] transition-colors">
               À Propos
-            </a>
+            </Link>
             <Link to="/contact" className="text-sm text-gray-600 hover:text-[#d4af37] transition-colors">
               Contact
             </Link>
@@ -197,15 +197,15 @@ export function Header() {
               <Link to="/" className="text-sm text-gray-600 hover:text-[#d4af37] transition-colors">
                 Accueil
               </Link>
-              <a href="/#proprietes" className="text-sm text-gray-600 hover:text-[#d4af37] transition-colors">
+              <Link to="/#proprietes" className="text-sm text-gray-600 hover:text-[#d4af37] transition-colors">
                 Propriétés
-              </a>
+              </Link>
               <Link to="/services" className="text-sm text-gray-600 hover:text-[#d4af37] transition-colors">
                 Services
               </Link>
-              <a href="/#apropos" className="text-sm text-gray-600 hover:text-[#d4af37] transition-colors">
+              <Link to="/#apropos" className="text-sm text-gray-600 hover:text-[#d4af37] transition-colors">
                 À Propos
-              </a>
+              </Link>
               <Link to="/contact" className="text-sm text-gray-600 hover:text-[#d4af37] transition-colors">
                 Contact
               </Link>
