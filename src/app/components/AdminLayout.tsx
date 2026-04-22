@@ -16,18 +16,18 @@ export default function AdminLayout() {
 
   // Navigation de base pour tous les admins
   const baseNavigation = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Demandes de Devis", href: "/demandes", icon: FileText },
-    { name: "Propriétés", href: "/proprietes", icon: Building2 },
-    { name: "Clients", href: "/clients", icon: Users },
-    { name: "Statistiques", href: "/statistiques", icon: BarChart3 },
-    { name: "Paramètres", href: "/parametres", icon: Settings }
+    { name: "Dashboard",          href: "/admin/dashboard",    icon: LayoutDashboard },
+    { name: "Demandes de Devis",  href: "/admin/demandes",     icon: FileText },
+    { name: "Propriétés",         href: "/admin/proprietes",   icon: Building2 },
+    { name: "Clients",            href: "/admin/clients",      icon: Users },
+    { name: "Statistiques",       href: "/admin/statistiques", icon: BarChart3 },
+    { name: "Paramètres",         href: "/admin/parametres",   icon: Settings }
   ];
 
   // Liens supplémentaires réservés au superadmin
   const superadminNavigation = [
-    { name: "Gestion de l'Équipe", href: "/equipe", icon: UserCog, superadminOnly: true },
-    { name: "Paramètres Système", href: "/systeme", icon: Shield, superadminOnly: true }
+    { name: "Gestion de l'Équipe",  href: "/admin/equipe",   icon: UserCog,  superadminOnly: true },
+    { name: "Paramètres Système",   href: "/admin/systeme",  icon: Shield,   superadminOnly: true }
   ];
 
   // Combiner les navigations selon le rôle
@@ -78,7 +78,7 @@ export default function AdminLayout() {
               {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
 
-            <Link to="/dashboard" className="flex items-center gap-3">
+            <Link to="/admin/dashboard" className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-lg flex items-center justify-center">
                 <Building2 className="w-6 h-6 text-[#0a0f1e]" />
               </div>
@@ -139,7 +139,7 @@ export default function AdminLayout() {
                     {getRoleBadge()}
                   </div>
                   <Link
-                    to="/parametres"
+                    to="/admin/parametres"
                     className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
                     onClick={() => setIsUserMenuOpen(false)}
                   >
@@ -149,7 +149,7 @@ export default function AdminLayout() {
                   {userRole === 'superadmin' && (
                     <>
                       <Link
-                        to="/equipe"
+                        to="/admin/equipe"
                         className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
@@ -157,7 +157,7 @@ export default function AdminLayout() {
                         <span className="text-sm">Gestion de l'Équipe</span>
                       </Link>
                       <Link
-                        to="/systeme"
+                        to="/admin/systeme"
                         className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
                         onClick={() => setIsUserMenuOpen(false)}
                       >

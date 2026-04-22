@@ -1,43 +1,30 @@
-import ClientApp from "./ClientApp";
-import AdminApp from "./AdminApp";
+import { BrowserRouter, Routes, Route } from "react-router";
+import { Suspense, lazy } from "react";
 
-/**
- * MSF CONGO - Point d'Entrée Principal
- *
- * Détection SYNCHRONE (pas de useEffect) pour éviter :
- * - Le flash visuel (ClientApp qui monte puis se démonte)
- * - La double instanciation des routeurs React Router
- *
- * Accès ADMIN APP :
- * - http://admin.msfcongo.com → ADMIN APP
- * - http://votre-site.com/admin* → ADMIN APP
- *
- * Accès CLIENT APP :
- * - Tout autre chemin → CLIENT APP
- */
+// Fallback global de chargement
+const FullScreenLoader = () => (
+  <div className="min-h-screen bg-[#0a0f1e] flex flex-col items-center justify-center gap-4">
+    <div className="w-12 h-12 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
+    <p className="text-[#d4af37] font-semibold tracking-wider animate-pulse">MSF CONGO</p>
+  </div>
+);
 
-function getInitialAppType(): 'client' | 'admin' {
-  const hostname = window.location.hostname;
-  const pathname = window.location.pathname;
-
-  // Méthode 1 : Sous-domaine admin.msfcongo.com
-  if (hostname.startsWith('admin.')) {
-    return 'admin';
-  }
-  // Méthode 2 : Chemin /admin*
-  if (pathname.startsWith('/admin')) {
-    return 'admin';
-  }
-  return 'client';
-}
+// Lazy loading des deux branches principales pour optimiser les performances
+const ClientAppRoutes = lazy(() => import("./ClientAppRoutes"));
+const AdminAppRoutes = lazy(() => import("./AdminAppRoutes"));
 
 export default function App() {
-  // Calcul synchrone : zéro re-render, zéro flash
-  const appType = getInitialAppType();
+  return (
+    <BrowserRouter>
+      <Suspense fallback={<FullScreenLoader />}>
+        <Routes>
+          {/* TOUT ce qui commence par /admin est géré par la branche Admin */}
+          <Route path="/admin/*" element={<AdminAppRoutes />} />
 
-  if (appType === 'admin') {
-    return <AdminApp />;
-  }
-
-  return <ClientApp />;
+          {/* TOUT le reste est géré par la branche Client */}
+          <Route path="/*" element={<ClientAppRoutes />} />
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
+  );
 }

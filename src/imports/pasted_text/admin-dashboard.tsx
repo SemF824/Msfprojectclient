@@ -1,3 +1,18 @@
+Agis en tant qu'Architecte React et Expert en Résilience Logicielle. Actuellement, notre AdminDashboard.tsx crashe en production (White Screen of Death) car il ne gère ni les valeurs null de la base de données, ni l'absence potentielle des variables d'environnement Supabase sur Vercel.
+
+Tâche Unique : Remplace l'intégralité du fichier src/app/pages/admin/AdminDashboard.tsx par le code fourni ci-dessous.
+
+Contraintes Strictes :
+
+N'ajoute AUCUNE donnée factice (mock data).
+
+N'ajoute AUCUNE clé Supabase en dur (fallback).
+
+Conserve intacte la logique de redirection (useNavigate) qui renvoie vers / en cas d'erreur critique.
+
+Voici le code complet à injecter :
+
+TypeScript
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";

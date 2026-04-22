@@ -245,6 +245,9 @@ export default function Dashboard() {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
+  // Calcul du nombre exact de notifications non lues depuis les données récupérées
+  const unreadNotificationsCount = notifications.filter(n => n.is_read === false).length;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 pt-20">
       <div className="container mx-auto px-6 py-8">
@@ -404,10 +407,20 @@ export default function Dashboard() {
                 </h1>
                 <p className="text-gray-600">Voici un aperçu de votre activité</p>
               </div>
-              <button className="relative p-3 bg-white border border-gray-200 rounded-xl text-gray-600 hover:border-[#d4af37] transition-colors shadow-sm">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
+
+              {/* CORRECTION : Lien fonctionnel avec point rouge intelligent */}
+              <Link 
+                to="/notifications" 
+                className="relative p-3 bg-white border border-gray-200 rounded-xl text-gray-600 hover:border-[#d4af37] hover:text-[#d4af37] transition-colors shadow-sm group"
+                title="Vos notifications"
+              >
+                <Bell className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                {unreadNotificationsCount > 0 && (
+                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white shadow-sm animate-pulse">
+                    {unreadNotificationsCount}
+                  </span>
+                )}
+              </Link>
             </div>
 
             {/* Overview Tab */}

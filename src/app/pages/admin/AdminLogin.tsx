@@ -16,7 +16,7 @@ export default function AdminLogin() {
 
   useEffect(() => {
     if (user && isAdmin) {
-      navigate("/dashboard", { replace: true });
+      navigate("/admin/dashboard", { replace: true });
     }
   }, [user, isAdmin, navigate]);
 
@@ -42,7 +42,7 @@ export default function AdminLogin() {
         return;
       }
 
-      navigate("/dashboard");
+      navigate("/admin/dashboard");
     } catch (err) {
       setError("Erreur de connexion. Veuillez réessayer.");
       setIsLoading(false);
