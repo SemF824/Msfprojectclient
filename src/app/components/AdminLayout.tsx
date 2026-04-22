@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation, useNavigate } from "react-router";
 import {
   Building2, LayoutDashboard, FileText, Users, Home,
   BarChart3, Settings, LogOut, Menu, X, Bell, Search,
-  ChevronDown
+  ChevronDown, Shield, UserCog
 } from "lucide-react";
 import { useSupabaseAuth } from "../../hooks/useSupabaseAuth";
 
@@ -12,9 +12,10 @@ export default function AdminLayout() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useSupabaseAuth();
+  const { user, userRole, signOut } = useSupabaseAuth();
 
-  const navigation = [
+  // Navigation de base pour tous les admins
+  const baseNavigation = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Demandes de Devis", href: "/demandes", icon: FileText },
     { name: "Propriétés", href: "/proprietes", icon: Building2 },
@@ -23,7 +24,44 @@ export default function AdminLayout() {
     { name: "Paramètres", href: "/parametres", icon: Settings }
   ];
 
+  // Liens supplémentaires réservés au superadmin
+  const superadminNavigation = [
+    { name: "Gestion de l'Équipe", href: "/equipe", icon: UserCog, superadminOnly: true },
+    { name: "Paramètres Système", href: "/systeme", icon: Shield, superadminOnly: true }
+  ];
+
+  // Combiner les navigations selon le rôle
+  const navigation = userRole === 'superadmin'
+    ? [...baseNavigation, ...superadminNavigation]
+    : baseNavigation;
+
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + "/");
+
+  // Récupérer le nom complet de l'utilisateur
+  const userFirstName = user?.user_metadata?.first_name || user?.user_metadata?.firstName || '';
+  const userLastName = user?.user_metadata?.last_name || user?.user_metadata?.lastName || '';
+  const userFullName = `${userFirstName} ${userLastName}`.trim() || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Administrateur';
+  const userInitials = (userFirstName[0] || '') + (userLastName[0] || '') || user?.email?.substring(0, 2).toUpperCase() || 'AD';
+
+  // Badge de rôle avec couleur
+  const getRoleBadge = () => {
+    if (userRole === 'superadmin') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-[10px] font-bold rounded-full">
+          <Shield className="w-3 h-3" />
+          SUPERADMIN
+        </span>
+      );
+    }
+    if (userRole === 'admin') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] text-[10px] font-bold rounded-full">
+          ADMIN
+        </span>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50">
@@ -35,13 +73,14 @@ export default function AdminLayout() {
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Toggle sidebar"
             >
               {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
-            
+
             <Link to="/dashboard" className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-lg flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-[#0a0f1e]" />
+              <div className="w-10 h-10 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-lg flex items-center justify-center">
+                <Building2 className="w-6 h-6 text-[#0a0f1e]" />
               </div>
               <div className="hidden md:block">
                 <h1 className="text-lg tracking-tight text-[#0a0f1e] font-bold">MSF CONGO</h1>
@@ -76,33 +115,61 @@ export default function AdminLayout() {
               >
                 <div className="w-8 h-8 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-full flex items-center justify-center">
                   <span className="text-[#0a0f1e] font-semibold text-sm">
-                    {user?.email?.substring(0, 2).toUpperCase() || "AD"}
+                    {userInitials}
                   </span>
                 </div>
-                <span className="hidden md:block text-sm text-[#0a0f1e] font-medium">
-                  {user?.email || "Administrateur"}
-                </span>
+                <div className="hidden md:block text-left">
+                  <span className="block text-sm text-[#0a0f1e] font-medium">
+                    {userFullName}
+                  </span>
+                  <span className="block text-xs text-gray-500">
+                    {getRoleBadge()}
+                  </span>
+                </div>
                 <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl border border-gray-200 shadow-xl py-2 z-50">
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl border border-gray-200 shadow-xl py-2 z-50">
                   <div className="px-4 py-3 border-b border-gray-200">
                     <p className="text-[#0a0f1e] font-semibold">
-                      {user?.user_metadata?.name || "Administrateur"}
+                      {userFullName}
                     </p>
-                    <p className="text-sm text-gray-600">{user?.email || ""}</p>
+                    <p className="text-sm text-gray-600 mb-2">{user?.email || ""}</p>
+                    {getRoleBadge()}
                   </div>
                   <Link
                     to="/parametres"
                     className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                    onClick={() => setIsUserMenuOpen(false)}
                   >
                     <Settings className="w-4 h-4 text-[#d4af37]" />
                     <span className="text-sm">Paramètres</span>
                   </Link>
+                  {userRole === 'superadmin' && (
+                    <>
+                      <Link
+                        to="/equipe"
+                        className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <UserCog className="w-4 h-4 text-purple-600" />
+                        <span className="text-sm">Gestion de l'Équipe</span>
+                      </Link>
+                      <Link
+                        to="/systeme"
+                        className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <Shield className="w-4 h-4 text-indigo-600" />
+                        <span className="text-sm">Paramètres Système</span>
+                      </Link>
+                    </>
+                  )}
                   <button
                     onClick={async () => {
                       await signOut();
+                      setIsUserMenuOpen(false);
                       navigate('/admin', { replace: true });
                     }}
                     className="flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors w-full mt-2 border-t border-gray-200"
@@ -138,18 +205,27 @@ export default function AdminLayout() {
           {navigation.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
+            const isSuperadminOnly = 'superadminOnly' in item && item.superadminOnly;
+
             return (
               <Link
                 key={item.name}
                 to={item.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                   active
-                    ? 'bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] font-semibold shadow-lg'
+                    ? isSuperadminOnly
+                      ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold shadow-lg'
+                      : 'bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] font-semibold shadow-lg'
+                    : isSuperadminOnly
+                    ? 'text-purple-700 hover:bg-purple-50 border border-purple-200'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
                 <Icon className="w-5 h-5" />
-                <span>{item.name}</span>
+                <span className="flex-1">{item.name}</span>
+                {isSuperadminOnly && (
+                  <Shield className="w-4 h-4" />
+                )}
               </Link>
             );
           })}

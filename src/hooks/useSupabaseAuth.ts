@@ -1,35 +1,49 @@
 import { useState, useEffect } from 'react';
-import { createClient, User } from '@supabase/supabase-js';
+import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
-if (!supabaseUrl || !supabaseKey) {
-  console.error("CRITICAL: Variables d'environnement Supabase manquantes.");
+const isConfigured = Boolean(supabaseUrl && supabaseKey);
+
+// Crée le client uniquement si les variables sont présentes
+const supabase: SupabaseClient | null = isConfigured
+  ? createClient(supabaseUrl!, supabaseKey!)
+  : null;
+
+if (!isConfigured) {
+  console.warn(
+    "[useSupabaseAuth] VITE_SUPABASE_URL ou VITE_SUPABASE_ANON_KEY manquant. " +
+    "Le hook fonctionne en mode dégradé (pas d'authentification)."
+  );
 }
-
-const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
 interface UseSupabaseAuthReturn {
   user: User | null;
   isAdmin: boolean;
+  userRole: 'admin' | 'superadmin' | 'client' | null;
   isLoading: boolean;
   signOut: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<{ data: any, error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ data: any; error: Error | null }>;
   getSession: () => Promise<any>;
 }
 
 export function useSupabaseAuth(): UseSupabaseAuthReturn {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(isConfigured); // false d'emblée si pas configuré
 
   useEffect(() => {
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
+
     const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user ?? null);
       } catch (error) {
-        console.error('Error getting session:', error);
+        console.error('[useSupabaseAuth] Erreur récupération session :', error);
       } finally {
         setIsLoading(false);
       }
@@ -46,28 +60,26 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
     };
   }, []);
 
-  const isAdmin = user?.user_metadata?.role === 'admin' || user?.user_metadata?.role === 'superadmin';
+  const userRole = (user?.user_metadata?.role as 'admin' | 'superadmin' | 'client') || null;
+  const isAdmin = userRole === 'admin' || userRole === 'superadmin';
 
   const signOut = async () => {
+    if (!supabase) return;
     try {
       await supabase.auth.signOut();
       setUser(null);
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error('[useSupabaseAuth] Erreur déconnexion :', error);
     }
   };
 
   const signIn = async (email: string, password: string) => {
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase non configuré.') };
+    }
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        return { data: null, error };
-      }
-
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return { data: null, error };
       setUser(data.user);
       return { data, error: null };
     } catch (error) {
@@ -76,18 +88,12 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
   };
 
   const getSession = async () => {
+    if (!supabase) return null;
     const { data: { session } } = await supabase.auth.getSession();
     return session;
   };
 
-  return {
-    user,
-    isAdmin,
-    isLoading,
-    signOut,
-    signIn,
-    getSession,
-  };
+  return { user, isAdmin, userRole, isLoading, signOut, signIn, getSession };
 }
 
 export { supabase };

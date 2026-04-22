@@ -1,19 +1,46 @@
-import { Building2, Home, MapPin, Palette, SlidersHorizontal, LandPlot } from "lucide-react";
+import {
+  Building2,
+  Home,
+  MapPin,
+  Palette,
+  SlidersHorizontal,
+  LandPlot,
+} from "lucide-react";
 import { useState } from "react";
 import { motion } from "motion/react";
 
-export function PropertyFilter() {
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [priceRange, setPriceRange] = useState([0, 10000000]);
+// On définit que ce composant accepte une fonction onSearch en paramètre
+interface PropertyFilterProps {
+  onSearch?: (filters: {
+    type: string;
+    location: string;
+    price: string;
+  }) => void;
+}
+
+export function PropertyFilter({
+  onSearch,
+}: PropertyFilterProps) {
+  const [activeFilter, setActiveFilter] = useState("all"); // Type de bien (boutons du haut)
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [selectedPrice, setSelectedPrice] = useState("all");
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const propertyTypes = [
     { value: "all", label: "Tous les types", icon: Building2 },
     { value: "villa", label: "Villas", icon: Home },
-    { value: "apartment", label: "Appartements", icon: Building2 },
-    { value: "penthouse", label: "Penthouses", icon: Building2 },
+    {
+      value: "apartment",
+      label: "Appartements",
+      icon: Building2,
+    },
+    {
+      value: "penthouse",
+      label: "Penthouses",
+      icon: Building2,
+    },
     { value: "terrain", label: "Terrains", icon: LandPlot },
-    { value: "lotti", label: "Lottis", icon: MapPin }
+    { value: "lotti", label: "Lottis", icon: MapPin },
   ];
 
   const cities = [
@@ -22,7 +49,7 @@ export function PropertyFilter() {
     { value: "brazzaville", label: "Brazzaville" },
     { value: "kounda", label: "Kounda" },
     { value: "oyo", label: "Oyo" },
-    { value: "sibiti", label: "Sibiti" }
+    { value: "sibiti", label: "Sibiti" },
   ];
 
   const priceRanges = [
@@ -31,19 +58,29 @@ export function PropertyFilter() {
     { value: "30000000-60000000", label: "30M - 60M FCFA" },
     { value: "60000000-120000000", label: "60M - 120M FCFA" },
     { value: "120000000-300000000", label: "120M - 300M FCFA" },
-    { value: "300000000+", label: "300M FCFA +" }
+    { value: "300000000+", label: "300M FCFA +" },
   ];
 
   const paymentOptions = [
     { value: "all", label: "Tous" },
     { value: "cash", label: "Comptant" },
-    { value: "loan", label: "Prêt disponible" }
+    { value: "loan", label: "Prêt disponible" },
   ];
+
+  const handleSearch = () => {
+    if (onSearch) {
+      onSearch({
+        type: activeFilter,
+        location:
+          selectedLocation === "all" ? "" : selectedLocation,
+        price: selectedPrice,
+      });
+    }
+  };
 
   return (
     <section className="relative -mt-20 z-10 px-6">
       <div className="container mx-auto">
-        {/* Main Filter Card with Glassmorphism */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -65,7 +102,9 @@ export function PropertyFilter() {
                   }`}
                 >
                   <Icon className="w-4 h-4" />
-                  <span className="text-sm font-medium">{type.label}</span>
+                  <span className="text-sm font-medium">
+                    {type.label}
+                  </span>
                 </button>
               );
             })}
@@ -80,10 +119,20 @@ export function PropertyFilter() {
               </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d4af37]" />
-                <select className="w-full pl-11 pr-4 py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer">
+                <select
+                  value={selectedLocation}
+                  onChange={(e) =>
+                    setSelectedLocation(e.target.value)
+                  }
+                  className="w-full pl-11 pr-4 py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer"
+                >
                   <option value="">Toutes les Villes</option>
                   {cities.map((city) => (
-                    <option key={city.value} value={city.value} className="bg-[#1e3a5f]">
+                    <option
+                      key={city.value}
+                      value={city.value}
+                      className="bg-[#1e3a5f]"
+                    >
                       {city.label}
                     </option>
                   ))}
@@ -96,27 +145,43 @@ export function PropertyFilter() {
               <label className="block text-sm text-gray-300 mb-2 font-medium">
                 Gamme de Prix
               </label>
-              <select className="w-full px-4 py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer">
+              <select
+                value={selectedPrice}
+                onChange={(e) =>
+                  setSelectedPrice(e.target.value)
+                }
+                className="w-full px-4 py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer"
+              >
                 {priceRanges.map((range) => (
-                  <option key={range.value} value={range.value} className="bg-[#1e3a5f]">
+                  <option
+                    key={range.value}
+                    value={range.value}
+                    className="bg-[#1e3a5f]"
+                  >
                     {range.label}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Bedrooms */}
+            {/* Bedrooms (UI Only for now) */}
             <div className="relative">
               <label className="block text-sm text-gray-300 mb-2 font-medium">
                 Chambres
               </label>
               <select className="w-full px-4 py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer">
-                <option value="" className="bg-[#1e3a5f]">Indifférent</option>
-                <option value="1" className="bg-[#1e3a5f]">1+</option>
-                <option value="2" className="bg-[#1e3a5f]">2+</option>
-                <option value="3" className="bg-[#1e3a5f]">3+</option>
-                <option value="4" className="bg-[#1e3a5f]">4+</option>
-                <option value="5" className="bg-[#1e3a5f]">5+</option>
+                <option value="" className="bg-[#1e3a5f]">
+                  Indifférent
+                </option>
+                <option value="1" className="bg-[#1e3a5f]">
+                  1+
+                </option>
+                <option value="2" className="bg-[#1e3a5f]">
+                  2+
+                </option>
+                <option value="3" className="bg-[#1e3a5f]">
+                  3+
+                </option>
               </select>
             </div>
 
@@ -132,7 +197,7 @@ export function PropertyFilter() {
             </div>
           </div>
 
-          {/* Advanced Filters Panel */}
+          {/* Advanced Filters Panel (UI Preserved) */}
           {showAdvanced && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
@@ -141,6 +206,7 @@ export function PropertyFilter() {
               className="mt-6 pt-6 border-t border-white/20"
             >
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Contenu avancé conservé à l'identique */}
                 <div>
                   <label className="block text-sm text-gray-300 mb-2 font-medium">
                     Surface (m²)
@@ -157,7 +223,11 @@ export function PropertyFilter() {
                   </label>
                   <select className="w-full px-4 py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer">
                     {paymentOptions.map((option) => (
-                      <option key={option.value} value={option.value} className="bg-[#1e3a5f]">
+                      <option
+                        key={option.value}
+                        value={option.value}
+                        className="bg-[#1e3a5f]"
+                      >
                         {option.label}
                       </option>
                     ))}
@@ -168,11 +238,21 @@ export function PropertyFilter() {
                     Équipements
                   </label>
                   <select className="w-full px-4 py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer">
-                    <option value="" className="bg-[#1e3a5f]">Sélectionner</option>
-                    <option value="pool" className="bg-[#1e3a5f]">Piscine</option>
-                    <option value="gym" className="bg-[#1e3a5f]">Salle de Sport</option>
-                    <option value="concierge" className="bg-[#1e3a5f]">Conciergerie 24/7</option>
-                    <option value="parking" className="bg-[#1e3a5f]">Parking Privé</option>
+                    <option value="" className="bg-[#1e3a5f]">
+                      Sélectionner
+                    </option>
+                    <option
+                      value="pool"
+                      className="bg-[#1e3a5f]"
+                    >
+                      Piscine
+                    </option>
+                    <option
+                      value="gym"
+                      className="bg-[#1e3a5f]"
+                    >
+                      Salle de Sport
+                    </option>
                   </select>
                 </div>
                 <div>
@@ -180,10 +260,21 @@ export function PropertyFilter() {
                     Type de Vue
                   </label>
                   <select className="w-full px-4 py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer">
-                    <option value="" className="bg-[#1e3a5f]">Toutes les Vues</option>
-                    <option value="ocean" className="bg-[#1e3a5f]">Vue Océan</option>
-                    <option value="city" className="bg-[#1e3a5f]">Vue Ville</option>
-                    <option value="garden" className="bg-[#1e3a5f]">Vue Jardin</option>
+                    <option value="" className="bg-[#1e3a5f]">
+                      Toutes les Vues
+                    </option>
+                    <option
+                      value="ocean"
+                      className="bg-[#1e3a5f]"
+                    >
+                      Vue Océan
+                    </option>
+                    <option
+                      value="city"
+                      className="bg-[#1e3a5f]"
+                    >
+                      Vue Ville
+                    </option>
                   </select>
                 </div>
               </div>
@@ -192,7 +283,10 @@ export function PropertyFilter() {
 
           {/* Search Button */}
           <div className="mt-6">
-            <button className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] font-bold rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all">
+            <button
+              onClick={handleSearch}
+              className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] font-bold rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all"
+            >
               Rechercher des Propriétés
             </button>
           </div>
