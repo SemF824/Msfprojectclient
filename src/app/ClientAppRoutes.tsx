@@ -1,14 +1,15 @@
 import { Routes, Route } from "react-router";
 import { lazy, Suspense } from "react";
 import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute"; // IMPORT VITAL
 
-// Pages publiques (Imports synchrones pour le SEO/LCP)
+// Pages publiques
 import Home            from "./pages/Home";
 import Contact         from "./pages/Contact";
 import Services        from "./pages/Services";
 import DevisRequest    from "./pages/DevisRequest";
 import PropertyDetails from "./pages/PropertyDetails";
-import ProjectDetail   from "./pages/ProjectDetail"; // RESTAURÉ
+import ProjectDetail   from "./pages/ProjectDetail";
 import Login           from "./pages/Login";
 import Signup          from "./pages/Signup";
 
@@ -19,7 +20,7 @@ const TransactionDetail = lazy(() => import("./pages/TransactionDetail"));
 const Notifications     = lazy(() => import("./pages/Notifications"));
 const Profile           = lazy(() => import("./pages/Profile"));
 const Favorites         = lazy(() => import("./pages/Favorites"));
-const Settings          = lazy(() => import("./pages/Settings")); // RESTAURÉ
+const Settings          = lazy(() => import("./pages/Settings"));
 const NotFound          = lazy(() => import("./pages/NotFound"));
 
 const ClientLoader = () => (
@@ -37,32 +38,25 @@ export default function ClientAppRoutes() {
           <Route index element={<Home />} />
           <Route path="contact"  element={<Contact />} />
           <Route path="services" element={<Services />} />
-
-          {/* RESTAURÉ : Passage de paramètre obligatoire ou optionnel pour les devis */}
           <Route path="devis"              element={<DevisRequest />} />
           <Route path="devis/:propertyId"  element={<DevisRequest />} />
-
           <Route path="propriete/:id"  element={<PropertyDetails />} />
-
-          {/* RESTAURÉ : Route des projets */}
           <Route path="projet/:slug" element={<ProjectDetail />} />
-
-          {/* Catch-all Layout */}
           <Route path="*" element={<NotFound />} />
         </Route>
 
-        {/* Routes autonomes (Sans Header/Footer public) */}
+        {/* Routes autonomes */}
         <Route path="connexion"  element={<Login />} />
         <Route path="inscription" element={<Signup />} />
 
-        {/* Espace Client */}
-        <Route path="dashboard"          element={<Dashboard />} />
-        <Route path="transactions"       element={<Transactions />} />
-        <Route path="transactions/:id"   element={<TransactionDetail />} />
-        <Route path="notifications"      element={<Notifications />} />
-        <Route path="profile"            element={<Profile />} />
-        <Route path="favorites"          element={<Favorites />} />
-        <Route path="settings"           element={<Settings />} /> {/* RESTAURÉ */}
+        {/* Espace Client Protégé */}
+        <Route path="dashboard"          element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="transactions"       element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
+        <Route path="transactions/:id"   element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>} />
+        <Route path="notifications"      element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+        <Route path="profile"            element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="favorites"          element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+        <Route path="settings"           element={<ProtectedRoute><Settings /></ProtectedRoute>} />
       </Routes>
     </Suspense>
   );
