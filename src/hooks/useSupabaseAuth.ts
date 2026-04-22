@@ -1,28 +1,21 @@
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import { projectId, publicAnonKey } from '../../utils/supabase/info';
+import { createClient, User } from '@supabase/supabase-js';
 
-// Initialize Supabase client using environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || `https://${projectId}.supabase.co`;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || publicAnonKey;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-interface User {
-  id: string;
-  email?: string;
-  user_metadata?: {
-    role?: string;
-    [key: string]: any;
-  };
+if (!supabaseUrl || !supabaseKey) {
+  console.error("CRITICAL: Variables d'environnement Supabase manquantes.");
 }
+
+const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
 interface UseSupabaseAuthReturn {
   user: User | null;
   isAdmin: boolean;
   isLoading: boolean;
   signOut: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ data: any, error: Error | null }>;
   getSession: () => Promise<any>;
 }
 
@@ -31,7 +24,6 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
     const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -45,7 +37,6 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
 
     initAuth();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
@@ -55,9 +46,6 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
     };
   }, []);
 
-  // SÉCURITÉ : isAdmin vérifie user_metadata.role pour l'UI (côté client)
-  // Les policies Supabase (RLS) vérifient public.user_roles pour la sécurité réelle
-  // Les deux doivent être synchronisés via le script database/security_fix.sql
   const isAdmin = user?.user_metadata?.role === 'admin' || user?.user_metadata?.role === 'superadmin';
 
   const signOut = async () => {
@@ -77,13 +65,13 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
       });
 
       if (error) {
-        return { error };
+        return { data: null, error };
       }
 
       setUser(data.user);
-      return { error: null };
+      return { data, error: null };
     } catch (error) {
-      return { error: error as Error };
+      return { data: null, error: error as Error };
     }
   };
 

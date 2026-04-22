@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router";
 import { Building2, Lock, Mail, AlertCircle, Shield } from "lucide-react";
@@ -6,7 +6,7 @@ import { useSupabaseAuth } from "../../../hooks/useSupabaseAuth";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
-  const { signIn } = useSupabaseAuth();
+  const { user, isAdmin, signIn, signOut } = useSupabaseAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: ""
@@ -14,33 +14,43 @@ export default function AdminLogin() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    if (user && isAdmin) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, isAdmin, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
     try {
-      const { error: authError } = await signIn(formData.email, formData.password);
+      const { data, error: authError } = await signIn(formData.email, formData.password);
 
       if (authError) {
-        setError("Identifiants incorrects. Accès admin uniquement.");
+        setError("Identifiants incorrects.");
         setIsLoading(false);
         return;
       }
 
-      // Verify admin role - the hook will check user_metadata.role
-      // If user is admin, redirect to dashboard
+      const role = data?.user?.user_metadata?.role;
+      if (role !== 'admin' && role !== 'superadmin') {
+        await signOut();
+        setError("Accès refusé. Privilèges administrateur requis.");
+        setIsLoading(false);
+        return;
+      }
+
       navigate("/dashboard");
     } catch (err) {
       setError("Erreur de connexion. Veuillez réessayer.");
-    } finally {
       setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 flex items-center justify-center px-6">
-      {/* Background Pattern */}
       <div className="absolute inset-0 overflow-hidden opacity-10">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#d4af37] rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
@@ -51,7 +61,6 @@ export default function AdminLogin() {
         animate={{ opacity: 1, y: 0 }}
         className="relative max-w-md w-full"
       >
-        {/* Security Badge */}
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-xl rounded-full border border-white/20">
             <Shield className="w-5 h-5 text-[#d4af37]" />
@@ -60,7 +69,6 @@ export default function AdminLogin() {
         </div>
 
         <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/20">
-          {/* Logo */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-2xl mb-4 shadow-lg">
               <Building2 className="w-8 h-8 text-[#0a0f1e]" />
@@ -77,7 +85,6 @@ export default function AdminLogin() {
             </p>
           </div>
 
-          {/* Error Message */}
           {error && (
             <motion.div
               initial={{ opacity: 0, x: -10 }}
@@ -92,13 +99,11 @@ export default function AdminLogin() {
             </motion.div>
           )}
 
-          {/* Info Security */}
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
             <p className="text-blue-800 font-medium mb-2 text-sm">🔐 Accès Sécurisé :</p>
-            <p className="text-blue-700 text-xs">Connexion via Supabase Auth avec vérification du rôle administrateur.</p>
+            <p className="text-blue-700 text-xs">Connexion via Supabase Auth avec vérification stricte du rôle.</p>
           </div>
 
-          {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm text-gray-700 mb-2 font-medium">
@@ -150,18 +155,16 @@ export default function AdminLogin() {
             </button>
           </form>
 
-          {/* Footer */}
           <div className="mt-8 pt-6 border-t border-gray-200 text-center">
             <p className="text-sm text-gray-600">
               Accès réservé au personnel MSF Congo
             </p>
             <p className="text-xs text-gray-500 mt-2">
-              © 2024 MSF Congo - Tous droits réservés
+              © 2026 MSF Congo - Tous droits réservés
             </p>
           </div>
         </div>
 
-        {/* Back to Client Site */}
         <div className="mt-6 text-center">
           <a
             href="/"

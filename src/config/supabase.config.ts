@@ -9,11 +9,13 @@
  * mais avec des permissions différentes selon le rôle utilisateur.
  */
 
-import { projectId, publicAnonKey } from '../../utils/supabase/info';
-
 // Use environment variables for security
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || `https://${projectId}.supabase.co`;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || publicAnonKey;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error("CRITICAL: Variables d'environnement Supabase manquantes.");
+}
 
 export const supabaseConfig = {
   url: supabaseUrl,
