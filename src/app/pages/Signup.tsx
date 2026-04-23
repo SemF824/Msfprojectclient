@@ -52,7 +52,7 @@ export default function Signup() {
         return;
       }
 
-      navigate("/dashboard");
+      navigate("/client/dashboard");
     } catch (err: any) {
       setError("Erreur lors de l'inscription. Veuillez réessayer.");
     } finally {

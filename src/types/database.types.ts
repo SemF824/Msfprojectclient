@@ -43,15 +43,20 @@ export interface Transaction {
   updated_at: string;
 }
 
+// ─── Catégories de documents sécurisés ───────────────────────────────────────
+export type DocCategory = 'identity' | 'finance' | 'land_title' | 'other';
+
 // Table: documents
 export interface Document {
   id: string;
   user_id: string;
   transaction_id?: string;
   name: string;
-  type: string; // 'contract', 'certificate', 'attestation', 'quote', 'finance'
-  url: string;
-  size: number; // en bytes
+  type: string;           // mime-type du fichier
+  url: string;            // conservé pour rétrocompat (vide pour bucket privé)
+  storage_path: string;   // chemin réel dans le bucket msf-private-docs
+  category: DocCategory;  // catégorie sécurisée pour filtrage admin
+  size: number;           // en bytes
   uploaded_at: string;
   created_at: string;
 }

@@ -9,6 +9,7 @@ const AdminLogin         = lazy(() => import("./pages/admin/AdminLogin"));
 const AdminDashboard     = lazy(() => import("./pages/admin/AdminDashboard"));
 const DemandesManagement = lazy(() => import("./pages/admin/DemandesManagement"));
 const DemandeDetail      = lazy(() => import("./pages/admin/DemandeDetail"));
+const ClientsDocuments   = lazy(() => import("./pages/admin/ClientsDocuments")); // ← Tâche 1
 const AdminNotFound      = lazy(() => import("./pages/admin/AdminNotFound"));
 
 const AdminLoader = () => (
@@ -30,14 +31,17 @@ export default function AdminAppRoutes() {
           <Route path="demandes"     element={<DemandesManagement />} />
           <Route path="demandes/:id" element={<DemandeDetail />} />
           <Route path="proprietes"   element={<div className="p-8"><h1 className="text-2xl font-bold">Catalogue Propriétés</h1><p className="mt-4 text-gray-500">Module en construction...</p></div>} />
-          
           <Route path="clients"      element={<div className="p-8"><h1 className="text-2xl font-bold">Clients</h1><p className="mt-4 text-gray-500">Module en construction...</p></div>} />
+
+          {/* ── Archives documentaires (admin + superadmin) ── */}
+          <Route path="documents"    element={<ClientsDocuments />} />
+
           <Route path="statistiques" element={<div className="p-8"><h1 className="text-2xl font-bold">Statistiques</h1><p className="mt-4 text-gray-500">Module en construction...</p></div>} />
           <Route path="parametres"   element={<div className="p-8"><h1 className="text-2xl font-bold">Paramètres</h1><p className="mt-4 text-gray-500">Module en construction...</p></div>} />
-          
+
           {/* Routes réservées au Super Admin */}
-          <Route 
-            path="equipe" 
+          <Route
+            path="equipe"
             element={
               <SuperAdminGuard>
                 <div className="p-8">
@@ -45,10 +49,10 @@ export default function AdminAppRoutes() {
                   <p className="mt-4 text-gray-500">Administration restreinte aux Super Admins.</p>
                 </div>
               </SuperAdminGuard>
-            } 
+            }
           />
-          <Route 
-            path="systeme" 
+          <Route
+            path="systeme"
             element={
               <SuperAdminGuard>
                 <div className="p-8">
@@ -56,7 +60,7 @@ export default function AdminAppRoutes() {
                   <p className="mt-4 text-gray-500">Administration restreinte aux Super Admins.</p>
                 </div>
               </SuperAdminGuard>
-            } 
+            }
           />
 
           {/* Fallback Admin */}

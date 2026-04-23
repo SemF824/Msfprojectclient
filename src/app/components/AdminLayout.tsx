@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation, useNavigate } from "react-router";
 import {
   Building2, LayoutDashboard, FileText, Users, Home,
   BarChart3, Settings, LogOut, Menu, X, Bell, Search,
-  ChevronDown, Shield, UserCog
+  ChevronDown, Shield, UserCog, FolderOpen
 } from "lucide-react";
 import { useSupabaseAuth } from "../../hooks/useSupabaseAuth";
 
@@ -16,12 +16,13 @@ export default function AdminLayout() {
 
   // Navigation de base pour tous les admins
   const baseNavigation = [
-    { name: "Dashboard",          href: "/admin/dashboard",    icon: LayoutDashboard },
-    { name: "Demandes de Devis",  href: "/admin/demandes",     icon: FileText },
-    { name: "Propriétés",         href: "/admin/proprietes",   icon: Building2 },
-    { name: "Clients",            href: "/admin/clients",      icon: Users },
-    { name: "Statistiques",       href: "/admin/statistiques", icon: BarChart3 },
-    { name: "Paramètres",         href: "/admin/parametres",   icon: Settings }
+    { name: "Dashboard",            href: "/admin/dashboard",    icon: LayoutDashboard },
+    { name: "Demandes de Devis",    href: "/admin/demandes",     icon: FileText },
+    { name: "Propriétés",           href: "/admin/proprietes",   icon: Building2 },
+    { name: "Clients",              href: "/admin/clients",      icon: Users },
+    { name: "Archives Documents",   href: "/admin/documents",    icon: FolderOpen },  // ← Tâche 1
+    { name: "Statistiques",         href: "/admin/statistiques", icon: BarChart3 },
+    { name: "Paramètres",           href: "/admin/parametres",   icon: Settings }
   ];
 
   // Liens supplémentaires réservés au superadmin

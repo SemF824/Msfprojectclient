@@ -18,7 +18,7 @@ export default function Login() {
   // Redirection automatique si l'utilisateur est déjà connecté
   useEffect(() => {
     if (user) {
-      navigate("/dashboard", { replace: true });
+      navigate("/client/dashboard", { replace: true });
     }
   }, [user, navigate]);
 
@@ -37,7 +37,7 @@ export default function Login() {
       }
 
       // La redirection sera gérée par le useEffect
-      navigate("/dashboard");
+      navigate("/client/dashboard");
     } catch (err: any) {
       setError(err.message || "Une erreur est survenue");
       setIsLoading(false);
