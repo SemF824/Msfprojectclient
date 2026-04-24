@@ -1,4 +1,14 @@
 import { useState, useEffect, useRef } from "react";
+
+// ─── Stagger variants (anti-clignotement stats) ───────────────────────────────
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+};
+const itemVariants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+};
 import { motion, AnimatePresence } from "motion/react";
 import { Link, useNavigate } from "react-router";
 import {
@@ -496,11 +506,16 @@ export default function Dashboard() {
             {/* ── ONGLET : Vue d'ensemble ─────────────────────────────────── */}
             {activeTab === "overview" && (
               <div className="space-y-6">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <motion.div
+                  className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
                   {stats.map((s, i) => {
                     const Icon = s.icon;
                     return (
-                      <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
+                      <motion.div key={i} variants={itemVariants}
                         className="bg-white rounded-2xl border border-gray-200 shadow-lg p-5"
                       >
                         <div className={`w-10 h-10 bg-gradient-to-br ${s.color} rounded-xl flex items-center justify-center mb-3`}>
@@ -511,7 +526,7 @@ export default function Dashboard() {
                       </motion.div>
                     );
                   })}
-                </div>
+                </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
                   <div className="flex items-center justify-between mb-4">

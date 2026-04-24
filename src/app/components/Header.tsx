@@ -96,7 +96,7 @@ export function Header() {
                     placeholder="Rechercher un bien..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-48 lg:w-64 pl-4 pr-10 py-2 bg-gray-100 border-none rounded-full text-sm focus:ring-2 focus:ring-[#d4af37] outline-none transition-all"
+                    className="w-48 lg:w-64 pl-4 pr-10 py-2 bg-gray-100 border-none rounded-full text-sm text-[#0a0f1e] placeholder:text-gray-400 focus:ring-2 focus:ring-[#d4af37] outline-none transition-all"
                   />
                   <button
                     type="button"

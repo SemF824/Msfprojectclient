@@ -1,12 +1,33 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
-import { 
-  FileText, CheckCircle, Clock, 
+import {
+  FileText, CheckCircle, Clock,
   ArrowUpRight, ArrowDownRight,
   Building2, DollarSign, Activity, Loader2, AlertCircle
 } from "lucide-react";
 import { supabase } from "../../../hooks/useSupabaseAuth";
+
+// ─── Stagger variants (anti-clignotement) ─────────────────────────────────────
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+  },
+};
+const itemVariants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+};
+
+// ─── Colour map statique (Tailwind purge-safe) ─────────────────────────────────
+const colorMap: Record<string, { bg: string; text: string }> = {
+  blue:   { bg: "bg-blue-50",   text: "text-blue-600"   },
+  green:  { bg: "bg-green-50",  text: "text-green-600"  },
+  purple: { bg: "bg-purple-50", text: "text-purple-600" },
+  amber:  { bg: "bg-amber-50",  text: "text-amber-600"  },
+};
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -111,10 +132,10 @@ export default function AdminDashboard() {
 
   // Affichage des cartes de statistiques
   const statCards = [
-    { title: "Dossiers en Attente", value: stats.pendingRequests, icon: Clock, trend: "+12%", trendUp: true, color: "blue" },
-    { title: "Ventes Potentielles", value: `${new Intl.NumberFormat('fr-FR').format(stats.potentialRevenue)} FCFA`, icon: DollarSign, trend: "+8%", trendUp: true, color: "green" },
-    { title: "Dossiers Approuvés", value: stats.approvedCount, icon: CheckCircle, trend: "+5%", trendUp: true, color: "purple" },
-    { title: "Total Demandes", value: stats.totalRequests, icon: FileText, trend: "+15%", trendUp: true, color: "amber" }
+    { title: "Dossiers en Attente",  value: stats.pendingRequests, icon: Clock,        trend: "+12%", trendUp: true,  color: "blue"   },
+    { title: "Ventes Potentielles",  value: `${new Intl.NumberFormat('fr-FR').format(stats.potentialRevenue)} FCFA`, icon: DollarSign, trend: "+8%",  trendUp: true,  color: "green"  },
+    { title: "Dossiers Approuvés",   value: stats.approvedCount,   icon: CheckCircle,  trend: "+5%",  trendUp: true,  color: "purple" },
+    { title: "Total Demandes",       value: stats.totalRequests,   icon: FileText,     trend: "+15%", trendUp: true,  color: "amber"  },
   ];
 
   return (
@@ -124,29 +145,36 @@ export default function AdminDashboard() {
         <p className="text-gray-600">Vue d'ensemble de l'activité MSF Congo.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {statCards.map((stat, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className={`p-3 rounded-xl bg-${stat.color}-50`}>
-                <stat.icon className={`w-6 h-6 text-${stat.color}-600`} />
+      {/* ── Stat cards avec stagger ── */}
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {statCards.map((stat, index) => {
+          const colors = colorMap[stat.color] ?? colorMap.blue;
+          return (
+            <motion.div
+              key={index}
+              variants={itemVariants}
+              className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className={`p-3 rounded-xl ${colors.bg}`}>
+                  <stat.icon className={`w-6 h-6 ${colors.text}`} />
+                </div>
+                <div className={`flex items-center gap-1 text-sm ${stat.trendUp ? 'text-green-600' : 'text-red-600'}`}>
+                  {stat.trendUp ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+                  {stat.trend}
+                </div>
               </div>
-              <div className={`flex items-center gap-1 text-sm ${stat.trendUp ? 'text-green-600' : 'text-red-600'}`}>
-                {stat.trendUp ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-                {stat.trend}
-              </div>
-            </div>
-            <h3 className="text-gray-500 text-sm font-medium mb-1">{stat.title}</h3>
-            <p className="text-2xl text-[#0a0f1e] font-bold">{stat.value}</p>
-          </motion.div>
-        ))}
-      </div>
+              <h3 className="text-gray-500 text-sm font-medium mb-1">{stat.title}</h3>
+              <p className="text-2xl text-[#0a0f1e] font-bold">{stat.value}</p>
+            </motion.div>
+          );
+        })}
+      </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Activités Récentes (Blindées contre les données nulles) */}

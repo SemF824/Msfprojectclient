@@ -26,6 +26,9 @@ interface UseSupabaseAuthReturn {
   signOut: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ data: any; error: Error | null }>;
   getSession: () => Promise<any>;
+  // IMPORTANT : isAdmin est pour l'UI uniquement (basé sur user_metadata).
+  // La vraie vérification de sécurité se fait dans ProtectedAdminRoute via la table user_roles.
+  verifyAdminRole: () => Promise<boolean>;
 }
 
 export function useSupabaseAuth(): UseSupabaseAuthReturn {
@@ -93,7 +96,21 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
     return session;
   };
 
-  return { user, isAdmin, userRole, isLoading, signOut, signIn, getSession };
+  // ── Vérification sécurisée du rôle admin via la table public.user_roles ──────
+  // Contrairement à isAdmin (user_metadata), cette fonction interroge la DB
+  // et ne peut pas être falsifiée côté client.
+  const verifyAdminRole = async (): Promise<boolean> => {
+    if (!supabase || !user) return false;
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+    if (error || !data) return false;
+    return ['admin', 'superadmin'].includes(data.role);
+  };
+
+  return { user, isAdmin, userRole, isLoading, signOut, signIn, getSession, verifyAdminRole };
 }
 
 export { supabase };

@@ -98,7 +98,7 @@ export default function AdminLayout() {
               <input
                 type="text"
                 placeholder="Rechercher..."
-                className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:border-[#d4af37] focus:outline-none w-64"
+                className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-[#0a0f1e] placeholder:text-gray-400 focus:border-[#d4af37] focus:outline-none w-64"
               />
             </div>
 
@@ -194,7 +194,7 @@ export default function AdminLayout() {
         <div className="p-4">
           {/* Bouton retour au site public */}
           <Link
-            to="/"
+            to="/vitrine"
             className="flex items-center gap-3 px-4 py-3 mb-4 rounded-xl text-gray-700 bg-gray-50 hover:bg-gray-100 transition-all border border-gray-200"
           >
             <Home className="w-5 h-5 text-[#d4af37]" />

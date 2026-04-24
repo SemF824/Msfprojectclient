@@ -1,8 +1,5 @@
-import { useState } from "react";
-import { motion } from "motion/react";
-import { Link } from "react-router";
 import {
-  Bell, Check, Trash2, Filter,
+  Bell, Check, Trash2, Filter, ArrowLeft,
   Home, CreditCard, Calendar, MessageSquare,
   TrendingUp, AlertCircle, CheckCircle2, Info,
   X, Settings

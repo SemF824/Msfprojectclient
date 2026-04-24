@@ -6,7 +6,7 @@ import { useSupabaseAuth } from "../../../hooks/useSupabaseAuth";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
-  const { user, isAdmin, signIn, signOut } = useSupabaseAuth();
+  const { user, isAdmin, signIn, signOut, verifyAdminRole } = useSupabaseAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: ""
@@ -34,12 +34,20 @@ export default function AdminLogin() {
         return;
       }
 
-      const role = data?.user?.user_metadata?.role;
-      if (role !== 'admin' && role !== 'superadmin') {
-        await signOut();
-        setError("Accès refusé. Privilèges administrateur requis.");
-        setIsLoading(false);
-        return;
+      // Vérification sécurisée via user_roles (table DB, non falsifiable)
+      const hasAdminRole = await verifyAdminRole();
+      if (!hasAdminRole) {
+        // Fallback : vérifier user_metadata si user_roles est vide
+        const role = data?.user?.user_metadata?.role;
+        if (role !== "admin" && role !== "superadmin") {
+          await signOut();
+          setError(
+            "Votre compte n'a pas les permissions administrateur. " +
+            "Contactez votre superadmin pour obtenir l'accès."
+          );
+          setIsLoading(false);
+          return;
+        }
       }
 
       navigate("/admin/dashboard");
