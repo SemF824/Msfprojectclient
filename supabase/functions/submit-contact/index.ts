@@ -7,52 +7,91 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Gérer les requêtes de pré-vérification du navigateur (CORS)
+  // Gestion CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { token, formData } = await req.json()
+    // CORRECTION ICI : Récupération directe et native du JSON
+    const payload = await req.json();
 
-    // 1. Vérification du token auprès des serveurs de Google
-    const secretKey = Deno.env.get('RECAPTCHA_SECRET_KEY')
-    const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${token}`
+    // Extraire les variables en vérifiant la structure
+    const token = payload?.token;
+    const formData = payload?.formData;
 
-    const recaptchaRes = await fetch(verifyUrl, { method: 'POST' })
-    const recaptchaJson = await recaptchaRes.json()
-
-    // Le score v3 va de 0.0 (bot) à 1.0 (humain). On refuse en dessous de 0.5.
-    if (!recaptchaJson.success || recaptchaJson.score < 0.5) {
-      return new Response(
-        JSON.stringify({ error: "Échec de la validation humaine (score trop bas)." }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
-      )
+    if (!token) {
+      throw new Error("Jeton reCAPTCHA manquant.");
+    }
+    if (!formData) {
+      throw new Error("Données du formulaire manquantes.");
     }
 
-    // 2. Si humain, on initialise Supabase avec la clé de service (Service Role Key)
-    // Elle permet d'insérer des données même si les règles RLS sont strictes
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    // Vérification de la clé secrète sur le serveur
+    const secretKey = Deno.env.get('RECAPTCHA_SECRET_KEY');
+    if (!secretKey) {
+      throw new Error("La clé secrète reCAPTCHA n'est pas configurée dans les variables d'environnement Supabase.");
+    }
 
-    // 3. Insertion des données dans la table contact_requests
-    const { error } = await supabaseClient
+    // Appel à Google
+    const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${token}`;
+    const recaptchaRes = await fetch(verifyUrl, { method: 'POST' });
+    const recaptchaJson = await recaptchaRes.json();
+
+    if (!recaptchaJson.success) {
+      console.error("Échec de la validation Google:", recaptchaJson['error-codes']);
+      return new Response(
+        JSON.stringify({ error: "Échec de l'authentification anti-bot." }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+      );
+    }
+
+    if (recaptchaJson.score < 0.5) {
+      return new Response(
+        JSON.stringify({ error: "Activité automatisée détectée." }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+      );
+    }
+
+    // Initialisation du client Supabase
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Impossible d'initialiser la base de données. URL ou Clé de service manquante.");
+    }
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Insertion
+    const { error: dbError } = await supabaseAdmin
       .from('contact_requests')
-      .insert([formData])
+      .insert([{
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        subject: formData.subject,
+        property_type: formData.propertyType || null,
+        budget: formData.budget || null,
+        message: formData.message,
+        created_at: new Date().toISOString()
+      }]);
 
-    if (error) throw error
+    if (dbError) {
+      throw new Error(`Erreur lors de la sauvegarde : ${dbError.message}`);
+    }
 
+    // Succès total
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, message: "Message envoyé avec succès." }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-    )
+    );
 
   } catch (error) {
+    // Renvoi du vrai message d'erreur au client
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : "Erreur inconnue." }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-    )
+    );
   }
 })
