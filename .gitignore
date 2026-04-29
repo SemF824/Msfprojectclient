@@ -1,11 +1,86 @@
+# Dependencies
 node_modules
-.env
+.pnpm-store
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Build & Runtime
 dist
+build
+.env
+.env.local
+.env.*.local
+.env.production.local
+
+# IDE & OS
 .DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Firebase & Deployment (Tu utilises Firebase maintenant)
+.firebase/
+.firebaserc
+.firebaserc.json
+netlify.toml
+vercel.json
+.vercel/
+
+# Supabase
+supabase/.env.local
+supabase/.env.*.local
+
+# Cache & Temp
+.cache/
+*.tmp
+.next/
+.nuxt/
+dist/
+out/
+.turbo/
+
+# Documentation inutile en prod (À ignorer complètement)
 ACCES_ADMIN.md
 GIT_COMMANDS.md
-CORRECTIONS_*.md
+CORRECTIONS_APPLIQUEES.md
+CORRECTIONS_ROUTING.md
 SEPARATION_COMPLETE.md
 TEST_ROUTING.md
 VERIFICATIONS.md
-.idea/
+URLS_REFERENCE.md
+
+# OS
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Archive files
+*.zip
+*.rar
+*.7z
+*.iso
+*.tar.gz
+
+# Node version
+.nvmrc
+.node-version
+
+# Misc
+*.pem
+*.key
+.env.test
+.env.test.local
