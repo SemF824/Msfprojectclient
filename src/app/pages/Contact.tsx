@@ -51,12 +51,14 @@ export default function Contact() {
     setIsSubmitting(true);
 
     try {
+      // 1. Vérification que le système anti-bot est chargé
       if (!executeRecaptcha) {
         setSubmitError("Le système de sécurité n'est pas encore initialisé. Veuillez patienter.");
         setIsSubmitting(false);
         return;
       }
 
+      // 2. Génération du Jeton Invisible V3
       const token = await executeRecaptcha('contact_form_submit');
 
       if (!token) {
@@ -65,6 +67,7 @@ export default function Contact() {
         return;
       }
 
+      // 3. Validation locale des données (Zod)
       const validationResult = contactFormSchema.safeParse(formData);
 
       if (!validationResult.success) {
@@ -74,6 +77,7 @@ export default function Contact() {
         return;
       }
 
+      // 4. Rate Limiting de courtoisie côté client
       const lastSubmit = localStorage.getItem('last_contact_submit');
       const now = Date.now();
       if (lastSubmit && now - parseInt(lastSubmit) < 60000) {
@@ -82,25 +86,25 @@ export default function Contact() {
         return;
       }
 
-      const { error } = await supabase
-        .from('contact_requests')
-        .insert([
-          {
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            subject: formData.subject,
-            property_type: formData.propertyType || null,
-            budget: formData.budget || null,
-            message: formData.message,
-            created_at: new Date().toISOString(),
-          }
-        ]);
+      // 5. LA STRATÉGIE SÉCURISÉE : Délégation à l'Edge Function
+      const { data, error } = await supabase.functions.invoke('submit-contact', {
+        body: {
+          token: token,
+          formData: formData
+        }
+      });
 
+      // Gestion des erreurs réseau (timeout, fonction introuvable...)
       if (error) {
-        throw error;
+        throw new Error(error.message || "Erreur de connexion au serveur.");
       }
 
+      // Gestion des erreurs applicatives renvoyées par notre propre code backend (ex: bot détecté)
+      if (data && data.error) {
+        throw new Error(data.error);
+      }
+
+      // 6. Succès et Nettoyage
       localStorage.setItem('last_contact_submit', now.toString());
       setSubmitted(true);
       setFormData({
@@ -116,7 +120,7 @@ export default function Contact() {
       setTimeout(() => setSubmitted(false), 5000);
     } catch (error: any) {
       console.error('Error submitting contact form:', error);
-      setSubmitError("Erreur lors de l'envoi du formulaire. Veuillez réessayer ou nous contacter directement.");
+      setSubmitError(error.message || "Erreur lors de l'envoi du formulaire. Veuillez réessayer ou nous contacter directement.");
     } finally {
       setIsSubmitting(false);
     }
@@ -236,7 +240,7 @@ export default function Contact() {
           frameBorder="0"
           style={{ border: 0 }}
           referrerPolicy="no-referrer-when-downgrade"
-          src={`https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=6R2W%2BJ28+Pointe-Noire+Congo-Brazzaville&zoom=16&language=fr`}
+          src={`https://googleusercontent.com/maps.google.com/0{apiKey}&q=6R2W%2BJ28+Pointe-Noire+Congo-Brazzaville&zoom=16&language=fr`}
           allowFullScreen
           title="Localisation MSF Congo"
         />

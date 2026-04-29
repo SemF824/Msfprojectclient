@@ -7,7 +7,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Gestion du preflight CORS
+  // Gérer les requêtes de pré-vérification du navigateur (CORS)
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -15,53 +15,37 @@ serve(async (req) => {
   try {
     const { token, formData } = await req.json()
 
-    if (!token) {
-      throw new Error("Token reCAPTCHA manquant.")
-    }
-
-    // 1. Vérification silencieuse auprès de Google
+    // 1. Vérification du token auprès des serveurs de Google
     const secretKey = Deno.env.get('RECAPTCHA_SECRET_KEY')
     const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${token}`
 
     const recaptchaRes = await fetch(verifyUrl, { method: 'POST' })
     const recaptchaJson = await recaptchaRes.json()
 
-    // Le Crash-Test : Le score est-il suffisant ? (0.0 = bot, 1.0 = humain)
+    // Le score v3 va de 0.0 (bot) à 1.0 (humain). On refuse en dessous de 0.5.
     if (!recaptchaJson.success || recaptchaJson.score < 0.5) {
-      console.warn("Activité suspecte détectée, score:", recaptchaJson.score)
       return new Response(
-        JSON.stringify({ error: "Trafic suspect détecté. Envoi refusé." }),
+        JSON.stringify({ error: "Échec de la validation humaine (score trop bas)." }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
       )
     }
 
-    // 2. Le visiteur est humain. On initialise le client Supabase.
-    // On utilise la Service Role Key pour contourner les règles RLS publiques si nécessaire
+    // 2. Si humain, on initialise Supabase avec la clé de service (Service Role Key)
+    // Elle permet d'insérer des données même si les règles RLS sont strictes
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 3. Insertion propre dans la base
-    const { data, error } = await supabaseClient
+    // 3. Insertion des données dans la table contact_requests
+    const { error } = await supabaseClient
       .from('contact_requests')
-      .insert([
-        {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          subject: formData.subject,
-          property_type: formData.propertyType || null,
-          budget: formData.budget || null,
-          message: formData.message,
-          created_at: new Date().toISOString(),
-        }
-      ])
+      .insert([formData])
 
     if (error) throw error
 
     return new Response(
-      JSON.stringify({ success: true, message: "Demande enregistrée avec succès." }),
+      JSON.stringify({ success: true }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
 

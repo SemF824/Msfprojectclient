@@ -4,7 +4,7 @@ on:
     branches:
       - main
 
-# LE BLOC CRUCIAL (Pas de commentaires PR ici, mais validation de statut requise)
+# LE BLOC CRUCIAL
 permissions:
   checks: write
   contents: read
@@ -23,6 +23,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_RECAPTCHA_SITE_KEY: ${{ secrets.VITE_RECAPTCHA_SITE_KEY }}
 
       - name: Deploiement sur Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0
