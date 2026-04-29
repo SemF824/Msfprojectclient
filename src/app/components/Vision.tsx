@@ -41,7 +41,8 @@ export function Vision() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "0px 0px -80px 0px" }}
+            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#d4af37]/10 backdrop-blur-md border border-[#d4af37]/30 mb-4"
           >
             <div className="w-2 h-2 bg-[#d4af37] rounded-full animate-pulse" />
@@ -51,8 +52,9 @@ export function Vision() {
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ delay: 0.1 }}
+            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
             className="text-4xl md:text-5xl mb-4"
           >
             <span className="text-white">Bâtir des </span>
@@ -64,24 +66,31 @@ export function Vision() {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ delay: 0.2 }}
+            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
             className="text-gray-300 max-w-3xl mx-auto text-lg"
           >
-            La philosophie de Roger Roc : pallier le manque de logements en créant des villes nouvelles autonomes, 
+            La philosophie de Roger Roc : pallier le manque de logements en créant des villes nouvelles autonomes,
             alliant modernité, culture africaine et respect de l'environnement.
           </motion.p>
         </div>
 
-        {/* Vision Grid */}
+        {/* Vision Grid - CORRIGÉ : Logique + GPU */}
         <div className="grid md:grid-cols-2 gap-8">
           {visionPoints.map((point, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
+              viewport={{ once: true, margin: "0px 0px -100px 0px", amount: 0.1 }}
+              transition={{ delay: index * 0.08, duration: 0.4, ease: "easeOut" }}
+              style={{
+                willChange: "transform, opacity",
+                transform: "translateZ(0)",
+                WebkitBackfaceVisibility: "hidden",
+                backfaceVisibility: "hidden"
+              }}
               className="group relative p-8 bg-white/5 backdrop-blur-xl rounded-3xl border border-[#d4af37]/20 hover:border-[#d4af37]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#d4af37]/20"
             >
               {/* Icon */}
@@ -107,7 +116,8 @@ export function Vision() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "0px 0px -80px 0px" }}
+          style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
           className="text-center mt-16"
         >
           <div className="inline-block p-8 bg-white/5 backdrop-blur-xl rounded-3xl border border-[#d4af37]/20 shadow-xl">

@@ -101,6 +101,7 @@ export default function Services() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
+            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
             className="max-w-4xl mx-auto text-center"
           >
             <h1 className="text-5xl md:text-6xl lg:text-7xl mb-6 text-white">
@@ -114,14 +115,15 @@ export default function Services() {
         </div>
       </section>
 
-      {/* Services Grid - OPTIMISÉ POUR ÉVITER LE FLICKERING */}
+      {/* Services Grid - CORRIGÉ : Logique + GPU */}
       <section className="py-20">
         <div className="container mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
+            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl text-[#0a0f1e] mb-4">
@@ -140,16 +142,24 @@ export default function Services() {
                   key={index}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  viewport={{ once: true, margin: "0px 0px -100px 0px", amount: 0.1 }}
+                  transition={{ delay: index * 0.08, duration: 0.4, ease: "easeOut" }}
+                  style={{
+                    willChange: "transform, opacity",
+                    transform: "translateZ(0)",
+                    WebkitBackfaceVisibility: "hidden",
+                    backfaceVisibility: "hidden"
+                  }}
                   className="group bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden hover:shadow-2xl hover:border-[#d4af37] transition-all duration-300 flex flex-col min-h-[520px]"
                 >
-                  {/* Image Section - Hauteur fixe pour éviter le layout shift */}
                   <div className="relative h-64 overflow-hidden bg-gray-200 flex-shrink-0">
                     <ImageWithFallback
                       src={service.image}
                       alt={service.title}
                       loading="lazy"
+                      // @ts-ignore : Attributs web standards pour le lazy-load optimisé
+                      decoding="async"
+                      fetchPriority="low"
                       sizes="(max-width: 768px) 100vw, 50vw"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
@@ -159,7 +169,6 @@ export default function Services() {
                     </div>
                   </div>
 
-                  {/* Content Section - Remplit l'espace disponible */}
                   <div className="p-8 flex-1 flex flex-col">
                     <h3 className="text-2xl text-[#0a0f1e] mb-4 flex-shrink-0">
                       {service.title}
@@ -181,8 +190,9 @@ export default function Services() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
+            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl text-[#0a0f1e] mb-4">
@@ -199,8 +209,14 @@ export default function Services() {
                 key={index}
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true, margin: "0px 0px -60px 0px", amount: 0.2 }}
+                transition={{ duration: 0.5, delay: index * 0.08 }}
+                style={{
+                  willChange: "transform, opacity",
+                  transform: "translateZ(0)",
+                  WebkitBackfaceVisibility: "hidden",
+                  backfaceVisibility: "hidden"
+                }}
                 className="flex items-start gap-6 mb-12 last:mb-0"
               >
                 <div className="flex-shrink-0 w-20 h-20 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-full flex items-center justify-center">
@@ -229,8 +245,9 @@ export default function Services() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
+            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl text-[#0a0f1e] mb-4">
@@ -247,8 +264,14 @@ export default function Services() {
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true, margin: "0px 0px -80px 0px", amount: 0.1 }}
+                transition={{ duration: 0.4, delay: index * 0.08 }}
+                style={{
+                  willChange: "transform, opacity",
+                  transform: "translateZ(0)",
+                  WebkitBackfaceVisibility: "hidden",
+                  backfaceVisibility: "hidden"
+                }}
                 className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 flex flex-col min-h-[300px]"
               >
                 <div className="flex gap-1 mb-4 flex-shrink-0">
@@ -279,8 +302,9 @@ export default function Services() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
+            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
             className="max-w-4xl mx-auto text-center"
           >
             <h2 className="text-4xl md:text-5xl text-white mb-6">

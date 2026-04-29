@@ -50,7 +50,6 @@ export default function Contact() {
     setIsSubmitting(true);
 
     try {
-      // Validation stricte avec Zod AVANT l'insertion
       const validationResult = contactFormSchema.safeParse(formData);
 
       if (!validationResult.success) {
@@ -60,7 +59,6 @@ export default function Contact() {
         return;
       }
 
-      // Rate limiting: prevent spam submissions (1 minute cooldown)
       const lastSubmit = localStorage.getItem('last_contact_submit');
       const now = Date.now();
       if (lastSubmit && now - parseInt(lastSubmit) < 60000) {
@@ -69,9 +67,6 @@ export default function Contact() {
         return;
       }
 
-      // TODO: Intégrer un token reCAPTCHA v3/Turnstile ici avant l'insertion Supabase
-
-      // Insert contact request into Supabase
       const { error } = await supabase
         .from('contact_requests')
         .insert([
@@ -91,10 +86,8 @@ export default function Contact() {
         throw error;
       }
 
-      // Save timestamp for rate limiting
       localStorage.setItem('last_contact_submit', now.toString());
 
-      // Success
       setSubmitted(true);
       setFormData({
         name: "",
@@ -220,7 +213,6 @@ export default function Contact() {
       );
     }
 
-    // Coordonnées de la Place Antonetti, Pointe-Noire
     const lat = -4.7759;
     const lng = 11.8634;
 
@@ -251,12 +243,13 @@ export default function Contact() {
             className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-30"
           />
         </div>
-        
+
         <div className="container mx-auto px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
+            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
             className="max-w-4xl mx-auto text-center"
           >
             <h1 className="text-5xl md:text-6xl lg:text-7xl mb-6 text-white">
@@ -280,8 +273,14 @@ export default function Contact() {
                   key={index}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  viewport={{ once: true, margin: "0px 0px -80px 0px", amount: 0.1 }}
+                  transition={{ duration: 0.4, delay: index * 0.08 }}
+                  style={{
+                    willChange: "transform, opacity",
+                    transform: "translateZ(0)",
+                    WebkitBackfaceVisibility: "hidden",
+                    backfaceVisibility: "hidden"
+                  }}
                   className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 text-center"
                 >
                   <div className="w-14 h-14 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-xl flex items-center justify-center mx-auto mb-4">
@@ -291,7 +290,7 @@ export default function Contact() {
                     {info.title}
                   </h3>
                   {info.link ? (
-                    <a 
+                    <a
                       href={info.link}
                       className="text-gray-600 hover:text-[#d4af37] transition-colors whitespace-pre-line break-words block"
                     >
@@ -313,8 +312,9 @@ export default function Contact() {
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: "0px 0px -80px 0px" }}
               transition={{ duration: 0.6 }}
+              style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
               className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8"
             >
               <h2 className="text-3xl text-[#0a0f1e] mb-2">
@@ -347,7 +347,6 @@ export default function Contact() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Name */}
                 <div>
                   <label className="block text-sm text-[#0a0f1e] mb-2">
                     Nom Complet *
@@ -366,7 +365,6 @@ export default function Contact() {
                   </div>
                 </div>
 
-                {/* Email & Phone */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm text-[#0a0f1e] mb-2">
@@ -404,7 +402,6 @@ export default function Contact() {
                   </div>
                 </div>
 
-                {/* Subject */}
                 <div>
                   <label className="block text-sm text-[#0a0f1e] mb-2">
                     Type de Demande *
@@ -426,7 +423,6 @@ export default function Contact() {
                   </div>
                 </div>
 
-                {/* Property Type & Budget */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm text-[#0a0f1e] mb-2">
@@ -468,7 +464,6 @@ export default function Contact() {
                   </div>
                 </div>
 
-                {/* Message */}
                 <div>
                   <label className="block text-sm text-[#0a0f1e] mb-2">
                     Votre Message *
@@ -484,7 +479,6 @@ export default function Contact() {
                   />
                 </div>
 
-                {/* Submit Button */}
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -509,16 +503,15 @@ export default function Contact() {
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: "0px 0px -80px 0px" }}
               transition={{ duration: 0.6 }}
+              style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
               className="space-y-6"
             >
-              {/* Google Map */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
                 <GoogleMap />
               </div>
 
-              {/* Office Image */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
                 <div className="relative h-64">
                   <ImageWithFallback
@@ -534,12 +527,11 @@ export default function Contact() {
                 </div>
               </div>
 
-              {/* Quick Info */}
               <div className="bg-gradient-to-br from-[#0a0f1e] via-[#1e3a5f] to-[#0a0f1e] rounded-2xl border border-[#d4af37]/20 p-8 text-white">
                 <Building2 className="w-12 h-12 text-[#d4af37] mb-4" />
                 <h3 className="text-2xl mb-4">Rencontrez Nos Experts</h3>
                 <p className="text-gray-300 mb-6">
-                  Notre équipe est disponible pour vous accueillir et vous conseiller sur vos projets immobiliers. 
+                  Notre équipe est disponible pour vous accueillir et vous conseiller sur vos projets immobiliers.
                   Prenez rendez-vous dès aujourd'hui.
                 </p>
                 <a
@@ -555,14 +547,15 @@ export default function Contact() {
         </div>
       </section>
 
-      {/* Team Section */}
+      {/* Team Section - CORRIGÉ : Logique + GPU */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
+            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
             className="text-center mb-16"
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#d4af37]/10 rounded-full mb-4">
@@ -581,8 +574,9 @@ export default function Contact() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
+            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
             className="max-w-4xl mx-auto mb-16"
           >
             <div className="group bg-white rounded-3xl border-2 border-[#d4af37] shadow-2xl overflow-hidden hover:shadow-[#d4af37]/20 transition-all duration-300">
@@ -613,7 +607,7 @@ export default function Contact() {
             </div>
           </motion.div>
 
-          {/* Collaborators - Grid 2x2 */}
+          {/* Collaborators - Grid 2x2 CORRIGÉ */}
           <div className="max-w-5xl mx-auto">
             <h3 className="text-2xl md:text-3xl text-[#0a0f1e] text-center mb-12">
               Nos Collaborateurs
@@ -624,14 +618,23 @@ export default function Contact() {
                   key={index}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  viewport={{ once: true, margin: "0px 0px -100px 0px", amount: 0.1 }}
+                  transition={{ duration: 0.4, delay: index * 0.08 }}
+                  style={{
+                    willChange: "transform, opacity",
+                    transform: "translateZ(0)",
+                    WebkitBackfaceVisibility: "hidden",
+                    backfaceVisibility: "hidden"
+                  }}
                   className="group bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden hover:shadow-2xl hover:border-[#d4af37] transition-all duration-300"
                 >
                   <div className="relative h-80 overflow-hidden">
                     <ImageWithFallback
                       src={member.image}
                       alt={member.name}
+                      // @ts-ignore : Attributs standards
+                      decoding="async"
+                      fetchPriority="low"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e]/80 via-[#0a0f1e]/40 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
