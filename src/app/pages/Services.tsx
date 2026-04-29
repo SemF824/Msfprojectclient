@@ -1,8 +1,8 @@
 import { motion } from "motion/react";
 import { Link } from "react-router";
-import { 
-  Building2, Key, Settings, TrendingUp, Banknote, 
-  Hammer, FileSearch, ArrowRight, CheckCircle2, 
+import {
+  Building2, Key, Settings, TrendingUp, Banknote,
+  Hammer, FileSearch, ArrowRight, CheckCircle2,
   Phone, Star, Users
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
@@ -95,7 +95,7 @@ export default function Services() {
             className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-30"
           />
         </div>
-        
+
         <div className="container mx-auto px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -107,7 +107,7 @@ export default function Services() {
               Nos <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">Services</span>
             </h1>
             <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-              MSF Congo vous accompagne à chaque étape de votre projet immobilier avec expertise, 
+              MSF Congo vous accompagne à chaque étape de votre projet immobilier avec expertise,
               professionnalisme et un service client d'excellence.
             </p>
           </motion.div>
@@ -158,7 +158,7 @@ export default function Services() {
                       <Icon className="w-8 h-8 text-[#0a0f1e]" />
                     </div>
                   </div>
-                  
+
                   {/* Content Section - Remplit l'espace disponible */}
                   <div className="p-8 flex-1 flex flex-col">
                     <h3 className="text-2xl text-[#0a0f1e] mb-4 flex-shrink-0">

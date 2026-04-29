@@ -76,38 +76,38 @@ export function Expertise() {
           </motion.p>
         </div>
 
-        {/* Expertise Grid */}
+        {/* Expertise Grid - OPTIMISÉ POUR ÉVITER LE FLICKERING */}
         <div className="grid md:grid-cols-2 gap-8">
           {expertiseAreas.map((area, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: "0px 0px -100px 0px" }}
               transition={{ delay: index * 0.1 }}
-              className="group relative p-8 bg-white backdrop-blur-xl rounded-3xl border border-gray-200 hover:border-[#d4af37]/50 transition-all duration-500 shadow-sm"
+              className="group relative p-8 bg-white backdrop-blur-xl rounded-3xl border border-gray-200 hover:border-[#d4af37]/50 transition-all duration-500 shadow-sm flex flex-col min-h-[350px]"
             >
-              {/* Icon Container */}
-              <div className="relative mb-6">
-                <div className="w-20 h-20 bg-gradient-to-br from-[#d4af37]/20 to-transparent rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+              {/* Icon Container - Hauteur fixe */}
+              <div className="relative mb-6 flex-shrink-0">
+                <div className="w-20 h-20 bg-gradient-to-br from-[#d4af37]/20 to-transparent rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 flex-shrink-0">
                   <area.icon className="w-10 h-10 text-[#d4af37]" />
                 </div>
                 <div className="absolute -top-2 -right-2 w-16 h-16 bg-[#d4af37]/10 rounded-full blur-2xl group-hover:bg-[#d4af37]/20 transition-colors duration-500" />
               </div>
 
-              {/* Content */}
-              <h3 className="text-2xl text-[#0a0f1e] mb-4 group-hover:text-[#d4af37] transition-colors">
+              {/* Content - Remplit l'espace */}
+              <h3 className="text-2xl text-[#0a0f1e] mb-4 group-hover:text-[#d4af37] transition-colors flex-shrink-0">
                 {area.title}
               </h3>
-              <p className="text-gray-600 mb-6 leading-relaxed">
+              <p className="text-gray-600 mb-6 leading-relaxed flex-1">
                 {area.description}
               </p>
 
-              {/* Highlights */}
-              <ul className="space-y-2">
+              {/* Highlights - En bas, non resizable */}
+              <ul className="space-y-2 flex-shrink-0">
                 {area.highlights.map((highlight, idx) => (
                   <li key={idx} className="flex items-center gap-2 text-gray-700">
-                    <div className="w-1.5 h-1.5 bg-[#d4af37] rounded-full" />
+                    <div className="w-1.5 h-1.5 bg-[#d4af37] rounded-full flex-shrink-0" />
                     <span className="text-sm">{highlight}</span>
                   </li>
                 ))}
@@ -131,7 +131,7 @@ export function Expertise() {
               <strong className="text-[#d4af37]">Une Vision Holistique</strong> du Développement Urbain
             </p>
             <p className="text-gray-600">
-              De la conception des logements à la construction des infrastructures, 
+              De la conception des logements à la construction des infrastructures,
               MSF Congo maîtrise l'intégralité de la chaîne de valeur pour créer des villes véritablement autonomes et durables.
             </p>
           </div>
