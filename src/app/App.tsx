@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 
 // Fallback global de chargement
 const FullScreenLoader = () => (
@@ -13,9 +13,18 @@ const FullScreenLoader = () => (
 const ClientAppRoutes = lazy(() => import("./ClientAppRoutes"));
 const AdminAppRoutes = lazy(() => import("./AdminAppRoutes"));
 
+// ✅ Composant wrapper pour scroller au top à chaque navigation
+function ScrollToTop() {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, []);
+  return null;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Suspense fallback={<FullScreenLoader />}>
         <Routes>
           {/* TOUT ce qui commence par /admin est géré par la branche Admin */}
