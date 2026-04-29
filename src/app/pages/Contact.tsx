@@ -10,7 +10,6 @@ import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { supabase } from "../../hooks/useSupabaseAuth";
 
-// Validation schema avec Zod
 const contactFormSchema = z.object({
   name: z.string()
     .min(2, "Le nom doit contenir au moins 2 caractères")
@@ -52,14 +51,12 @@ export default function Contact() {
     setIsSubmitting(true);
 
     try {
-      // 1. Crash-Test : Le système anti-bot est-il prêt ?
       if (!executeRecaptcha) {
         setSubmitError("Le système de sécurité n'est pas encore initialisé. Veuillez patienter.");
         setIsSubmitting(false);
         return;
       }
 
-      // 2. Génération du Token V3 (Invisible)
       const token = await executeRecaptcha('contact_form_submit');
 
       if (!token) {
@@ -68,7 +65,6 @@ export default function Contact() {
         return;
       }
 
-      // 3. Validation stricte des données avec Zod
       const validationResult = contactFormSchema.safeParse(formData);
 
       if (!validationResult.success) {
@@ -78,7 +74,6 @@ export default function Contact() {
         return;
       }
 
-      // 4. Rate limiting basique
       const lastSubmit = localStorage.getItem('last_contact_submit');
       const now = Date.now();
       if (lastSubmit && now - parseInt(lastSubmit) < 60000) {
@@ -87,10 +82,6 @@ export default function Contact() {
         return;
       }
 
-      // 5. Insertion Supabase
-      // NOTE STRATÉGIQUE : Dans une architecture parfaite, tu ne devrais pas faire de `.insert()` directement ici.
-      // Tu devrais appeler une Supabase Edge Function, lui passer le "token" généré plus haut et tes "formData".
-      // L'Edge Function vérifierait le token auprès de Google, et seulement si le score est > 0.5, elle insérerait la ligne.
       const { error } = await supabase
         .from('contact_requests')
         .insert([
@@ -110,7 +101,6 @@ export default function Contact() {
         throw error;
       }
 
-      // 6. Succès et nettoyage
       localStorage.setItem('last_contact_submit', now.toString());
       setSubmitted(true);
       setFormData({
@@ -268,10 +258,15 @@ export default function Contact() {
 
         <div className="container mx-auto px-6 relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 30, z: 0 }}
+            animate={{ opacity: 1, y: 0, z: 0 }}
             transition={{ duration: 0.8 }}
-            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
+            style={{
+              WebkitBackfaceVisibility: "hidden",
+              backfaceVisibility: "hidden",
+              WebkitTransform: "translate3d(0,0,0)",
+              WebkitTransformStyle: "preserve-3d"
+            }}
             className="max-w-4xl mx-auto text-center"
           >
             <h1 className="text-5xl md:text-6xl lg:text-7xl mb-6 text-white">
@@ -293,15 +288,16 @@ export default function Contact() {
               return (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 20, z: 0 }}
+                  whileInView={{ opacity: 1, y: 0, z: 0 }}
                   viewport={{ once: true, margin: "0px 0px -80px 0px", amount: 0.1 }}
                   transition={{ duration: 0.4, delay: index * 0.08 }}
                   style={{
-                    willChange: "transform, opacity",
-                    transform: "translateZ(0)",
                     WebkitBackfaceVisibility: "hidden",
-                    backfaceVisibility: "hidden"
+                    backfaceVisibility: "hidden",
+                    WebkitTransform: "translate3d(0,0,0)",
+                    WebkitTransformStyle: "preserve-3d",
+                    WebkitMaskImage: "-webkit-radial-gradient(white, black)"
                   }}
                   className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 text-center"
                 >
@@ -332,11 +328,16 @@ export default function Contact() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-7xl mx-auto">
             {/* Contact Form */}
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, x: -30, z: 0 }}
+              whileInView={{ opacity: 1, x: 0, z: 0 }}
               viewport={{ once: true, margin: "0px 0px -80px 0px" }}
               transition={{ duration: 0.6 }}
-              style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
+              style={{
+                WebkitBackfaceVisibility: "hidden",
+                backfaceVisibility: "hidden",
+                WebkitTransform: "translate3d(0,0,0)",
+                WebkitTransformStyle: "preserve-3d"
+              }}
               className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8"
             >
               <h2 className="text-3xl text-[#0a0f1e] mb-2">
@@ -528,11 +529,16 @@ export default function Contact() {
 
             {/* Map & Office Info */}
             <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, x: 30, z: 0 }}
+              whileInView={{ opacity: 1, x: 0, z: 0 }}
               viewport={{ once: true, margin: "0px 0px -80px 0px" }}
               transition={{ duration: 0.6 }}
-              style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
+              style={{
+                WebkitBackfaceVisibility: "hidden",
+                backfaceVisibility: "hidden",
+                WebkitTransform: "translate3d(0,0,0)",
+                WebkitTransformStyle: "preserve-3d"
+              }}
               className="space-y-6"
             >
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
@@ -578,11 +584,16 @@ export default function Contact() {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20, z: 0 }}
+            whileInView={{ opacity: 1, y: 0, z: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
-            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
+            style={{
+              WebkitBackfaceVisibility: "hidden",
+              backfaceVisibility: "hidden",
+              WebkitTransform: "translate3d(0,0,0)",
+              WebkitTransformStyle: "preserve-3d"
+            }}
             className="text-center mb-16"
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#d4af37]/10 rounded-full mb-4">
@@ -598,11 +609,16 @@ export default function Contact() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20, z: 0 }}
+            whileInView={{ opacity: 1, y: 0, z: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
-            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
+            style={{
+              WebkitBackfaceVisibility: "hidden",
+              backfaceVisibility: "hidden",
+              WebkitTransform: "translate3d(0,0,0)",
+              WebkitTransformStyle: "preserve-3d"
+            }}
             className="max-w-4xl mx-auto mb-16"
           >
             <div className="group bg-white rounded-3xl border-2 border-[#d4af37] shadow-2xl overflow-hidden hover:shadow-[#d4af37]/20 transition-all duration-300">
@@ -641,15 +657,16 @@ export default function Contact() {
               {team.slice(1).map((member, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 20, z: 0 }}
+                  whileInView={{ opacity: 1, y: 0, z: 0 }}
                   viewport={{ once: true, margin: "0px 0px -100px 0px", amount: 0.1 }}
                   transition={{ duration: 0.4, delay: index * 0.08 }}
                   style={{
-                    willChange: "transform, opacity",
-                    transform: "translateZ(0)",
                     WebkitBackfaceVisibility: "hidden",
-                    backfaceVisibility: "hidden"
+                    backfaceVisibility: "hidden",
+                    WebkitTransform: "translate3d(0,0,0)",
+                    WebkitTransformStyle: "preserve-3d",
+                    WebkitMaskImage: "-webkit-radial-gradient(white, black)"
                   }}
                   className="group bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden hover:shadow-2xl hover:border-[#d4af37] transition-all duration-300"
                 >

@@ -98,10 +98,15 @@ export default function Services() {
 
         <div className="container mx-auto px-6 relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 30, z: 0 }}
+            animate={{ opacity: 1, y: 0, z: 0 }}
             transition={{ duration: 0.8 }}
-            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
+            style={{
+              WebkitBackfaceVisibility: "hidden",
+              backfaceVisibility: "hidden",
+              WebkitTransform: "translate3d(0,0,0)",
+              WebkitTransformStyle: "preserve-3d"
+            }}
             className="max-w-4xl mx-auto text-center"
           >
             <h1 className="text-5xl md:text-6xl lg:text-7xl mb-6 text-white">
@@ -115,15 +120,20 @@ export default function Services() {
         </div>
       </section>
 
-      {/* Services Grid - CORRIGÉ : Logique + GPU */}
+      {/* Services Grid - SAFARI FIX */}
       <section className="py-20">
         <div className="container mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20, z: 0 }}
+            whileInView={{ opacity: 1, y: 0, z: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
-            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
+            style={{
+              WebkitBackfaceVisibility: "hidden",
+              backfaceVisibility: "hidden",
+              WebkitTransform: "translate3d(0,0,0)",
+              WebkitTransformStyle: "preserve-3d"
+            }}
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl text-[#0a0f1e] mb-4">
@@ -140,15 +150,16 @@ export default function Services() {
               return (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 20, z: 0 }}
+                  whileInView={{ opacity: 1, y: 0, z: 0 }}
                   viewport={{ once: true, margin: "0px 0px -100px 0px", amount: 0.1 }}
                   transition={{ delay: index * 0.08, duration: 0.4, ease: "easeOut" }}
                   style={{
-                    willChange: "transform, opacity",
-                    transform: "translateZ(0)",
                     WebkitBackfaceVisibility: "hidden",
-                    backfaceVisibility: "hidden"
+                    backfaceVisibility: "hidden",
+                    WebkitTransform: "translate3d(0,0,0)",
+                    WebkitTransformStyle: "preserve-3d",
+                    WebkitMaskImage: "-webkit-radial-gradient(white, black)"
                   }}
                   className="group bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden hover:shadow-2xl hover:border-[#d4af37] transition-all duration-300 flex flex-col min-h-[520px]"
                 >
@@ -157,7 +168,7 @@ export default function Services() {
                       src={service.image}
                       alt={service.title}
                       loading="lazy"
-                      // @ts-ignore : Attributs web standards pour le lazy-load optimisé
+                      // @ts-ignore : Attributs web standards
                       decoding="async"
                       fetchPriority="low"
                       sizes="(max-width: 768px) 100vw, 50vw"
@@ -188,11 +199,16 @@ export default function Services() {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20, z: 0 }}
+            whileInView={{ opacity: 1, y: 0, z: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
-            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
+            style={{
+              WebkitBackfaceVisibility: "hidden",
+              backfaceVisibility: "hidden",
+              WebkitTransform: "translate3d(0,0,0)",
+              WebkitTransformStyle: "preserve-3d"
+            }}
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl text-[#0a0f1e] mb-4">
@@ -207,15 +223,15 @@ export default function Services() {
             {steps.map((step, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, x: -30, z: 0 }}
+                whileInView={{ opacity: 1, x: 0, z: 0 }}
                 viewport={{ once: true, margin: "0px 0px -60px 0px", amount: 0.2 }}
                 transition={{ duration: 0.5, delay: index * 0.08 }}
                 style={{
-                  willChange: "transform, opacity",
-                  transform: "translateZ(0)",
                   WebkitBackfaceVisibility: "hidden",
-                  backfaceVisibility: "hidden"
+                  backfaceVisibility: "hidden",
+                  WebkitTransform: "translate3d(0,0,0)",
+                  WebkitTransformStyle: "preserve-3d"
                 }}
                 className="flex items-start gap-6 mb-12 last:mb-0"
               >
@@ -243,11 +259,16 @@ export default function Services() {
       <section className="py-20">
         <div className="container mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20, z: 0 }}
+            whileInView={{ opacity: 1, y: 0, z: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
-            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
+            style={{
+              WebkitBackfaceVisibility: "hidden",
+              backfaceVisibility: "hidden",
+              WebkitTransform: "translate3d(0,0,0)",
+              WebkitTransformStyle: "preserve-3d"
+            }}
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl text-[#0a0f1e] mb-4">
@@ -262,15 +283,16 @@ export default function Services() {
             {testimonials.map((testimonial, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 20, z: 0 }}
+                whileInView={{ opacity: 1, y: 0, z: 0 }}
                 viewport={{ once: true, margin: "0px 0px -80px 0px", amount: 0.1 }}
                 transition={{ duration: 0.4, delay: index * 0.08 }}
                 style={{
-                  willChange: "transform, opacity",
-                  transform: "translateZ(0)",
                   WebkitBackfaceVisibility: "hidden",
-                  backfaceVisibility: "hidden"
+                  backfaceVisibility: "hidden",
+                  WebkitTransform: "translate3d(0,0,0)",
+                  WebkitTransformStyle: "preserve-3d",
+                  WebkitMaskImage: "-webkit-radial-gradient(white, black)"
                 }}
                 className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 flex flex-col min-h-[300px]"
               >
@@ -300,11 +322,16 @@ export default function Services() {
       <section className="py-20 bg-gradient-to-br from-[#0a0f1e] via-[#1e3a5f] to-[#0a0f1e]">
         <div className="container mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20, z: 0 }}
+            whileInView={{ opacity: 1, y: 0, z: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
-            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden" }}
+            style={{
+              WebkitBackfaceVisibility: "hidden",
+              backfaceVisibility: "hidden",
+              WebkitTransform: "translate3d(0,0,0)",
+              WebkitTransformStyle: "preserve-3d"
+            }}
             className="max-w-4xl mx-auto text-center"
           >
             <h2 className="text-4xl md:text-5xl text-white mb-6">
