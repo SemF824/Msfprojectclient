@@ -114,7 +114,7 @@ export default function Services() {
         </div>
       </section>
 
-      {/* Services Grid */}
+      {/* Services Grid - OPTIMISÉ POUR ÉVITER LE FLICKERING */}
       <section className="py-20">
         <div className="container mx-auto px-6">
           <motion.div
@@ -140,29 +140,31 @@ export default function Services() {
                   key={index}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
+                  viewport={{ once: true, margin: "0px 0px -100px 0px" }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="group bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden hover:shadow-2xl hover:border-[#d4af37] transition-all duration-300"
+                  className="group bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden hover:shadow-2xl hover:border-[#d4af37] transition-all duration-300 flex flex-col min-h-[520px]"
                 >
-                  {/* Image Section */}
-                  <div className="relative h-64 overflow-hidden">
+                  {/* Image Section - Hauteur fixe pour éviter le layout shift */}
+                  <div className="relative h-64 overflow-hidden bg-gray-200 flex-shrink-0">
                     <ImageWithFallback
                       src={service.image}
                       alt={service.title}
+                      loading="lazy"
+                      sizes="(max-width: 768px) 100vw, 50vw"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e]/80 to-transparent" />
-                    <div className="absolute top-6 left-6 w-16 h-16 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-xl flex items-center justify-center shadow-xl">
+                    <div className="absolute top-6 left-6 w-16 h-16 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-xl flex items-center justify-center shadow-xl flex-shrink-0">
                       <Icon className="w-8 h-8 text-[#0a0f1e]" />
                     </div>
                   </div>
                   
-                  {/* Content Section */}
-                  <div className="p-8">
-                    <h3 className="text-2xl text-[#0a0f1e] mb-4">
+                  {/* Content Section - Remplit l'espace disponible */}
+                  <div className="p-8 flex-1 flex flex-col">
+                    <h3 className="text-2xl text-[#0a0f1e] mb-4 flex-shrink-0">
                       {service.title}
                     </h3>
-                    <p className="text-gray-600 leading-relaxed">
+                    <p className="text-gray-600 leading-relaxed flex-1">
                       {service.description}
                     </p>
                   </div>
@@ -202,7 +204,7 @@ export default function Services() {
                 className="flex items-start gap-6 mb-12 last:mb-0"
               >
                 <div className="flex-shrink-0 w-20 h-20 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-full flex items-center justify-center">
-                  <span className="text-2xl text-[#0a0f1e]">{step.number}</span>
+                  <span className="text-2xl text-[#0a0f1e] font-bold">{step.number}</span>
                 </div>
                 <div className="flex-1 pt-4">
                   <h3 className="text-2xl text-[#0a0f1e] mb-2">
@@ -247,18 +249,18 @@ export default function Services() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8"
+                className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 flex flex-col min-h-[300px]"
               >
-                <div className="flex gap-1 mb-4">
+                <div className="flex gap-1 mb-4 flex-shrink-0">
                   {[...Array(testimonial.rating)].map((_, i) => (
                     <Star key={i} className="w-5 h-5 text-[#d4af37] fill-current" />
                   ))}
                 </div>
-                <p className="text-gray-700 mb-6 leading-relaxed italic">
+                <p className="text-gray-700 mb-6 leading-relaxed italic flex-1">
                   "{testimonial.text}"
                 </p>
-                <div className="pt-4 border-t border-gray-200">
-                  <p className="text-[#0a0f1e] mb-1">
+                <div className="pt-4 border-t border-gray-200 flex-shrink-0">
+                  <p className="text-[#0a0f1e] mb-1 font-semibold">
                     {testimonial.name}
                   </p>
                   <p className="text-gray-500 text-sm">
@@ -290,14 +292,14 @@ export default function Services() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/contact"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all font-medium"
               >
                 <Users className="w-5 h-5" />
                 Demander une Consultation
               </Link>
               <a
                 href="tel:+242064588618"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-xl hover:bg-white/20 transition-all"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-xl hover:bg-white/20 transition-all font-medium"
               >
                 <Phone className="w-5 h-5" />
                 +242 06 458 8618
