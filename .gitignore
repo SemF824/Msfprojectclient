@@ -2,3 +2,10 @@ node_modules
 .env
 dist
 .DS_Store
+ACCES_ADMIN.md
+GIT_COMMANDS.md
+CORRECTIONS_*.md
+SEPARATION_COMPLETE.md
+TEST_ROUTING.md
+VERIFICATIONS.md
+.idea/
