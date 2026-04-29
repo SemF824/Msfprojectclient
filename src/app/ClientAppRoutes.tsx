@@ -1,5 +1,5 @@
-import { Routes, Route, Navigate } from "react-router";
-import { lazy, Suspense } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router";
+import { lazy, Suspense, useEffect } from "react";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -32,69 +32,83 @@ const ClientLoader = () => (
   </div>
 );
 
+// ✅ Composant pour scroller au top lors du changement de route
+function ScrollToTopOnRouteChange() {
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [location.pathname]);
+
+  return null;
+}
+
 export default function ClientAppRoutes() {
   return (
-    <Suspense fallback={<ClientLoader />}>
-      <Routes>
+    <>
+      <ScrollToTopOnRouteChange />
+      <Suspense fallback={<ClientLoader />}>
+        <Routes>
 
-        {/* ── Redirection racine → vitrine ──────────────────────────────────── */}
-        <Route index element={<Navigate to="/vitrine" replace />} />
+          {/* ── Redirection racine → vitrine ──────────────────────────────────── */}
+          <Route index element={<Navigate to="/vitrine" replace />} />
 
-        {/* ════════════════════════════════════════════════════════════════════
-            VITRINE PUBLIQUE  —  préfixe /vitrine
-        ════════════════════════════════════════════════════════════════════ */}
-        <Route path="vitrine" element={<Layout />}>
-          <Route index                   element={<Home />} />
-          <Route path="contact"          element={<Contact />} />
-          <Route path="services"         element={<Services />} />
-          <Route path="devis"            element={<DevisRequest />} />
-          <Route path="devis/:propertyId" element={<DevisRequest />} />
-          <Route path="propriete/:id"    element={<PropertyDetails />} />
-          <Route path="projet/:slug"     element={<ProjectDetail />} />
-        </Route>
+          {/* ═════════════════════════════════════════════════════════════════════
+              VITRINE PUBLIQUE  —  préfixe /vitrine
+          ════════════════════════════════════════════════════════════════════ */}
+          <Route path="vitrine" element={<Layout />}>
+            <Route index                   element={<Home />} />
+            <Route path="contact"          element={<Contact />} />
+            <Route path="services"         element={<Services />} />
+            <Route path="devis"            element={<DevisRequest />} />
+            <Route path="devis/:propertyId" element={<DevisRequest />} />
+            <Route path="propriete/:id"    element={<PropertyDetails />} />
+            <Route path="projet/:slug"     element={<ProjectDetail />} />
+          </Route>
 
-        {/* ── Routes autonomes (sans Layout public) ─────────────────────────── */}
-        <Route path="connexion"  element={<Login />} />
-        <Route path="inscription" element={<Signup />} />
+          {/* ── Routes autonomes (sans Layout public) ─────────────────────────── */}
+          <Route path="connexion"  element={<Login />} />
+          <Route path="inscription" element={<Signup />} />
 
-        {/* ════════════════════════════════════════════════════════════════════
-            ESPACE CLIENT PROTÉGÉ  —  préfixe /client
-        ════════════════════════════════════════════════════════════════════ */}
-        <Route path="client">
-          <Route
-            path="dashboard"
-            element={<ProtectedRoute><Dashboard /></ProtectedRoute>}
-          />
-          <Route
-            path="transactions"
-            element={<ProtectedRoute><Transactions /></ProtectedRoute>}
-          />
-          <Route
-            path="transactions/:id"
-            element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>}
-          />
-          <Route
-            path="notifications"
-            element={<ProtectedRoute><Notifications /></ProtectedRoute>}
-          />
-          <Route
-            path="profile"
-            element={<ProtectedRoute><Profile /></ProtectedRoute>}
-          />
-          <Route
-            path="favorites"
-            element={<ProtectedRoute><Favorites /></ProtectedRoute>}
-          />
-          <Route
-            path="settings"
-            element={<ProtectedRoute><Settings /></ProtectedRoute>}
-          />
-        </Route>
+          {/* ═════════════════════════════════════════════════════════════════════
+              ESPACE CLIENT PROTÉGÉ  —  préfixe /client
+          ════════════════════════════════════════════════════════════════════ */}
+          <Route path="client">
+            <Route
+              path="dashboard"
+              element={<ProtectedRoute><Dashboard /></ProtectedRoute>}
+            />
+            <Route
+              path="transactions"
+              element={<ProtectedRoute><Transactions /></ProtectedRoute>}
+            />
+            <Route
+              path="transactions/:id"
+              element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>}
+            />
+            <Route
+              path="notifications"
+              element={<ProtectedRoute><Notifications /></ProtectedRoute>}
+            />
+            <Route
+              path="profile"
+              element={<ProtectedRoute><Profile /></ProtectedRoute>}
+            />
+            <Route
+              path="favorites"
+              element={<ProtectedRoute><Favorites /></ProtectedRoute>}
+            />
+            <Route
+              path="settings"
+              element={<ProtectedRoute><Settings /></ProtectedRoute>}
+            />
+          </Route>
 
-        {/* ── Catch-all ─────────────────────────────────────────────────────── */}
-        <Route path="*" element={<NotFound />} />
+          {/* ── Catch-all ─────────────────────────────────────────────────────── */}
+          <Route path="*" element={<NotFound />} />
 
-      </Routes>
-    </Suspense>
+        </Routes>
+      </Suspense>
+    </>
   );
 }

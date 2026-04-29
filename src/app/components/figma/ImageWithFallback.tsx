@@ -1,16 +1,23 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 const ERROR_IMG_SRC =
-  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODgiIGhlaWdodD0iODgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgc3Ryb2tlPSIjMDAwIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBvcGFjaXR5PSIuMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIzLjciPjxyZWN0IHg9IjE2IiB5PSIxNiIgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiByeD0iNiIvPjxwYXRoIGQ9Im0xNiA1OCAxNi0xOCAzMiAzMiIvPjxjaXJjbGUgY3g9IjUzIiBjeT0iMzUiIHI9IjciLz48L3N2Zz4KCg=='
+  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODgiIGhlaWdodD0iODgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgc3Ryb2tlPSIjMDAwIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBvcGFjaXR5PSIuMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIyIj48cmVjdCB3aWR0aD0iODgiIGhlaWdodD0iODgiIHJ4PSI4Ii8+PHBhdGggZD0iTTI4IDM0bDMyIDMyTTYwIDM0bC0zMiAzMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+'
 
 export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElement>) {
   const [didError, setDidError] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
 
   const handleError = () => {
     setDidError(true)
+    setIsLoaded(true)
   }
 
-  const { src, alt, style, className, ...rest } = props
+  const handleLoad = () => {
+    setIsLoaded(true)
+    setDidError(false)
+  }
+
+  const { src, alt, style, className, loading = "lazy", ...rest } = props
 
   return didError ? (
     <div
@@ -22,6 +29,15 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
       </div>
     </div>
   ) : (
-    <img src={src} alt={alt} className={className} style={style} {...rest} onError={handleError} />
+    <img
+      src={src}
+      alt={alt}
+      loading={loading as React.ImgHTMLAttributes<HTMLImageElement>['loading']}
+      className={`${className ?? ''} ${!isLoaded ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+      style={style}
+      onError={handleError}
+      onLoad={handleLoad}
+      {...rest}
+    />
   )
 }
