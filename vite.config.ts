@@ -3,7 +3,6 @@ import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
-
 function figmaAssetResolver() {
   return {
     name: 'figma-asset-resolver',
@@ -17,6 +16,10 @@ function figmaAssetResolver() {
 }
 
 export default defineConfig({
+  // LA CORRECTION CHIRURGICALE EST ICI :
+  // Force les assets à être chargés depuis la racine du domaine, peu importe la profondeur de l'URL
+  base: '/',
+
   plugins: [
     figmaAssetResolver(),
     // The React and Tailwind plugins are both required for Make, even if
