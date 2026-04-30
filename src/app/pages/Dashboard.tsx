@@ -1,15 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-
-// ─── Stagger variants (anti-clignotement stats) ───────────────────────────────
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
-};
-const itemVariants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
-};
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, type Variants } from "motion/react";
 import { Link, useNavigate } from "react-router";
 import {
   Home, Heart, Calendar, FileText, Calculator, LogOut,
@@ -26,6 +16,17 @@ import type {
   Favorite, DevisRequest, DocCategory
 } from "../../types/database.types";
 
+// ─── Stagger variants (anti-clignotement stats) ───────────────────────────────
+// Ajout du type 'Variants' pour satisfaire TypeScript et Framer Motion
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+};
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Constantes
 // ─────────────────────────────────────────────────────────────────────────────
@@ -35,8 +36,6 @@ const PDF_MAX_MB      = 15;   // PDF : limite stricte imposée
 const SIGNED_URL_TTL  = 60;   // secondes
 
 // ─── Compression d'image via Canvas API (= browser-image-compression natif) ──
-// Redimensionne si > MAX_DIMENSION, réencode JPEG à JPEG_QUALITY.
-// Retourne le File compressé si gain > 0, sinon l'original.
 const MAX_DIMENSION = 1920;
 const JPEG_QUALITY  = 0.82;
 
@@ -209,33 +208,41 @@ export default function Dashboard() {
 
   // ── Fetching ──────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!authUser) return;
+    // VÉRIFICATION DE SÉCURITÉ : Supabase n'est appelé que s'il est initialisé
+    if (!authUser || !supabase) return;
+    
     (async () => {
       setIsDataLoading(true);
       try {
         const uid   = authUser.id;
         const email = authUser.email || "";
+        
+        // SUPPRESSION DES .catch() INUTILES QUI CAUSAIENT L'ERREUR TYPESCRIPT
         const [tr, ap, dc, fv, dv, nt] = await Promise.all([
-          supabase.from("transactions").select("*").eq("user_id", uid).order("created_at", { ascending: false }).catch(() => ({ data: [] })),
-          supabase.from("appointments").select("*").eq("user_id", uid).order("appointment_date", { ascending: true }).catch(() => ({ data: [] })),
-          supabase.from("documents").select("*").eq("user_id", uid).order("created_at", { ascending: false }).catch(() => ({ data: [] })),
-          supabase.from("favorites").select("*").eq("user_id", uid).catch(() => ({ data: [] })),
-          supabase.from("devis_requests").select("*").eq("client_email", email).order("created_at", { ascending: false }).catch(() => ({ data: [] })),
-          supabase.from("notifications").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(10).catch(() => ({ data: [] })),
+          supabase.from("transactions").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
+          supabase.from("appointments").select("*").eq("user_id", uid).order("appointment_date", { ascending: true }),
+          supabase.from("documents").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
+          supabase.from("favorites").select("*").eq("user_id", uid),
+          supabase.from("devis_requests").select("*").eq("client_email", email).order("created_at", { ascending: false }),
+          supabase.from("notifications").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(10),
         ]);
+        
         setTransactions(tr?.data  || []);
         setAppointments(ap?.data  || []);
         setDocuments(   dc?.data  || []);
         setFavorites(   fv?.data  || []);
         setDevisRequests(dv?.data || []);
         setNotifications(nt?.data || []);
-      } catch (e) { console.error("Fetch error:", e); }
-      finally { setIsDataLoading(false); }
+      } catch (e) { 
+        console.error("Fetch error:", e); 
+      } finally { 
+        setIsDataLoading(false); 
+      }
     })();
   }, [authUser]);
 
   const refreshDocuments = async () => {
-    if (!authUser) return;
+    if (!authUser || !supabase) return;
     const { data } = await supabase.from("documents").select("*").eq("user_id", authUser.id).order("created_at", { ascending: false });
     setDocuments(data || []);
   };
@@ -280,7 +287,6 @@ export default function Dashboard() {
 
     try {
       // ── COMPRESSION IMAGE via Canvas API ─────────────────────────────────
-      // Équivalent de browser-image-compression : redimension + JPEG 0.82
       let fileToUpload = file;
       if (isImage(file.name)) {
         const originalSize = file.size;
@@ -312,11 +318,11 @@ export default function Dashboard() {
       // ── Insertion en base avec storage_path + category ───────────────────
       const { error: dbErr } = await supabase.from("documents").insert({
         user_id:      authUser.id,
-        name:         file.name,           // nom original affiché
+        name:         file.name,
         type:         fileToUpload.type,
-        size:         fileToUpload.size,   // taille post-compression
-        url:          "",                  // bucket privé → pas d'URL publique
-        storage_path: stored.path,         // chemin pour createSignedUrl
+        size:         fileToUpload.size,
+        url:          "",
+        storage_path: stored.path,
         category:     docCategory,
       });
 
@@ -367,12 +373,9 @@ export default function Dashboard() {
       if (error || !data?.signedUrl) throw error ?? new Error("URL signée non générée.");
 
       if (isPdf(doc.name)) {
-        // PDF → nouvel onglet propre (iframe bloqué par X-Frame-Options sur certains navigateurs)
         window.open(data.signedUrl, "_blank", "noopener,noreferrer");
-        // Ferme la modal s'il n'y en a pas pour les PDF
         setPreviewDoc(null);
       } else {
-        // Image → modal interne
         setPreviewSignedUrl(data.signedUrl);
       }
     } catch (err: any) {
