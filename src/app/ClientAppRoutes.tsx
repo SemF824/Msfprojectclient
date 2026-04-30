@@ -4,7 +4,7 @@ import Layout from "./components/Layout";
 import ClientLayout from "./components/ClientLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-// ── Pages publiques (import synchrone → SEO / LCP) ──────────────────────────
+// ── Pages publiques (import synchrone → SEO / LCP)
 import Home            from "./pages/Home";
 import Contact         from "./pages/Contact";
 import Services        from "./pages/Services";
@@ -14,15 +14,21 @@ import ProjectDetail   from "./pages/ProjectDetail";
 import Login           from "./pages/Login";
 import Signup          from "./pages/Signup";
 
-// ── Espace client protégé (lazy) ─────────────────────────────────────────────
-const Dashboard         = lazy(() => import("./pages/Dashboard"));
-const Transactions      = lazy(() => import("./pages/Transactions"));
-const TransactionDetail = lazy(() => import("./pages/TransactionDetail"));
-const Notifications     = lazy(() => import("./pages/Notifications"));
-const Profile           = lazy(() => import("./pages/Profile"));
-const Favorites         = lazy(() => import("./pages/Favorites"));
-const Settings          = lazy(() => import("./pages/Settings"));
-const NotFound          = lazy(() => import("./pages/NotFound"));
+// ── Espace client protégé (lazy)
+const Dashboard          = lazy(() => import("./pages/Dashboard"));
+const Transactions       = lazy(() => import("./pages/Transactions"));
+const TransactionDetail  = lazy(() => import("./pages/TransactionDetail"));
+const Notifications      = lazy(() => import("./pages/Notifications"));
+const Profile            = lazy(() => import("./pages/Profile"));
+const Favorites          = lazy(() => import("./pages/Favorites"));
+const Settings           = lazy(() => import("./pages/Settings"));
+const NotFound           = lazy(() => import("./pages/NotFound"));
+
+// ── Nouvelles pages extraites du Dashboard
+const ClientRequests     = lazy(() => import("./pages/ClientRequests"));
+const ClientAppointments = lazy(() => import("./pages/ClientAppointments"));
+const ClientDocuments    = lazy(() => import("./pages/ClientDocuments"));
+const ClientLoan         = lazy(() => import("./pages/ClientLoan"));
 
 const ClientLoader = () => (
   <div className="min-h-screen pt-20 flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
@@ -48,12 +54,10 @@ export default function ClientAppRoutes() {
       <Suspense fallback={<ClientLoader />}>
         <Routes>
 
-          {/* ── Redirection racine → vitrine ──────────────────────────────────── */}
+          {/* ── Redirection racine → vitrine ── */}
           <Route index element={<Navigate to="/vitrine" replace />} />
 
-          {/* ═════════════════════════════════════════════════════════════════════
-              VITRINE PUBLIQUE  —  préfixe /vitrine
-          ════════════════════════════════════════════════════════════════════ */}
+          {/* ── VITRINE PUBLIQUE ── */}
           <Route path="vitrine" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="contact" element={<Contact />} />
@@ -67,9 +71,7 @@ export default function ClientAppRoutes() {
           <Route path="connexion" element={<Login />} />
           <Route path="inscription" element={<Signup />} />
 
-          {/* ═════════════════════════════════════════════════════════════════════
-              ALIAS : ESPACE CLIENT SANS PRÉFIXE 
-          ════════════════════════════════════════════════════════════════════ */}
+          {/* ── ALIAS SANS PRÉFIXE ── */}
           <Route path="dashboard" element={<Navigate to="/client/dashboard" replace />} />
           <Route path="transactions" element={<Navigate to="/client/transactions" replace />} />
           <Route path="transaction/:id" element={<Navigate to={`/client/transaction/${useLocation().pathname.split('/').pop()}`} replace />} />
@@ -78,9 +80,7 @@ export default function ClientAppRoutes() {
           <Route path="favorites" element={<Navigate to="/client/favorites" replace />} />
           <Route path="settings" element={<Navigate to="/client/settings" replace />} />
 
-          {/* ═════════════════════════════════════════════════════════════════════
-              ESPACE CLIENT PROTÉGÉ AVEC LE NOUVEAU LAYOUT
-          ════════════════════════════════════════════════════════════════════ */}
+          {/* ── ESPACE CLIENT PROTÉGÉ ── */}
           <Route path="client" element={<ProtectedRoute><ClientLayout /></ProtectedRoute>}>
             <Route index element={<Navigate to="dashboard" replace />} />
             
@@ -93,17 +93,15 @@ export default function ClientAppRoutes() {
             <Route path="favorites" element={<Favorites />} />
             <Route path="settings" element={<Settings />} />
 
-            {/* Redirections temporaires le temps de finir la refonte du Dashboard */}
-            <Route path="requests" element={<Dashboard />} />
-            <Route path="appointments" element={<Dashboard />} />
-            <Route path="history" element={<Dashboard />} />
-            <Route path="documents" element={<Dashboard />} />
-            <Route path="loan" element={<Dashboard />} />
+            {/* Nouvelles routes fonctionnelles */}
+            <Route path="requests" element={<ClientRequests />} />
+            <Route path="appointments" element={<ClientAppointments />} />
+            <Route path="documents" element={<ClientDocuments />} />
+            <Route path="loan" element={<ClientLoan />} />
+            <Route path="history" element={<Navigate to="transactions" replace />} />
           </Route>
 
-          {/* ── Catch-all ─────────────────────────────────────────────────────── */}
           <Route path="*" element={<NotFound />} />
-
         </Routes>
       </Suspense>
     </>

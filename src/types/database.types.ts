@@ -57,6 +57,8 @@ export interface Document {
   storage_path: string;   // chemin réel dans le bucket msf-private-docs
   category: DocCategory;  // catégorie sécurisée pour filtrage admin
   size: number;           // en bytes
+  status?: 'en_attente' | 'approuve' | 'rejete';
+  admin_comment?: string | null;
   uploaded_at: string;
   created_at: string;
 }

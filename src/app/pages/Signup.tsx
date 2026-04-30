@@ -43,6 +43,7 @@ export default function Signup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!supabase) return setError("Erreur de connexion au serveur.");
     setIsLoading(true);
     setError("");
 

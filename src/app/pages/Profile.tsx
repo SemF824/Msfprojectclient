@@ -5,15 +5,15 @@ import {
   Edit2, Save, X, Shield, Award, TrendingUp,
   Home, CreditCard
 } from "lucide-react";
-import { useSupabaseAuth } from "../../hooks/useSupabaseAuth";
-import { supabase } from "../../hooks/useSupabaseAuth";
+import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 import Breadcrumb from "../components/Breadcrumb";
 
 export default function Profile() {
-  const { user: authUser, isLoading } = useSupabaseAuth();
+  const { user: authUser, isLoading: authLoading } = useSupabaseAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -29,6 +29,7 @@ export default function Profile() {
     idNumber: "",
   });
 
+  // Synchronisation des données Supabase vers le formulaire local
   useEffect(() => {
     if (authUser) {
       setFormData(prev => ({
@@ -47,6 +48,12 @@ export default function Profile() {
   };
 
   const handleSave = async () => {
+    // SÉCURITÉ TYPESCRIPT : On vérifie que supabase existe avant d'agir
+    if (!supabase) {
+      setSaveMessage({ type: 'error', text: 'Erreur : Connexion à Supabase impossible.' });
+      return;
+    }
+
     setIsSaving(true);
     setSaveMessage(null);
 
@@ -87,8 +94,12 @@ export default function Profile() {
     { label: "Investissements", value: "295M", icon: TrendingUp, color: "from-purple-500 to-purple-600" },
   ];
 
-  if (isLoading) {
-    return <div className="flex justify-center py-20"><div className="w-10 h-10 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin" /></div>;
+  if (authLoading) {
+    return (
+      <div className="flex justify-center py-20">
+        <div className="w-10 h-10 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
   }
 
   return (
@@ -104,162 +115,143 @@ export default function Profile() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`mb-4 p-4 rounded-xl ${
+            className={`mb-4 p-4 rounded-xl border ${
               saveMessage.type === 'success'
-                ? 'bg-green-50 border border-green-200 text-green-700'
-                : 'bg-red-50 border border-red-200 text-red-700'
+                ? 'bg-green-50 border-green-200 text-green-700'
+                : 'bg-red-50 border-red-200 text-red-700'
             }`}
           >
             {saveMessage.text}
           </motion.div>
         )}
 
-        <div className="flex items-start justify-between">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mb-2">
+            <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mb-2 font-bold">
               Mon <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">Profil</span>
             </h1>
-            <p className="text-gray-600">Gérez vos informations personnelles</p>
+            <p className="text-gray-600">Gérez vos informations personnelles.</p>
           </div>
           {!isEditing ? (
             <button
               onClick={() => setIsEditing(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-[#d4af37] text-[#0a0f1e] rounded-xl hover:shadow-xl transition-all font-medium"
+              className="flex items-center gap-2 px-6 py-3 bg-[#d4af37] text-[#0a0f1e] rounded-xl hover:bg-[#f4e3b2] hover:shadow-xl transition-all font-semibold"
             >
               <Edit2 className="w-5 h-5" />
-              <span>Modifier</span>
+              Modifier
             </button>
           ) : (
             <div className="flex gap-2">
               <button
                 onClick={() => setIsEditing(false)}
-                className="flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all font-medium"
+                className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-medium"
               >
                 <X className="w-5 h-5" />
-                <span>Annuler</span>
+                Annuler
               </button>
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-6 py-3 bg-[#d4af37] text-[#0a0f1e] rounded-xl hover:shadow-xl transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-6 py-3 bg-[#0a0f1e] text-[#d4af37] rounded-xl hover:shadow-xl transition-all font-semibold disabled:opacity-50"
               >
-                {isSaving ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-[#0a0f1e] border-t-transparent rounded-full animate-spin"></div>
-                    <span>Sauvegarde...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-5 h-5" />
-                    <span>Enregistrer</span>
-                  </>
-                )}
+                {isSaving ? <span className="w-5 h-5 border-2 border-[#d4af37] border-t-transparent rounded-full animate-spin" /> : <Save className="w-5 h-5" />}
+                Enregistrer
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Stats */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {stats.map((stat, idx) => {
-          const Icon = stat.icon;
-          return (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              className="bg-white rounded-2xl border border-gray-200 shadow-lg p-4"
-            >
-              <div className={`w-10 h-10 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center mb-3`}>
-                <Icon className="w-5 h-5 text-white" />
-              </div>
-              <p className="text-2xl text-[#0a0f1e] font-semibold">{stat.value}</p>
-              <p className="text-xs text-gray-600">{stat.label}</p>
-            </motion.div>
-          );
-        })}
+        {stats.map((stat, idx) => (
+          <motion.div
+            key={idx}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.1 }}
+            className="bg-white rounded-2xl border border-gray-200 shadow-lg p-5"
+          >
+            <div className={`w-10 h-10 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center mb-3`}>
+              <stat.icon className="w-5 h-5 text-white" />
+            </div>
+            <p className="text-2xl text-[#0a0f1e] font-bold">{stat.value}</p>
+            <p className="text-xs text-gray-500">{stat.label}</p>
+          </motion.div>
+        ))}
       </div>
 
-      {/* Informations Personnelles */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6"
-      >
-        <h2 className="text-xl text-[#0a0f1e] font-semibold mb-6">Informations Personnelles</h2>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm text-gray-700 mb-2 font-medium">Prénom</label>
-            {isEditing ? (
-              <input type="text" value={formData.firstName} onChange={(e) => handleInputChange("firstName", e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none transition-colors" />
-            ) : (
-              <p className="px-4 py-3 bg-gray-50 rounded-xl text-[#0a0f1e]">{formData.firstName || "-"}</p>
-            )}
+      <div className="grid grid-cols-1 gap-6">
+        {/* Informations Personnelles */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
+          <h2 className="text-xl text-[#0a0f1e] font-bold mb-6 flex items-center gap-2">
+            <User className="w-5 h-5 text-[#d4af37]" /> Informations Personnelles
+          </h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Prénom</label>
+              {isEditing ? (
+                <input type="text" value={formData.firstName} onChange={(e) => handleInputChange("firstName", e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#d4af37]" />
+              ) : (
+                <p className="px-4 py-3 bg-gray-50/50 rounded-xl text-[#0a0f1e] border border-transparent font-medium">{formData.firstName || "-"}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Nom</label>
+              {isEditing ? (
+                <input type="text" value={formData.lastName} onChange={(e) => handleInputChange("lastName", e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#d4af37]" />
+              ) : (
+                <p className="px-4 py-3 bg-gray-50/50 rounded-xl text-[#0a0f1e] border border-transparent font-medium">{formData.lastName || "-"}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Email</label>
+              <p className="px-4 py-3 bg-gray-100 rounded-xl text-gray-500 border border-gray-100 italic">{formData.email}</p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Téléphone Principal</label>
+              {isEditing ? (
+                <input type="tel" value={formData.phone} onChange={(e) => handleInputChange("phone", e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#d4af37]" />
+              ) : (
+                <p className="px-4 py-3 bg-gray-50/50 rounded-xl text-[#0a0f1e] border border-transparent font-medium">{formData.phone || "-"}</p>
+              )}
+            </div>
           </div>
-          <div>
-            <label className="block text-sm text-gray-700 mb-2 font-medium">Nom</label>
-            {isEditing ? (
-              <input type="text" value={formData.lastName} onChange={(e) => handleInputChange("lastName", e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none transition-colors" />
-            ) : (
-              <p className="px-4 py-3 bg-gray-50 rounded-xl text-[#0a0f1e]">{formData.lastName || "-"}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm text-gray-700 mb-2 font-medium">Email</label>
-            {isEditing ? (
-              <input type="email" value={formData.email} onChange={(e) => handleInputChange("email", e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none transition-colors" />
-            ) : (
-              <p className="px-4 py-3 bg-gray-50 rounded-xl text-[#0a0f1e]">{formData.email}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm text-gray-700 mb-2 font-medium">Téléphone Principal</label>
-            {isEditing ? (
-              <input type="tel" value={formData.phone} onChange={(e) => handleInputChange("phone", e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none transition-colors" />
-            ) : (
-              <p className="px-4 py-3 bg-gray-50 rounded-xl text-[#0a0f1e]">{formData.phone || "-"}</p>
-            )}
-          </div>
-        </div>
-      </motion.div>
+        </motion.div>
 
-      {/* Adresse */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6"
-      >
-        <h2 className="text-xl text-[#0a0f1e] font-semibold mb-6">Adresse</h2>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="md:col-span-2">
-            <label className="block text-sm text-gray-700 mb-2 font-medium">Adresse Complète</label>
-            {isEditing ? (
-              <input type="text" value={formData.address} onChange={(e) => handleInputChange("address", e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none transition-colors" />
-            ) : (
-              <p className="px-4 py-3 bg-gray-50 rounded-xl text-[#0a0f1e]">{formData.address || "-"}</p>
-            )}
+        {/* Adresse */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
+          <h2 className="text-xl text-[#0a0f1e] font-bold mb-6 flex items-center gap-2">
+            <MapPin className="w-5 h-5 text-[#d4af37]" /> Adresse de Résidence
+          </h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="md:col-span-2 space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Adresse Complète</label>
+              {isEditing ? (
+                <input type="text" value={formData.address} onChange={(e) => handleInputChange("address", e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#d4af37]" />
+              ) : (
+                <p className="px-4 py-3 bg-gray-50/50 rounded-xl text-[#0a0f1e] border border-transparent font-medium">{formData.address || "-"}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Ville</label>
+              {isEditing ? (
+                <input type="text" value={formData.city} onChange={(e) => handleInputChange("city", e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#d4af37]" />
+              ) : (
+                <p className="px-4 py-3 bg-gray-50/50 rounded-xl text-[#0a0f1e] border border-transparent font-medium">{formData.city || "-"}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Pays</label>
+              {isEditing ? (
+                <input type="text" value={formData.country} onChange={(e) => handleInputChange("country", e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#d4af37]" />
+              ) : (
+                <p className="px-4 py-3 bg-gray-50/50 rounded-xl text-[#0a0f1e] border border-transparent font-medium">{formData.country || "-"}</p>
+              )}
+            </div>
           </div>
-          <div>
-            <label className="block text-sm text-gray-700 mb-2 font-medium">Ville</label>
-            {isEditing ? (
-              <input type="text" value={formData.city} onChange={(e) => handleInputChange("city", e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none transition-colors" />
-            ) : (
-              <p className="px-4 py-3 bg-gray-50 rounded-xl text-[#0a0f1e]">{formData.city || "-"}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm text-gray-700 mb-2 font-medium">Pays</label>
-            {isEditing ? (
-              <input type="text" value={formData.country} onChange={(e) => handleInputChange("country", e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none transition-colors" />
-            ) : (
-              <p className="px-4 py-3 bg-gray-50 rounded-xl text-[#0a0f1e]">{formData.country || "-"}</p>
-            )}
-          </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }

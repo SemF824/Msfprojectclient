@@ -10,7 +10,8 @@ import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { supabase } from "../../hooks/useSupabaseAuth";
 
-const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || "promotions@msfcongo.com";
+// Typage pour bypasser l'erreur Vite sur import.meta.env
+const adminEmail = (import.meta as any).env.VITE_ADMIN_EMAIL || "promotions@msfcongo.com";
 
 const contactFormSchema = z.object({
   name: z.string()
@@ -50,6 +51,13 @@ export default function Contact() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError("");
+    
+    // Barrière de sécurité Supabase
+    if (!supabase) {
+      setSubmitError("Erreur système : connexion au serveur impossible.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -70,7 +78,8 @@ export default function Contact() {
       const validationResult = contactFormSchema.safeParse(formData);
 
       if (!validationResult.success) {
-        const firstError = validationResult.error.errors[0];
+        // Correction de l'erreur Zod
+        const firstError = validationResult.error.issues[0];
         setSubmitError(firstError.message);
         setIsSubmitting(false);
         return;
@@ -84,6 +93,7 @@ export default function Contact() {
         return;
       }
 
+      // Supabase est vérifié non-null au début de la fonction
       const { data, error } = await supabase.functions.invoke('submit-contact', {
         body: {
           token: token,
@@ -210,7 +220,7 @@ export default function Contact() {
   ];
 
   const GoogleMap = () => {
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    const apiKey = (import.meta as any).env.VITE_GOOGLE_MAPS_API_KEY;
 
     if (!apiKey) {
       return (

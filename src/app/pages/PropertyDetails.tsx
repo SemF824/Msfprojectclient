@@ -34,7 +34,7 @@ import {
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 // On récupère l'URL depuis les variables d'environnement, avec un fallback de sécurité
-  const calendlyUrl = import.meta.env.VITE_CALENDLY_URL;
+  const calendlyUrl = (import.meta as any).env.VITE_CALENDLY_URL;
 
 export default function PropertyDetails() {
   const { id } = useParams();
@@ -145,7 +145,7 @@ export default function PropertyDetails() {
   };
 
   const PropertyMap = ({ location }: { location: string }) => {
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    const apiKey = ((import.meta as any) as any).env.VITE_GOOGLE_MAPS_API_KEY;
 
     if (!apiKey) {
       return (
