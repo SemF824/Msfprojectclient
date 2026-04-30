@@ -71,6 +71,18 @@ export default function ClientAppRoutes() {
           <Route path="inscription" element={<Signup />} />
 
           {/* ═════════════════════════════════════════════════════════════════════
+              ALIAS : ESPACE CLIENT SANS PRÉFIXE 
+              (Intercepte les liens codés en dur dans tes pages)
+          ════════════════════════════════════════════════════════════════════ */}
+          <Route path="dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
+          <Route path="transaction/:id" element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>} />
+          <Route path="notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+          <Route path="profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+          <Route path="settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+
+          {/* ═════════════════════════════════════════════════════════════════════
               ESPACE CLIENT PROTÉGÉ  —  préfixe /client
           ════════════════════════════════════════════════════════════════════ */}
           <Route path="client">
@@ -82,8 +94,13 @@ export default function ClientAppRoutes() {
               path="transactions"
               element={<ProtectedRoute><Transactions /></ProtectedRoute>}
             />
+            {/* Gestion du pluriel et du singulier pour parer à toute éventualité */}
             <Route
               path="transactions/:id"
+              element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>}
+            />
+            <Route
+              path="transaction/:id"
               element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>}
             />
             <Route

@@ -64,19 +64,28 @@ export default function Signup() {
         }
       });
 
-      if (signUpError) throw signUpError;
+      if (signUpError) {
+        // Gère spécifiquement l'erreur si l'utilisateur existe déjà
+        if (signUpError.status === 400 || signUpError.status === 401 || signUpError.message.includes('already registered')) {
+            throw new Error("Cette adresse email est déjà utilisée ou invalide.");
+        }
+        throw signUpError;
+      }
 
-      // STRATÉGIE IMPITOYABLE : On détruit toute session prématurée 
-      // pour forcer la vérification de l'email et empêcher l'accès au Dashboard.
+      // STRATÉGIE IMPITOYABLE : On détruit toute session fantôme générée par Supabase
+      // Cela empêche le routeur de croire que l'utilisateur est connecté.
       if (data.session) {
         await supabase.auth.signOut();
       }
       
-      // On force SYSTEMATIQUEMENT l'étape 3
+      // On force SYSTEMATIQUEMENT l'affichage de l'écran de vérification
       setStep(3);
       
     } catch (err: any) {
+      console.error("Signup Error:", err);
       setError(err.message || "Erreur lors de l'inscription.");
+      // On s'assure de rester sur l'étape 2 en cas d'erreur
+      setStep(2);
     } finally {
       setIsLoading(false);
     }
@@ -207,7 +216,7 @@ export default function Signup() {
                   <span className="group-hover:text-[#0a0f1e] transition-colors">J'accepte les conditions d'utilisation et la politique de confidentialité de MSF Congo.</span>
                 </label>
 
-                {error && <div className="text-red-600 text-sm p-3 bg-red-50 rounded-xl border border-red-100">{error}</div>}
+                {error && <div className="text-red-600 text-sm p-3 bg-red-50 rounded-xl border border-red-100"><AlertCircle size={16}/>{error}</div>}
 
                 <div className="grid grid-cols-2 gap-4">
                   <button type="button" onClick={() => setStep(1)} className="py-4 border border-gray-200 rounded-xl font-bold text-gray-500 flex items-center justify-center gap-2 hover:bg-gray-50 transition-all">
@@ -221,7 +230,12 @@ export default function Signup() {
             )}
 
             {step === 3 && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-10">
+              <motion.div 
+                key="step3" 
+                initial={{ opacity: 0, scale: 0.95 }} 
+                animate={{ opacity: 1, scale: 1 }} 
+                className="text-center py-10"
+              >
                 <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Mail className="w-10 h-10 text-green-500" />
                 </div>
