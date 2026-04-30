@@ -7,7 +7,7 @@ import {
 import { supabase } from "../../../hooks/useSupabaseAuth";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Period = "7d" | "30d" | "3m" | "1y";
+type Period = "30d" | "1y" | "2y" | "10y";
 
 interface KPI {
   label:    string;
@@ -22,7 +22,12 @@ interface MonthCount  { month: string;  count: number; }
 interface TopProp     { name: string;   count: number; }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const PERIOD_DAYS: Record<Period, number> = { "7d": 7, "30d": 30, "3m": 90, "1y": 365 };
+const PERIOD_DAYS: Record<Period, number> = { 
+  "30d": 30, 
+  "1y": 365, 
+  "2y": 730, 
+  "10y": 3650 
+};
 
 const STATUS_COLORS: Record<string, string> = {
   nouveau:    "#3b82f6",
@@ -181,12 +186,6 @@ export default function StatistiquesPage() {
       const docsTotal     = docs.length;
       const uniqueClients = new Set(reqs.map(r => r.client_email).filter(Boolean)).size;
 
-      const colorMap2: Record<string, string> = {
-        blue: "bg-blue-50 text-blue-600",   green:  "bg-green-50 text-green-600",
-        amber: "bg-amber-50 text-amber-600", purple: "bg-purple-50 text-purple-600",
-        cyan:  "bg-cyan-50 text-cyan-600",   rose:   "bg-rose-50 text-rose-600",
-      };
-
       setKpis([
         { label: "Total Demandes",       value: totalDemandes,  icon: FileText,    color: "bg-blue-50 text-blue-600" },
         { label: "Ce mois",              value: ceMois,         icon: Calendar,    color: "bg-green-50 text-green-600" },
@@ -196,27 +195,56 @@ export default function StatistiquesPage() {
         { label: "Clients Uniques",      value: uniqueClients,  icon: Users,       color: "bg-rose-50 text-rose-600" },
       ]);
 
-      // ── Statuts ──
+      // ── Statuts (Calculés sur la période sélectionnée) ──
       const statusMap: Record<string, number> = {};
       pReqs.forEach(r => { if (r.status) statusMap[r.status] = (statusMap[r.status] || 0) + 1; });
       setStatusData(Object.entries(statusMap).map(([status, count]) => ({ status, count })));
 
-      // ── Évolution mensuelle (12 derniers mois) ──
-      const monthly: Record<string, number> = {};
-      for (let i = 11; i >= 0; i--) {
-        const d = new Date(); d.setMonth(d.getMonth() - i); d.setDate(1);
-        const key = `${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getFullYear()).slice(-2)}`;
-        monthly[key] = 0;
+      // ── Moteur d'Agrégation Dynamique ──
+      const timeSeries: Record<string, number> = {};
+      const now = new Date();
+
+      // 1. Initialiser l'axe des X pour éviter les trous
+      if (period === "30d") {
+        for (let i = 29; i >= 0; i--) {
+          const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+          const key = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+          timeSeries[key] = 0;
+        }
+      } else if (period === "1y" || period === "2y") {
+        const monthsCount = period === "1y" ? 12 : 24;
+        for (let i = monthsCount - 1; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const key = `${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getFullYear()).slice(-2)}`;
+          timeSeries[key] = 0;
+        }
+      } else if (period === "10y") {
+        for (let i = 9; i >= 0; i--) {
+          const key = String(now.getFullYear() - i);
+          timeSeries[key] = 0;
+        }
       }
-      reqs.forEach(r => {
+
+      // 2. Remplir avec les données de la période
+      pReqs.forEach(r => {
         if (!r.created_at) return;
         const d = new Date(r.created_at);
-        const key = `${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getFullYear()).slice(-2)}`;
-        if (key in monthly) monthly[key]++;
-      });
-      setMonthData(Object.entries(monthly).map(([month, count]) => ({ month, count })));
+        let key = "";
+        
+        if (period === "30d") {
+          key = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+        } else if (period === "1y" || period === "2y") {
+          key = `${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getFullYear()).slice(-2)}`;
+        } else if (period === "10y") {
+          key = String(d.getFullYear());
+        }
 
-      // ── Top propriétés ──
+        if (key in timeSeries) timeSeries[key]++;
+      });
+
+      setMonthData(Object.entries(timeSeries).map(([month, count]) => ({ month, count })));
+
+      // ── Top propriétés (Calculé sur tout l'historique) ──
       const propMap: Record<string, number> = {};
       reqs.forEach(r => { if (r.property_name) propMap[r.property_name] = (propMap[r.property_name] || 0) + 1; });
       const top = Object.entries(propMap)
@@ -237,7 +265,7 @@ export default function StatistiquesPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="w-12 h-12 text-[#d4af37] animate-spin" />
-        <p className="text-gray-500 text-sm animate-pulse">Calcul des statistiques…</p>
+        <p className="text-gray-500 text-sm animate-pulse">Calcul des statistiques dynamiques…</p>
       </div>
     );
   }
@@ -251,18 +279,18 @@ export default function StatistiquesPage() {
           <h1 className="text-3xl text-[#0a0f1e] font-bold">Statistiques & Analytics</h1>
           <p className="text-gray-500 text-sm mt-1">Données calculées en temps réel depuis Supabase</p>
         </div>
-        <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
-          {(["7d", "30d", "3m", "1y"] as Period[]).map(p => (
+        <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-sm overflow-x-auto">
+          {(["30d", "1y", "2y", "10y"] as Period[]).map(p => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                 period === p
                   ? "bg-[#d4af37] text-[#0a0f1e] shadow-sm"
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >
-              {{ "7d": "7 jours", "30d": "30 jours", "3m": "3 mois", "1y": "1 an" }[p]}
+              {{ "30d": "30 jours", "1y": "1 an", "2y": "2 ans", "10y": "10 ans" }[p]}
             </button>
           ))}
         </div>
@@ -300,7 +328,9 @@ export default function StatistiquesPage() {
           <h2 className="text-lg text-[#0a0f1e] font-semibold mb-5 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-[#d4af37]" />
             Demandes par Statut
-            <span className="text-xs text-gray-400 font-normal ml-1">({period === "7d" ? "7 derniers jours" : period === "30d" ? "30 derniers jours" : period === "3m" ? "3 derniers mois" : "1 an"})</span>
+            <span className="text-xs text-gray-400 font-normal ml-1">
+              ({period === "30d" ? "30 derniers jours" : period === "1y" ? "12 derniers mois" : period === "2y" ? "24 derniers mois" : "10 dernières années"})
+            </span>
           </h2>
           <PieChart data={statusData} />
         </div>
@@ -309,7 +339,7 @@ export default function StatistiquesPage() {
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
           <h2 className="text-lg text-[#0a0f1e] font-semibold mb-5 flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-[#d4af37]" />
-            Évolution mensuelle (12 mois)
+            {period === "30d" ? "Évolution journalière" : period === "10y" ? "Évolution annuelle" : "Évolution mensuelle"}
           </h2>
           <BarChart data={monthData} />
         </div>
