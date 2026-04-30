@@ -28,8 +28,8 @@ export default function Favorites() {
   const [filterType, setFilterType] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Mock favorites data
-  const favorites: FavoriteProperty[] = [
+  // Transformation en "State" pour pouvoir supprimer des favoris
+  const [favorites, setFavorites] = useState<FavoriteProperty[]>([
     {
       id: "tchikobo-villa-5",
       name: "Villa Tchikobo Prestige",
@@ -121,7 +121,12 @@ export default function Favorites() {
       status: "available",
       addedDate: "2026-03-20",
     },
-  ];
+  ]);
+
+  // Fonction pour retirer un favori (clic sur le coeur ou la poubelle)
+  const toggleFavorite = (id: string) => {
+    setFavorites(prevFavorites => prevFavorites.filter(prop => prop.id !== id));
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -315,7 +320,10 @@ export default function Favorites() {
                   />
                   <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
                     {getStatusBadge(property.status)}
-                    <button className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-pink-500 hover:bg-pink-500 hover:text-white transition-colors">
+                    <button 
+                      onClick={() => toggleFavorite(property.id)}
+                      className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-pink-500 hover:bg-pink-500 hover:text-white transition-colors"
+                    >
                       <Heart className="w-5 h-5 fill-current" />
                     </button>
                   </div>
@@ -376,7 +384,10 @@ export default function Favorites() {
                       <button className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-blue-500 hover:text-white transition-colors">
                         <Share2 className="w-5 h-5" />
                       </button>
-                      <button className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
+                      <button 
+                        onClick={() => toggleFavorite(property.id)}
+                        className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
+                      >
                         <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
@@ -417,7 +428,10 @@ export default function Favorites() {
                           {property.location}
                         </p>
                       </div>
-                      <button className="w-10 h-10 bg-pink-50 rounded-full flex items-center justify-center text-pink-500 hover:bg-pink-500 hover:text-white transition-colors">
+                      <button 
+                        onClick={() => toggleFavorite(property.id)}
+                        className="w-10 h-10 bg-pink-50 rounded-full flex items-center justify-center text-pink-500 hover:bg-pink-500 hover:text-white transition-colors"
+                      >
                         <Heart className="w-5 h-5 fill-current" />
                       </button>
                     </div>
@@ -459,7 +473,10 @@ export default function Favorites() {
                         <button className="p-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-blue-500 hover:text-white transition-colors">
                           <Share2 className="w-5 h-5" />
                         </button>
-                        <button className="p-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-red-500 hover:text-white transition-colors">
+                        <button 
+                          onClick={() => toggleFavorite(property.id)}
+                          className="p-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-red-500 hover:text-white transition-colors"
+                        >
                           <Trash2 className="w-5 h-5" />
                         </button>
                       </div>

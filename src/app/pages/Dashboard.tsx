@@ -16,8 +16,6 @@ import type {
   Favorite, DevisRequest, DocCategory
 } from "../../types/database.types";
 
-// ─── Stagger variants (anti-clignotement stats) ───────────────────────────────
-// Ajout du type 'Variants' pour satisfaire TypeScript et Framer Motion
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
@@ -27,15 +25,11 @@ const itemVariants: Variants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Constantes
-// ─────────────────────────────────────────────────────────────────────────────
 const BUCKET          = "msf-private-docs";
-const MAX_SIZE_MB     = 10;   // non-images, non-PDF
-const PDF_MAX_MB      = 15;   // PDF : limite stricte imposée
-const SIGNED_URL_TTL  = 60;   // secondes
+const MAX_SIZE_MB     = 10;
+const PDF_MAX_MB      = 15;
+const SIGNED_URL_TTL  = 60;
 
-// ─── Compression d'image via Canvas API (= browser-image-compression natif) ──
 const MAX_DIMENSION = 1920;
 const JPEG_QUALITY  = 0.82;
 
@@ -86,13 +80,12 @@ const ACCEPTED_TYPES = [
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ];
 
-// ─── Configuration des catégories ────────────────────────────────────────────
 type CategoryKey = DocCategory | "all";
 
 interface CategoryConfig {
   label:     string;
   icon:      React.ElementType;
-  color:     string;   // bg + text Tailwind
+  color:     string;
   badgeBg:   string;
   badgeText: string;
 }
@@ -128,10 +121,8 @@ const CATEGORIES: Record<DocCategory, CategoryConfig> = {
   },
 };
 
-// ─── Helpers fichiers ─────────────────────────────────────────────────────────
 const isImage = (name: string) => /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(name ?? "");
 const isPdf   = (name: string) => /\.pdf$/i.test(name ?? "");
-
 const safeFilename  = (raw: string) => raw.replace(/[^a-zA-Z0-9._\-]/g, "_");
 const formatSize    = (bytes: number) => {
   if (!bytes) return "0 B";
@@ -140,13 +131,11 @@ const formatSize    = (bytes: number) => {
   return (bytes / 1_048_576).toFixed(1) + " Mo";
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const { user: authUser, isLoading, signOut } = useSupabaseAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
 
-  // ── Données ───────────────────────────────────────────────────────────────
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [transactions,  setTransactions]  = useState<Transaction[]>([]);
   const [appointments,  setAppointments]  = useState<Appointment[]>([]);
@@ -155,7 +144,6 @@ export default function Dashboard() {
   const [devisRequests, setDevisRequests] = useState<DevisRequest[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // ── Upload ────────────────────────────────────────────────────────────────
   const [docCategory,    setDocCategory]    = useState<DocCategory>("other");
   const [isUploading,    setIsUploading]    = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -164,16 +152,13 @@ export default function Dashboard() {
   const [isDragOver,     setIsDragOver]     = useState(false);
   const [compressInfo,   setCompressInfo]   = useState<string | null>(null);
 
-  // ── Filtre documents ──────────────────────────────────────────────────────
   const [docFilter, setDocFilter] = useState<CategoryKey>("all");
 
-  // ── Preview sécurisé ──────────────────────────────────────────────────────
   const [previewDoc,       setPreviewDoc]       = useState<Document | null>(null);
   const [previewSignedUrl, setPreviewSignedUrl] = useState<string | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [previewError,     setPreviewError]     = useState<string | null>(null);
 
-  // ── Simulateur ────────────────────────────────────────────────────────────
   const [loanAmount,   setLoanAmount]   = useState(450_000);
   const [downPayment,  setDownPayment]  = useState(90_000);
   const [loanTerm,     setLoanTerm]     = useState(20);
@@ -181,34 +166,8 @@ export default function Dashboard() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ── Guard chargement auth ─────────────────────────────────────────────────
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 pt-20 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">Chargement de votre espace…</p>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Identité affichée ─────────────────────────────────────────────────────
-  const displayName  = authUser?.user_metadata?.full_name
-    || authUser?.user_metadata?.first_name
-    || authUser?.email?.split("@")[0] || "Utilisateur";
-  const displayEmail = authUser?.email || "";
-
-  const stats = [
-    { label: "Demandes Actives",     value: (devisRequests).filter(r => r?.status === "nouveau" || r?.status === "en_cours").length.toString(), icon: FileText, color: "from-blue-500 to-blue-600" },
-    { label: "Propriétés Favorites", value: favorites.length.toString(),                                                                          icon: Heart,    color: "from-pink-500 to-pink-600" },
-    { label: "Visites Planifiées",   value: (appointments).filter(a => (a as any)?.status === "planifie").length.toString(),                      icon: Calendar, color: "from-green-500 to-green-600" },
-    { label: "Documents Sécurisés",  value: documents.length.toString(),                                                                           icon: Lock,     color: "from-purple-500 to-purple-600" },
-  ];
-
-  // ── Fetching ──────────────────────────────────────────────────────────────
+  // 1. DÉCLARATION DU HOOK useEffect EN HAUT (Résout l'erreur React 310)
   useEffect(() => {
-    // VÉRIFICATION DE SÉCURITÉ : Supabase n'est appelé que s'il est initialisé
     if (!authUser || !supabase) return;
     
     (async () => {
@@ -217,7 +176,6 @@ export default function Dashboard() {
         const uid   = authUser.id;
         const email = authUser.email || "";
         
-        // SUPPRESSION DES .catch() INUTILES QUI CAUSAIENT L'ERREUR TYPESCRIPT
         const [tr, ap, dc, fv, dv, nt] = await Promise.all([
           supabase.from("transactions").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
           supabase.from("appointments").select("*").eq("user_id", uid).order("appointment_date", { ascending: true }),
@@ -239,7 +197,31 @@ export default function Dashboard() {
         setIsDataLoading(false); 
       }
     })();
-  }, [authUser]);
+  }, [authUser]); // On dépend de authUser, donc dès qu'il est là, on fetch.
+
+  // 2. ENSUITE SEULEMENT, on gère les retours conditionnels
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 pt-20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-gray-500 text-sm">Chargement de votre espace…</p>
+        </div>
+      </div>
+    );
+  }
+
+  const displayName  = authUser?.user_metadata?.full_name
+    || authUser?.user_metadata?.first_name
+    || authUser?.email?.split("@")[0] || "Utilisateur";
+  const displayEmail = authUser?.email || "";
+
+  const stats = [
+    { label: "Demandes Actives",     value: (devisRequests).filter(r => r?.status === "nouveau" || r?.status === "en_cours").length.toString(), icon: FileText, color: "from-blue-500 to-blue-600" },
+    { label: "Propriétés Favorites", value: favorites.length.toString(),                                                                          icon: Heart,    color: "from-pink-500 to-pink-600" },
+    { label: "Visites Planifiées",   value: (appointments).filter(a => (a as any)?.status === "planifie").length.toString(),                      icon: Calendar, color: "from-green-500 to-green-600" },
+    { label: "Documents Sécurisés",  value: documents.length.toString(),                                                                           icon: Lock,     color: "from-purple-500 to-purple-600" },
+  ];
 
   const refreshDocuments = async () => {
     if (!authUser || !supabase) return;
@@ -247,12 +229,6 @@ export default function Dashboard() {
     setDocuments(data || []);
   };
 
-  // ═════════════════════════════════════════════════════════════════════════
-  // UPLOAD — bucket privé msf-private-docs
-  // Chemin : {userId}/{category}/{timestamp}_{filename}
-  // ═════════════════════════════════════════════════════════════════════════
-  // UPLOAD — Garde PDF + Compression images + Bucket privé catégorisé
-  // ═════════════════════════════════════════════════════════════════════════
   const handleFileUpload = async (file: File) => {
     if (!authUser || !supabase) return;
 
@@ -260,7 +236,6 @@ export default function Dashboard() {
     setUploadSuccess(false);
     setCompressInfo(null);
 
-    // ── GARDE 1 : PDF trop lourd → message métier explicite ──────────────
     if (isPdf(file.name) && file.size > PDF_MAX_MB * 1_048_576) {
       setUploadError(
         "Ce document est trop lourd. Veuillez le compresser sur un outil en ligne avant de l'envoyer pour garantir la sécurité du transfert."
@@ -268,7 +243,6 @@ export default function Dashboard() {
       return;
     }
 
-    // ── GARDE 2 : Autres fichiers non-image > 10 Mo ───────────────────────
     if (!isImage(file.name) && !isPdf(file.name) && file.size > MAX_SIZE_MB * 1_048_576) {
       setUploadError(`Le fichier ne doit pas dépasser ${MAX_SIZE_MB} Mo.`);
       return;
@@ -277,7 +251,6 @@ export default function Dashboard() {
     setIsUploading(true);
     setUploadProgress(0);
 
-    // Simulation de progression réseau
     const interval = setInterval(() => {
       setUploadProgress(prev => {
         if (prev >= 80) { clearInterval(interval); return prev; }
@@ -286,7 +259,6 @@ export default function Dashboard() {
     }, 160);
 
     try {
-      // ── COMPRESSION IMAGE via Canvas API ─────────────────────────────────
       let fileToUpload = file;
       if (isImage(file.name)) {
         const originalSize = file.size;
@@ -299,7 +271,6 @@ export default function Dashboard() {
         }
       }
 
-      // ── Chemin sécurisé et catégorisé ───────────────────────────────────
       const fname       = safeFilename(fileToUpload.name);
       const storagePath = `${authUser.id}/${docCategory}/${Date.now()}_${fname}`;
 
@@ -315,7 +286,6 @@ export default function Dashboard() {
       if (storeErr) throw storeErr;
       setUploadProgress(90);
 
-      // ── Insertion en base avec storage_path + category ───────────────────
       const { error: dbErr } = await supabase.from("documents").insert({
         user_id:      authUser.id,
         name:         file.name,
@@ -351,9 +321,6 @@ export default function Dashboard() {
     if (file) { handleFileUpload(file); e.target.value = ""; }
   };
 
-  // ═════════════════════════════════════════════════════════════════════════
-  // PREVIEW SÉCURISÉ — URL signée de 60 secondes
-  // ═════════════════════════════════════════════════════════════════════════
   const handlePreview = async (doc: Document) => {
     if (!supabase || !doc.storage_path) {
       setPreviewError("Chemin de stockage introuvable pour ce document.");
@@ -392,7 +359,6 @@ export default function Dashboard() {
     setIsLoadingPreview(false);
   };
 
-  // ── Simulateur ────────────────────────────────────────────────────────────
   const monthlyPayment = () => {
     const p = loanAmount - downPayment;
     if (p <= 0 || loanTerm <= 0) return 0;
@@ -404,7 +370,6 @@ export default function Dashboard() {
 
   const handleLogout = async () => { await signOut(); navigate("/connexion"); };
 
-  // ── Helpers statuts ───────────────────────────────────────────────────────
   const txColor = (s: string) => ({
     en_attente: "bg-blue-500/20 text-blue-400 border-blue-500/30",
     complete:   "bg-green-500/20 text-green-400 border-green-500/30",
@@ -425,12 +390,10 @@ export default function Dashboard() {
 
   const unread = notifications.filter(n => !(n as any)?.is_read).length;
 
-  // ── Documents filtrés ─────────────────────────────────────────────────────
   const filteredDocs = docFilter === "all"
     ? documents
     : documents.filter(d => d.category === docFilter);
 
-  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 pt-20">
       <div className="container mx-auto px-6 py-8">
