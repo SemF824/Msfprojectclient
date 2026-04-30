@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router";
 import {
   Building2, LayoutDashboard, FileText, Users, Home,
   BarChart3, Settings, LogOut, Menu, X, Bell, Search,
   ChevronDown, Shield, UserCog, FolderOpen
 } from "lucide-react";
-import { useSupabaseAuth } from "../../hooks/useSupabaseAuth";
+import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 
 export default function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [unreadContactsCount, setUnreadContactsCount] = useState(0); // <-- Ajout de l'état
+
   const location = useLocation();
   const navigate = useNavigate();
   const { user, userRole, signOut } = useSupabaseAuth();
@@ -20,7 +22,7 @@ export default function AdminLayout() {
     { name: "Demandes de Devis",    href: "/admin/demandes",     icon: FileText },
     { name: "Propriétés",           href: "/admin/proprietes",   icon: Building2 },
     { name: "Clients",              href: "/admin/clients",      icon: Users },
-    { name: "Archives Documents",   href: "/admin/documents",    icon: FolderOpen },  // ← Tâche 1
+    { name: "Archives Documents",   href: "/admin/documents",    icon: FolderOpen },
     { name: "Statistiques",         href: "/admin/statistiques", icon: BarChart3 },
     { name: "Paramètres",           href: "/admin/parametres",   icon: Settings }
   ];
@@ -64,6 +66,39 @@ export default function AdminLayout() {
     return null;
   };
 
+  // ── MOTEUR DE NOTIFICATIONS TEMPS RÉEL (Admin) ─────────────────────────
+  useEffect(() => {
+    // 1. Chargement initial
+    const fetchUnreadContacts = async () => {
+      const { count, error } = await supabase
+        .from('contact_requests')
+        .select('*', { count: 'exact', head: true })
+        .or('status.eq.nouveau,status.is.null'); // Compte les statuts 'nouveau' ou absents
+
+      if (!error && count !== null) {
+        setUnreadContactsCount(count);
+      }
+    };
+
+    fetchUnreadContacts();
+
+    // 2. Écoute des changements en temps réel
+    const channel = supabase
+      .channel('admin-notifications')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'contact_requests' },
+        () => {
+          fetchUnreadContacts(); // On recharge le compte à chaque modif
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50">
       {/* Top Bar */}
@@ -102,11 +137,15 @@ export default function AdminLayout() {
               />
             </div>
 
-            {/* Notifications */}
-            <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Bell className="w-5 h-5 text-gray-600" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            {/* Notifications Dynamiques */}
+            <Link to="/admin/demandes" className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors group">
+              <Bell className="w-5 h-5 text-gray-600 group-hover:text-[#d4af37] transition-colors" />
+              {unreadContactsCount > 0 && (
+                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white border-2 border-white">
+                  {unreadContactsCount > 9 ? '9+' : unreadContactsCount}
+                </span>
+              )}
+            </Link>
 
             {/* User Menu */}
             <div className="relative">
@@ -239,7 +278,7 @@ export default function AdminLayout() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-600">Nouvelles demandes</span>
-                <span className="text-sm text-[#0a0f1e] font-bold">5</span>
+                <span className="text-sm text-[#0a0f1e] font-bold">{unreadContactsCount}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-600">Visites planifiées</span>
