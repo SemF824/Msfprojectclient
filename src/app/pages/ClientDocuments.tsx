@@ -107,7 +107,7 @@ export default function ClientDocuments() {
                   return (
                     <button key={key} type="button" onClick={() => setDocCategory(key)} className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all text-center ${active ? "border-[#d4af37] bg-[#d4af37]/10" : "border-gray-200 hover:bg-gray-50"}`}>
                       <Icon className={`w-5 h-5 ${active ? 'text-[#d4af37]' : 'text-gray-500'}`} />
-                      <span className="text-[10px] font-medium">{cfg.label}</span>
+                      <span className={`text-[10px] font-bold ${active ? 'text-[#0a0f1e]' : 'text-gray-600'}`}>{cfg.label}</span>
                     </button>
                   );
                 })}
@@ -118,18 +118,18 @@ export default function ClientDocuments() {
               {isUploading ? (
                 <div className="flex flex-col items-center">
                    <Loader2 className="w-8 h-8 text-[#d4af37] animate-spin mb-2" />
-                   <p className="text-sm font-medium text-[#d4af37]">Envoi... {uploadProgress}%</p>
+                   <p className="text-sm font-bold text-[#d4af37]">Envoi... {uploadProgress}%</p>
                 </div>
               ) : (
                 <>
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center"><Upload className="w-6 h-6 text-gray-400" /></div>
-                  <p className="text-sm text-gray-600 font-medium text-center">Cliquez ou glissez un fichier ici</p>
-                  <p className="text-[10px] text-gray-400 text-center">PDF, JPG, PNG (Max {MAX_SIZE_MB}Mo)</p>
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center"><Upload className="w-6 h-6 text-gray-500" /></div>
+                  <p className="text-sm text-gray-900 font-bold text-center">Cliquez ou glissez un fichier ici</p>
+                  <p className="text-xs text-gray-500 font-medium text-center">PDF, JPG, PNG (Max {MAX_SIZE_MB}Mo)</p>
                 </>
               )}
               <input ref={fileInputRef} type="file" accept={ACCEPTED_TYPES.join(",")} onChange={handleFileInput} className="hidden" />
             </div>
-            {uploadError && <p className="mt-3 text-sm text-red-500 text-center font-medium">{uploadError}</p>}
+            {uploadError && <p className="mt-4 text-sm text-red-600 bg-red-50 border border-red-100 p-3 rounded-xl text-center font-semibold">{uploadError}</p>}
           </div>
         </motion.div>
 
@@ -147,11 +147,11 @@ export default function ClientDocuments() {
                          <FileArchive className="w-5 h-5 text-[#d4af37]" />
                        </div>
                        <div>
-                         <p className="text-[#0a0f1e] font-medium text-sm">{doc.name}</p>
-                         <p className="text-xs text-gray-500 mt-0.5 capitalize">{CATEGORIES[doc.category]?.label || doc.category} • {formatSize(doc.size || 0)}</p>
+                         <p className="text-[#0a0f1e] font-bold text-sm">{doc.name}</p>
+                         <p className="text-xs text-gray-500 mt-0.5 capitalize font-medium">{CATEGORIES[doc.category]?.label || doc.category} • {formatSize(doc.size || 0)}</p>
                        </div>
                      </div>
-                     <span className={`px-3 py-1 text-[10px] rounded-full font-semibold uppercase border ${doc.status === 'approuve' ? 'bg-green-100 text-green-700 border-green-200' : doc.status === 'rejete' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
+                     <span className={`px-3 py-1 text-[10px] rounded-full font-bold uppercase border ${doc.status === 'approuve' ? 'bg-green-100 text-green-700 border-green-200' : doc.status === 'rejete' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
                         {doc.status === 'approuve' ? 'Validé' : doc.status === 'rejete' ? 'Rejeté' : 'En attente'}
                      </span>
                    </div>
