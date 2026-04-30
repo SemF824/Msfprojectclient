@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Link, useParams } from "react-router";
-import { PopupModal } from "react-calendly"; // IMPORT CALENDLY
+import { PopupModal } from "react-calendly";
 import {
   ArrowLeft,
   Bed,
@@ -30,11 +30,13 @@ import {
   Hospital,
   FileText,
   Loader2,
+  Info
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
+
 // On récupère l'URL depuis les variables d'environnement, avec un fallback de sécurité
-  const calendlyUrl = (import.meta as any).env.VITE_CALENDLY_URL;
+const calendlyUrl = (import.meta as any).env.VITE_CALENDLY_URL;
 
 export default function PropertyDetails() {
   const { id } = useParams();
@@ -407,6 +409,48 @@ export default function PropertyDetails() {
                     className="w-full h-full object-cover"
                   />
                 </div>
+              </div>
+            </motion.div>
+
+            {/* Plan de Financement Sécurisé */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45 }}
+              className="bg-white backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-8"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-[#d4af37]/10 rounded-xl flex items-center justify-center text-[#d4af37]">
+                  <Info className="w-5 h-5" />
+                </div>
+                <h3 className="text-2xl text-[#0a0f1e] font-bold">Plan de Financement Sécurisé</h3>
+              </div>
+              
+              <p className="text-gray-600 mb-8">
+                Pour garantir la sécurité de votre investissement, nos paiements sont échelonnés et strictement liés à l'avancement réel des travaux.
+              </p>
+
+              <div className="space-y-0 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-[#d4af37] before:via-[#d4af37] before:to-transparent">
+                {[
+                  { step: "Phase 1", title: "Signature, Terrain, Titre & Fondations", desc: "Acquisition du terrain, établissement du titre foncier, signature du contrat et réalisation des fondations solides.", pct: "30%" },
+                  { step: "Phase 2", title: "Élévations", desc: "Élévation des murs et de la structure principale de votre villa.", pct: "10%" },
+                  { step: "Phase 3", title: "Mise hors d'eau (Toiture)", desc: "Installation complète de la charpente et de la toiture.", pct: "20%" },
+                  { step: "Phase 4", title: "Finalisation", desc: "Travaux de plomberie, électricité, finitions intérieures/extérieures et remise officielle des clés.", pct: "40%" },
+                ].map((item, index) => (
+                  <div key={index} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active mb-8">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-[#0a0f1e] text-[#d4af37] shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                      <CheckCircle2 className="w-5 h-5" />
+                    </div>
+                    <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-gray-50 p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-bold text-[#d4af37] uppercase tracking-wider">{item.step}</span>
+                        <span className="px-3 py-1 bg-white text-[#0a0f1e] font-black text-sm rounded-lg border border-gray-200 shadow-sm">{item.pct}</span>
+                      </div>
+                      <h4 className="text-lg font-bold text-[#0a0f1e] mb-1">{item.title}</h4>
+                      <p className="text-sm text-gray-500">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </motion.div>
 
