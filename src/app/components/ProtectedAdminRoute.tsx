@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Navigate } from "react-router";
 import { useSupabaseAuth } from "../../hooks/useSupabaseAuth";
 import { supabase } from "../../hooks/useSupabaseAuth";
-import { Loader2, ShieldAlert } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface ProtectedAdminRouteProps {
   children: React.ReactNode;
@@ -21,6 +21,8 @@ export default function ProtectedAdminRoute({ children }: ProtectedAdminRoutePro
 
   useEffect(() => {
     if (authLoading) return;
+
+    // S'il n'y a pas d'utilisateur connecté du tout
     if (!user) {
       setIsAdminVerified(false);
       return;
@@ -51,7 +53,7 @@ export default function ProtectedAdminRoute({ children }: ProtectedAdminRoutePro
       });
   }, [user, authLoading]);
 
-  // Chargement auth
+  // Phase 1 : Chargement Auth
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 flex items-center justify-center">
@@ -64,23 +66,30 @@ export default function ProtectedAdminRoute({ children }: ProtectedAdminRoutePro
     );
   }
 
-  // Vérification user_roles en cours
+  // Phase 2 : Vérification user_roles en cours
   if (isChecking || isAdminVerified === null) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-[#d4af37] animate-spin mx-auto mb-3" />
           <p className="text-gray-600 font-medium">Vérification des droits...</p>
-          <p className="text-sm text-gray-400 mt-1">Contrôle de la table user_roles</p>
+          <p className="text-sm text-gray-400 mt-1">Contrôle de sécurité en cours</p>
         </div>
       </div>
     );
   }
 
-  // Non autorisé
-  if (!user || !isAdminVerified) {
+  // Phase 3 : Le couperet
+  if (!isAdminVerified) {
+    // Si la personne est connectée, mais que c'est un client classique
+    if (user) {
+      console.warn("Accès Admin refusé pour un client. Redirection vers l'espace client...");
+      return <Navigate to="/client/dashboard" replace />;
+    }
+    // Si personne n'est connecté
     return <Navigate to="/admin" replace />;
   }
 
+  // L'utilisateur est un vrai admin, on le laisse passer
   return <>{children}</>;
 }
