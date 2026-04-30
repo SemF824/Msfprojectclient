@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Search, Filter, Mail, Phone, Calendar,
-  ChevronRight, MoreVertical, CheckCircle2,
-  Clock, AlertCircle, Trash2, ExternalLink
+  Search, Mail, Phone, Clock,
+  MoreVertical, CheckCircle2,
+  Trash2, ChevronDown, ChevronUp,
+  MessageSquare, User, DollarSign, Building2,
+  Send, Archive, RefreshCcw
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "../../../hooks/useSupabaseAuth";
-import {
-  Card, CardContent, CardHeader, CardTitle
-} from "../../components/ui/card";
+import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
@@ -20,9 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "../../components/ui/dropdown-menu";
-import { Link } from "react-router";
 
-// Définition de l'interface basée sur ton schéma de table réel
 interface ContactRequest {
   id: string;
   name: string;
@@ -37,12 +35,13 @@ interface ContactRequest {
 }
 
 export default function DemandesManagement() {
+  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
   const [demandes, setDemandes] = useState<ContactRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("tous");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // 1. CHARGEMENT DES VRAIES DONNÉES
   const fetchDemandes = async () => {
     try {
       setLoading(true);
@@ -54,7 +53,7 @@ export default function DemandesManagement() {
       if (error) throw error;
       setDemandes(data || []);
     } catch (error) {
-      console.error("Erreur lors de la récupération des demandes:", error);
+      console.error("Erreur chargement demandes:", error);
     } finally {
       setLoading(false);
     }
@@ -64,187 +63,213 @@ export default function DemandesManagement() {
     fetchDemandes();
   }, []);
 
-  // 2. SUPPRESSION D'UNE DEMANDE
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette demande ?")) return;
-
+  const updateStatus = async (id: string, newStatus: string) => {
     try {
       const { error } = await supabase
         .from('contact_requests')
-        .delete()
+        .update({ status: newStatus })
         .eq('id', id);
 
       if (error) throw error;
-      setDemandes(demandes.filter(d => d.id !== id));
+      setDemandes(demandes.map(d => d.id === id ? { ...d, status: newStatus as any } : d));
     } catch (error) {
-      alert("Erreur lors de la suppression");
+      alert("Erreur lors de la mise à jour du statut.");
     }
   };
 
-  const filteredDemandes = demandes.filter(demande => {
-    const matchesSearch =
-      demande.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      demande.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      demande.subject.toLowerCase().includes(searchTerm.toLowerCase());
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Supprimer définitivement ce prospect ?")) return;
+    try {
+      const { error } = await supabase.from('contact_requests').delete().eq('id', id);
+      if (error) throw error;
+      setDemandes(demandes.filter(d => d.id !== id));
+      if (expandedId === id) setExpandedId(null);
+    } catch (error) {
+      alert("Erreur suppression.");
+    }
+  };
 
-    const matchesStatus = filterStatus === "tous" || demande.status === filterStatus;
+  const toggleExpand = (id: string) => {
+    setExpandedId(expandedId === id ? null : id);
+  };
 
+  const filteredDemandes = demandes.filter(d => {
+    const matchesSearch = d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         d.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === "tous" || d.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
 
-  const getStatusBadge = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'traite':
-        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200">Traité</Badge>;
-      case 'en_cours':
-        return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200">En cours</Badge>;
-      case 'archive':
-        return <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100 border-gray-200">Archivé</Badge>;
-      default:
-        return <Badge className="bg-amber-100 text-[#d4af37] hover:bg-amber-100 border-amber-200">Nouveau</Badge>;
+      case 'traite': return "bg-green-100 text-green-700 border-green-200";
+      case 'en_cours': return "bg-blue-100 text-blue-700 border-blue-200";
+      case 'archive': return "bg-gray-100 text-gray-700 border-gray-200";
+      default: return "bg-amber-100 text-[#d4af37] border-amber-200";
     }
   };
 
   return (
-    <div className="space-y-8 p-6">
+    <div className="space-y-6 p-6 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-[#0a0f1e]">Gestion des Demandes</h1>
-          <p className="text-gray-500">Gérez les prospects et demandes de contact de MSF Congo</p>
+          <h1 className="text-3xl font-bold text-[#0a0f1e]">Pipeline Prospects</h1>
+          <p className="text-gray-500">Flux de conversion MSF Congo en temps réel</p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-gray-400 bg-white px-4 py-2 rounded-lg border border-gray-100 shadow-sm">
-          <Clock className="w-4 h-4" />
-          Dernière mise à jour : {format(new Date(), 'HH:mm', { locale: fr })}
-        </div>
+        <Button onClick={fetchDemandes} variant="outline" size="sm" className="gap-2">
+          <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Actualiser
+        </Button>
       </div>
 
-      {/* Statistiques rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-none shadow-sm">
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{demandes.length}</div>
-            <p className="text-xs text-gray-500 uppercase tracking-wider">Total Demandes</p>
-          </CardContent>
-        </Card>
-        <Card className="border-none shadow-sm">
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-[#d4af37]">
-              {demandes.filter(d => !d.status || d.status === 'nouveau').length}
-            </div>
-            <p className="text-xs text-gray-500 uppercase tracking-wider">Non lues</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Barre d'outils */}
-      <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+      {/* Filtres stratégiques */}
+      <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <Input
-            placeholder="Rechercher un nom, email ou sujet..."
-            className="pl-10 border-gray-200 focus:border-[#d4af37]"
+            placeholder="Rechercher un client..."
+            className="pl-10 border-gray-200"
             value={searchTerm}
-            onChange={(e) => setSearchSearchTerm(e.target.value)}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex gap-2">
-          <select
-            className="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-[#d4af37] focus:border-[#d4af37] block w-full p-2.5"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="tous">Tous les statuts</option>
-            <option value="nouveau">Nouveaux</option>
-            <option value="en_cours">En cours</option>
-            <option value="traite">Traités</option>
-          </select>
-          <Button variant="outline" onClick={fetchDemandes} className="gap-2">
-             Rafraîchir
-          </Button>
-        </div>
+        <select
+          className="bg-gray-50 border border-gray-200 text-sm rounded-lg p-2.5 focus:ring-[#d4af37]"
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+        >
+          <option value="tous">Tous les statuts</option>
+          <option value="nouveau">Nouveaux</option>
+          <option value="en_cours">En cours</option>
+          <option value="traite">Traités</option>
+        </select>
       </div>
 
-      {/* Liste des demandes */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="p-20 text-center text-gray-400">Chargement des prospects...</div>
+      {/* Liste des demandes avec expansion */}
+      <div className="space-y-4">
+        {loading && demandes.length === 0 ? (
+          <div className="p-12 text-center text-gray-400">Analyse de la base de données...</div>
         ) : filteredDemandes.length === 0 ? (
-          <div className="p-20 text-center text-gray-400">
-            <Mail className="w-12 h-12 mx-auto mb-4 opacity-20" />
-            Aucune demande ne correspond à vos critères.
+          <div className="p-12 text-center text-gray-400 bg-white rounded-xl border border-dashed">
+            Aucun prospect trouvé. Le marketing doit se réveiller.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="p-4 text-xs font-semibold text-gray-500 uppercase">Contact</th>
-                  <th className="p-4 text-xs font-semibold text-gray-500 uppercase">Sujet / Projet</th>
-                  <th className="p-4 text-xs font-semibold text-gray-500 uppercase">Date</th>
-                  <th className="p-4 text-xs font-semibold text-gray-500 uppercase">Statut</th>
-                  <th className="p-4 text-xs font-semibold text-gray-500 uppercase text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+          filteredDemandes.map((demande) => (
+            <Card key={demande.id} className={`overflow-hidden transition-all duration-300 border-l-4 ${expandedId === demande.id ? 'border-l-[#d4af37] shadow-md' : 'border-l-transparent'}`}>
+              <CardContent className="p-0">
+                {/* Header de la ligne (cliquable pour déplier) */}
+                <div
+                  onClick={() => toggleExpand(demande.id)}
+                  className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors"
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-[#d4af37] font-bold">
+                      {demande.name.charAt(0)}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-1 flex-1">
+                      <div className="font-semibold text-[#0a0f1e]">{demande.name}</div>
+                      <div className="text-sm text-gray-500 hidden md:block">{demande.subject}</div>
+                      <div className="text-xs text-gray-400 flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> {format(new Date(demande.created_at), 'dd/MM/yyyy HH:mm')}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Badge className={getStatusColor(demande.status || 'nouveau')}>
+                      {(demande.status || 'nouveau').toUpperCase()}
+                    </Badge>
+                    {expandedId === demande.id ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                  </div>
+                </div>
+
+                {/* Zone dépliée */}
                 <AnimatePresence>
-                  {filteredDemandes.map((demande) => (
-                    <motion.tr
-                      key={demande.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="group border-b border-gray-50 hover:bg-slate-50 transition-colors"
+                  {expandedId === demande.id && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="border-t border-gray-100 bg-slate-50/50"
                     >
-                      <td className="p-4">
-                        <div className="font-medium text-[#0a0f1e]">{demande.name}</div>
-                        <div className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                          <Mail className="w-3 h-3" /> {demande.email}
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="text-sm font-medium text-gray-700">{demande.subject}</div>
-                        {demande.property_type && (
-                          <div className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded mt-1 inline-block">
-                            {demande.property_type}
+                      <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {/* Détails techniques */}
+                        <div className="space-y-4">
+                          <h4 className="text-xs font-bold uppercase text-gray-400 tracking-widest">Informations</h4>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm">
+                              <Mail className="w-4 h-4 text-gray-400" /> {demande.email}
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <Phone className="w-4 h-4 text-gray-400" /> {demande.phone}
+                            </div>
+                            {demande.budget && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <DollarSign className="w-4 h-4 text-gray-400" /> Budget: {demande.budget}
+                              </div>
+                            )}
+                            {demande.property_type && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Building2 className="w-4 h-4 text-gray-400" /> Type: {demande.property_type}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </td>
-                      <td className="p-4 text-sm text-gray-500">
-                        {format(new Date(demande.created_at), 'dd MMM yyyy', { locale: fr })}
-                      </td>
-                      <td className="p-4">
-                        {getStatusBadge(demande.status || 'nouveau')}
-                      </td>
-                      <td className="p-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link to={`/admin/demandes/${demande.id}`}>
-                              Détails
-                            </Link>
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => window.open(`mailto:${demande.email}`)}>
-                                <Mail className="w-4 h-4 mr-2" /> Répondre par mail
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(demande.id)}>
-                                <Trash2 className="w-4 h-4 mr-2" /> Supprimer
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
                         </div>
-                      </td>
-                    </motion.tr>
-                  ))}
+
+                        {/* Le Message */}
+                        <div className="lg:col-span-2 space-y-4">
+                          <h4 className="text-xs font-bold uppercase text-gray-400 tracking-widest">Message du Prospect</h4>
+                          <div className="bg-white p-4 rounded-xl border border-gray-200 text-gray-700 leading-relaxed text-sm whitespace-pre-wrap">
+                            {demande.message}
+                          </div>
+
+                          {/* Actions de Pipeline */}
+                          <div className="flex flex-wrap gap-3 pt-4">
+                            <Button
+                              size="sm"
+                              className="bg-[#d4af37] hover:bg-[#b8952e] gap-2"
+                              onClick={() => {
+                                const subject = encodeURIComponent(`Réponse: ${demande.subject}`);
+                                const body = encodeURIComponent(`Bonjour ${demande.name},\n\n`);
+                                // On ajoute le bcc pour le suivi interne
+                                window.open(`mailto:${demande.email}?bcc=${adminEmail}&subject=${subject}&body=${body}`);
+                              }}
+                            >
+                              <Send className="w-4 h-4" /> Répondre par Email
+                            </Button>
+
+                            <div className="h-8 w-[1px] bg-gray-200 mx-2 hidden md:block" />
+
+                            <Button
+                              size="sm" variant="outline"
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                              onClick={() => updateStatus(demande.id, 'en_cours')}
+                            >
+                              Marquer "En cours"
+                            </Button>
+
+                            <Button
+                              size="sm" variant="outline"
+                              className="text-green-600 border-green-200 hover:bg-green-50"
+                              onClick={() => updateStatus(demande.id, 'traite')}
+                            >
+                              Marquer "Traité"
+                            </Button>
+
+                            <Button
+                              size="sm" variant="ghost"
+                              className="text-red-500 hover:bg-red-50 ml-auto"
+                              onClick={() => handleDelete(demande.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
                 </AnimatePresence>
-              </tbody>
-            </table>
-          </div>
+              </CardContent>
+            </Card>
+          ))
         )}
       </div>
     </div>
