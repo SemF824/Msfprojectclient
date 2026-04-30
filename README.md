@@ -2,7 +2,11 @@
 
 Site web immobilier moderne et futuriste pour **MSF Congo** (Roger ROC), spécialisé dans les développements côtiers haut de gamme à Pointe-Noire, Congo.
 
-## 🎯 Deux Applications en Une 2.5
+<<<<<<< HEAD
+## 🎯 Deux Applications en Une 2.2
+=======
+## 🎯 Deux Applications en Une
+>>>>>>> 5168ff1 (affinage 2.3)
 
 Ce projet contient **DEUX applications distinctes** qui partagent la même base de données :
 
