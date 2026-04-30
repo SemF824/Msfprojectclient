@@ -66,11 +66,15 @@ export default function Signup() {
 
       if (signUpError) throw signUpError;
 
+      // STRATÉGIE IMPITOYABLE : On détruit toute session prématurée 
+      // pour forcer la vérification de l'email et empêcher l'accès au Dashboard.
       if (data.session) {
-        navigate("/client/dashboard");
-      } else {
-        setStep(3);
+        await supabase.auth.signOut();
       }
+      
+      // On force SYSTEMATIQUEMENT l'étape 3
+      setStep(3);
+      
     } catch (err: any) {
       setError(err.message || "Erreur lors de l'inscription.");
     } finally {
@@ -223,7 +227,7 @@ export default function Signup() {
                 </div>
                 <h3 className="text-2xl font-bold text-[#0a0f1e] mb-4">Vérifiez vos emails</h3>
                 <p className="text-gray-600 mb-8">Un lien de confirmation a été envoyé à <strong>{formData.email}</strong>. Confirmez-le pour accéder à l'intégralité de vos services.</p>
-                <Link to="/connexion" className="inline-block px-8 py-3 bg-[#0a0f1e] text-[#d4af37] rounded-xl font-bold hover:shadow-lg transition-all">Retour à la connexion</Link>
+                <Link to="/connexion" className="inline-block px-8 py-3 bg-[#0a0f1e] text-[#d4af37] rounded-xl font-bold hover:shadow-lg transition-all">Aller à la connexion</Link>
               </motion.div>
             )}
           </AnimatePresence>
