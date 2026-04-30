@@ -10,7 +10,7 @@ import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 export default function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [unreadContactsCount, setUnreadContactsCount] = useState(0); // <-- Ajout de l'état
+  const [unreadContactsCount, setUnreadContactsCount] = useState(0);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -66,14 +66,15 @@ export default function AdminLayout() {
     return null;
   };
 
-  // ── MOTEUR DE NOTIFICATIONS TEMPS RÉEL (Admin) ─────────────────────────
+  // Moteur de Notifications (contact_requests)
   useEffect(() => {
-    // 1. Chargement initial
+    if (!supabase) return;
+
     const fetchUnreadContacts = async () => {
       const { count, error } = await supabase
         .from('contact_requests')
         .select('*', { count: 'exact', head: true })
-        .or('status.eq.nouveau,status.is.null'); // Compte les statuts 'nouveau' ou absents
+        .or('status.eq.nouveau,status.is.null');
 
       if (!error && count !== null) {
         setUnreadContactsCount(count);
@@ -82,15 +83,12 @@ export default function AdminLayout() {
 
     fetchUnreadContacts();
 
-    // 2. Écoute des changements en temps réel
     const channel = supabase
       .channel('admin-notifications')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'contact_requests' },
-        () => {
-          fetchUnreadContacts(); // On recharge le compte à chaque modif
-        }
+        () => fetchUnreadContacts()
       )
       .subscribe();
 
@@ -98,6 +96,14 @@ export default function AdminLayout() {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // SÉCURITÉ : Déconnexion forcée
+  const handlePublicSiteReturn = async () => {
+    if (window.confirm("SÉCURITÉ : Retourner sur le site public va détruire votre session Administrateur. Voulez-vous vous déconnecter et continuer ?")) {
+      await signOut();
+      navigate('/vitrine');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50">
@@ -228,20 +234,20 @@ export default function AdminLayout() {
       <aside
         className={`fixed top-16 left-0 bottom-0 z-40 bg-white border-r border-gray-200 transition-all duration-300 ${
           isSidebarOpen ? 'w-64' : 'w-0'
-        } overflow-hidden`}
+        } overflow-hidden flex flex-col`}
       >
         <div className="p-4">
-          {/* Bouton retour au site public */}
-          <Link
-            to="/vitrine"
-            className="flex items-center gap-3 px-4 py-3 mb-4 rounded-xl text-gray-700 bg-gray-50 hover:bg-gray-100 transition-all border border-gray-200"
+          {/* Bouton retour au site public AVEC DÉCONNEXION */}
+          <button
+            onClick={handlePublicSiteReturn}
+            className="w-full flex items-center gap-3 px-4 py-3 mb-4 rounded-xl text-red-600 bg-red-50 hover:bg-red-100 hover:text-red-700 transition-all border border-red-100 font-medium"
           >
-            <Home className="w-5 h-5 text-[#d4af37]" />
-            <span>← Site Public</span>
-          </Link>
+            <Home className="w-5 h-5" />
+            <span>← Quitter (Déconnexion)</span>
+          </button>
         </div>
 
-        <nav className="px-4 pb-4 space-y-2">
+        <nav className="px-4 pb-4 space-y-2 flex-1 overflow-y-auto">
           {navigation.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -254,10 +260,10 @@ export default function AdminLayout() {
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                   active
                     ? isSuperadminOnly
-                      ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold shadow-lg'
-                      : 'bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] font-semibold shadow-lg'
+                      ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold shadow-md'
+                      : 'bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] font-semibold shadow-md'
                     : isSuperadminOnly
-                    ? 'text-purple-700 hover:bg-purple-50 border border-purple-200'
+                    ? 'text-purple-700 hover:bg-purple-50 border border-purple-100'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
@@ -272,7 +278,7 @@ export default function AdminLayout() {
         </nav>
 
         {/* Quick Stats in Sidebar */}
-        <div className="p-4 mt-8">
+        <div className="p-4 mt-auto border-t border-gray-100">
           <div className="bg-gradient-to-br from-[#d4af37]/10 to-transparent rounded-xl border border-[#d4af37]/30 p-4">
             <h3 className="text-sm text-[#0a0f1e] font-semibold mb-3">Aujourd'hui</h3>
             <div className="space-y-2">
@@ -282,11 +288,7 @@ export default function AdminLayout() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-600">Visites planifiées</span>
-                <span className="text-sm text-[#0a0f1e] font-bold">3</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-600">Documents à vérifier</span>
-                <span className="text-sm text-orange-600 font-bold">8</span>
+                <span className="text-sm text-[#0a0f1e] font-bold">0</span>
               </div>
             </div>
           </div>

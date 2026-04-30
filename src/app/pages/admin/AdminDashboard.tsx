@@ -4,9 +4,11 @@ import { motion } from "motion/react";
 import {
   FileText, CheckCircle, Clock,
   ArrowUpRight, ArrowDownRight,
-  Building2, DollarSign, Activity, Loader2, AlertCircle
+  Building2, DollarSign, Activity, Loader2, AlertCircle, Download
 } from "lucide-react";
+import { format } from "date-fns";
 import { supabase } from "../../../hooks/useSupabaseAuth";
+import { Link } from "react-router"; // Corrigé depuis react-router-dom pour Vite moderne si configuré
 
 // ─── Stagger variants (anti-clignotement) ─────────────────────────────────────
 const containerVariants = {
@@ -51,9 +53,9 @@ export default function AdminDashboard() {
         if (isMounted) navigate("/");
         return;
       }
-      
+
       setIsLoading(true);
-      
+
       try {
         // 2. Récupération des vraies données
         const { data: allData, error: dataError } = await supabase
@@ -64,9 +66,18 @@ export default function AdminDashboard() {
 
         if (allData && isMounted) {
           // Calculs sécurisés
-          const pending = allData.filter(d => d.status === 'nouveau' || d.status === 'en_cours').length;
-          const approved = allData.filter(d => d.status === 'approuve').length;
-          const revenue = allData.reduce((acc, curr) => acc + (Number(curr.property_price) || 0), 0);
+          const pending = allData.filter(d => !d.status || d.status === 'nouveau' || d.status === 'en_cours').length;
+          const approved = allData.filter(d => d.status === 'approuve' || d.status === 'traite').length;
+
+          let revenue = 0;
+          allData.forEach(req => {
+            // Nettoyer les chaînes de caractères si le prix contient des espaces ou la mention FCFA
+            if (req.property_price) {
+              const cleanPrice = String(req.property_price).replace(/[^0-9]/g, '');
+              const numPrice = parseInt(cleanPrice, 10);
+              if (!isNaN(numPrice)) revenue += numPrice;
+            }
+          });
 
           setStats({
             pendingRequests: pending,
@@ -75,7 +86,7 @@ export default function AdminDashboard() {
             totalRequests: allData.length
           });
 
-          // Tri et extraction des 5 plus récents avec protection anti-crash
+          // Tri et extraction des 5 plus récents
           const latest = allData
             .sort((a, b) => {
               const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
@@ -83,15 +94,13 @@ export default function AdminDashboard() {
               return dateB - dateA;
             })
             .slice(0, 5);
-            
+
           setRecentRequests(latest);
         }
       } catch (err: any) {
         console.error("Erreur critique Dashboard:", err);
         if (isMounted) {
-          setError("Échec de connexion à la base de données.");
-          // Éjection vers l'accueil après 3 secondes pour que l'utilisateur comprenne
-          setTimeout(() => navigate("/"), 3000); 
+          setError("Échec de connexion à la base de données pour les devis.");
         }
       } finally {
         if (isMounted) setIsLoading(false);
@@ -101,41 +110,64 @@ export default function AdminDashboard() {
     fetchDashboardData();
 
     return () => {
-      isMounted = false; // Cleanup pour éviter les fuites de mémoire
+      isMounted = false; // Cleanup
     };
   }, [navigate]);
+
+  const formatCurrency = (value: number) => {
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " FCFA";
+  };
+
+  // Export CSV Fonctionnel
+  const exportToCSV = async () => {
+    const { data } = await supabase.from('devis_requests').select('*');
+    if (!data || data.length === 0) return alert("Aucune donnée à exporter.");
+
+    const headers = ['Date', 'Client', 'Propriété', 'Prix', 'Statut'];
+    const csvData = data.map(req => [
+      format(new Date(req.created_at), 'dd/MM/yyyy HH:mm'),
+      `"${req.client_first_name} ${req.client_last_name}"`,
+      `"${req.property_name || 'Non spécifié'}"`,
+      `"${req.property_price || 0}"`,
+      `"${req.status || 'nouveau'}"`
+    ].join(','));
+
+    const csvContent = [headers.join(','), ...csvData].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `MSF_Devis_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    link.click();
+  };
 
   // État de chargement
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="w-12 h-12 text-[#d4af37] animate-spin" />
-        <p className="text-gray-500 animate-pulse">Synchronisation des données...</p>
+        <p className="text-gray-500 animate-pulse">Synchronisation des données du Dashboard...</p>
       </div>
     );
   }
 
-  // État d'erreur avec éjection
+  // État d'erreur
   if (error) {
     return (
       <div className="p-8 flex flex-col items-center justify-center min-h-[60vh] text-center bg-white rounded-2xl m-8 shadow-sm border border-red-100">
         <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
-        <h2 className="text-2xl font-bold text-[#0a0f1e] mb-2">Accès Impossible</h2>
+        <h2 className="text-2xl font-bold text-[#0a0f1e] mb-2">Impossible de charger les statistiques</h2>
         <p className="text-gray-600 mb-6">{error}</p>
-        <div className="flex items-center gap-2 text-sm text-gray-400 font-medium">
-          <Loader2 className="w-4 h-4 animate-spin" />
-          <span>Redirection vers l'accueil en cours...</span>
-        </div>
+        <button onClick={() => window.location.reload()} className="px-6 py-2 bg-slate-900 text-white rounded-lg">Réessayer</button>
       </div>
     );
   }
 
   // Affichage des cartes de statistiques
   const statCards = [
-    { title: "Dossiers en Attente",  value: stats.pendingRequests, icon: Clock,        trend: "+12%", trendUp: true,  color: "blue"   },
-    { title: "Ventes Potentielles",  value: `${new Intl.NumberFormat('fr-FR').format(stats.potentialRevenue)} FCFA`, icon: DollarSign, trend: "+8%",  trendUp: true,  color: "green"  },
-    { title: "Dossiers Approuvés",   value: stats.approvedCount,   icon: CheckCircle,  trend: "+5%",  trendUp: true,  color: "purple" },
-    { title: "Total Demandes",       value: stats.totalRequests,   icon: FileText,     trend: "+15%", trendUp: true,  color: "amber"  },
+    { title: "Dossiers en Attente",  value: stats.pendingRequests, icon: Clock,        trend: "Actifs", trendUp: true,  color: "blue"   },
+    { title: "Ventes Potentielles",  value: formatCurrency(stats.potentialRevenue), icon: DollarSign, trend: "Pipeline",  trendUp: true,  color: "green"  },
+    { title: "Dossiers Approuvés",   value: stats.approvedCount,   icon: CheckCircle,  trend: "Validés",  trendUp: true,  color: "purple" },
+    { title: "Total Demandes",       value: stats.totalRequests,   icon: FileText,     trend: "Global", trendUp: true,  color: "amber"  },
   ];
 
   return (
@@ -164,13 +196,12 @@ export default function AdminDashboard() {
                 <div className={`p-3 rounded-xl ${colors.bg}`}>
                   <stat.icon className={`w-6 h-6 ${colors.text}`} />
                 </div>
-                <div className={`flex items-center gap-1 text-sm ${stat.trendUp ? 'text-green-600' : 'text-red-600'}`}>
-                  {stat.trendUp ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+                <div className={`flex items-center gap-1 text-sm ${stat.trendUp ? 'text-green-600' : 'text-gray-500'}`}>
                   {stat.trend}
                 </div>
               </div>
               <h3 className="text-gray-500 text-sm font-medium mb-1">{stat.title}</h3>
-              <p className="text-2xl text-[#0a0f1e] font-bold">{stat.value}</p>
+              <p className="text-2xl text-[#0a0f1e] font-bold truncate" title={String(stat.value)}>{stat.value}</p>
             </motion.div>
           );
         })}
@@ -179,11 +210,14 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Activités Récentes (Blindées contre les données nulles) */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-          <h2 className="text-xl text-[#0a0f1e] font-bold mb-6">Activités Récentes</h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl text-[#0a0f1e] font-bold">Derniers Devis (Réels)</h2>
+            <Link to="/admin/demandes" className="text-sm text-blue-600 hover:underline">Voir tout</Link>
+          </div>
           <div className="space-y-4">
             {recentRequests.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                Aucune demande enregistrée pour le moment.
+              <div className="text-center py-8 text-gray-500 border border-dashed border-gray-200 rounded-xl">
+                Aucun devis enregistré pour le moment.
               </div>
             ) : (
               recentRequests.map((req, i) => {
@@ -195,16 +229,16 @@ export default function AdminDashboard() {
 
                 return (
                   <div key={i} className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
-                    <div className="w-12 h-12 bg-[#0a0f1e] rounded-full flex items-center justify-center font-bold text-[#d4af37]">
+                    <div className="w-12 h-12 bg-[#0a0f1e] rounded-full flex items-center justify-center font-bold text-[#d4af37] flex-shrink-0">
                       {initials}
                     </div>
-                    <div className="flex-1">
-                      <p className="text-[#0a0f1e] font-semibold">{firstName} {lastName}</p>
-                      <p className="text-sm text-gray-500">Demande pour : {req.property_name || 'Bien non spécifié'}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[#0a0f1e] font-semibold truncate">{firstName} {lastName}</p>
+                      <p className="text-sm text-gray-500 truncate">Demande pour : {req.property_name || 'Bien non spécifié'}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right flex-shrink-0">
                       <p className="text-sm font-medium text-[#0a0f1e]">{date}</p>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${status === 'nouveau' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${status === 'nouveau' ? 'bg-amber-100 text-amber-700' : status === 'approuve' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
                         {status}
                       </span>
                     </div>
@@ -216,21 +250,21 @@ export default function AdminDashboard() {
         </div>
 
         {/* Actions Rapides */}
-        <div className="bg-[#0a0f1e] rounded-2xl p-6 text-white h-fit">
+        <div className="bg-[#0a0f1e] rounded-2xl p-6 text-white h-fit shadow-lg">
           <h2 className="text-xl font-bold mb-6">Raccourcis</h2>
           <div className="space-y-3">
-            <button className="w-full py-4 bg-white/10 hover:bg-white/20 rounded-xl transition-all flex items-center gap-3 px-4 border border-white/10 text-left">
+            <Link to="/admin/proprietes" className="w-full py-4 bg-white/10 hover:bg-white/20 rounded-xl transition-all flex items-center gap-3 px-4 border border-white/10 text-left group block">
               <Building2 className="w-5 h-5 text-[#d4af37]" />
               <div>
-                <p className="text-sm font-semibold">Catalogue Propriétés</p>
+                <p className="text-sm font-semibold group-hover:text-[#d4af37] transition-colors">Catalogue Propriétés</p>
                 <p className="text-[10px] text-gray-400">Gérer les annonces</p>
               </div>
-            </button>
-            <button className="w-full py-4 bg-white/10 hover:bg-white/20 rounded-xl transition-all flex items-center gap-3 px-4 border border-white/10 text-left">
-              <Activity className="w-5 h-5 text-blue-400" />
+            </Link>
+            <button onClick={exportToCSV} className="w-full py-4 bg-white/10 hover:bg-white/20 rounded-xl transition-all flex items-center gap-3 px-4 border border-white/10 text-left group">
+              <Download className="w-5 h-5 text-blue-400" />
               <div>
-                <p className="text-sm font-semibold">Exporter Données</p>
-                <p className="text-[10px] text-gray-400">Rapport CSV</p>
+                <p className="text-sm font-semibold group-hover:text-blue-400 transition-colors">Exporter Données</p>
+                <p className="text-[10px] text-gray-400">Rapport complet (CSV)</p>
               </div>
             </button>
           </div>
