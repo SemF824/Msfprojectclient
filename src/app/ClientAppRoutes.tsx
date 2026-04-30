@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from "react-router";
 import { lazy, Suspense, useEffect } from "react";
 import Layout from "./components/Layout";
+import ClientLayout from "./components/ClientLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // ── Pages publiques (import synchrone → SEO / LCP) ──────────────────────────
@@ -32,14 +33,11 @@ const ClientLoader = () => (
   </div>
 );
 
-// ✅ Composant pour scroller au top lors du changement de route
 function ScrollToTopOnRouteChange() {
   const location = useLocation();
-
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
   }, [location.pathname]);
-
   return null;
 }
 
@@ -57,68 +55,50 @@ export default function ClientAppRoutes() {
               VITRINE PUBLIQUE  —  préfixe /vitrine
           ════════════════════════════════════════════════════════════════════ */}
           <Route path="vitrine" element={<Layout />}>
-            <Route index                   element={<Home />} />
-            <Route path="contact"          element={<Contact />} />
-            <Route path="services"         element={<Services />} />
-            <Route path="devis"            element={<DevisRequest />} />
+            <Route index element={<Home />} />
+            <Route path="contact" element={<Contact />} />
+            <Route path="services" element={<Services />} />
+            <Route path="devis" element={<DevisRequest />} />
             <Route path="devis/:propertyId" element={<DevisRequest />} />
-            <Route path="propriete/:id"    element={<PropertyDetails />} />
-            <Route path="projet/:slug"     element={<ProjectDetail />} />
+            <Route path="propriete/:id" element={<PropertyDetails />} />
+            <Route path="projet/:slug" element={<ProjectDetail />} />
           </Route>
 
-          {/* ── Routes autonomes (sans Layout public) ─────────────────────────── */}
-          <Route path="connexion"  element={<Login />} />
+          <Route path="connexion" element={<Login />} />
           <Route path="inscription" element={<Signup />} />
 
           {/* ═════════════════════════════════════════════════════════════════════
               ALIAS : ESPACE CLIENT SANS PRÉFIXE 
-              (Intercepte les liens codés en dur dans tes pages)
           ════════════════════════════════════════════════════════════════════ */}
-          <Route path="dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
-          <Route path="transaction/:id" element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>} />
-          <Route path="notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-          <Route path="profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
-          <Route path="settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="dashboard" element={<Navigate to="/client/dashboard" replace />} />
+          <Route path="transactions" element={<Navigate to="/client/transactions" replace />} />
+          <Route path="transaction/:id" element={<Navigate to={`/client/transaction/${useLocation().pathname.split('/').pop()}`} replace />} />
+          <Route path="notifications" element={<Navigate to="/client/notifications" replace />} />
+          <Route path="profile" element={<Navigate to="/client/profile" replace />} />
+          <Route path="favorites" element={<Navigate to="/client/favorites" replace />} />
+          <Route path="settings" element={<Navigate to="/client/settings" replace />} />
 
           {/* ═════════════════════════════════════════════════════════════════════
-              ESPACE CLIENT PROTÉGÉ  —  préfixe /client
+              ESPACE CLIENT PROTÉGÉ AVEC LE NOUVEAU LAYOUT
           ════════════════════════════════════════════════════════════════════ */}
-          <Route path="client">
-            <Route
-              path="dashboard"
-              element={<ProtectedRoute><Dashboard /></ProtectedRoute>}
-            />
-            <Route
-              path="transactions"
-              element={<ProtectedRoute><Transactions /></ProtectedRoute>}
-            />
-            {/* Gestion du pluriel et du singulier pour parer à toute éventualité */}
-            <Route
-              path="transactions/:id"
-              element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>}
-            />
-            <Route
-              path="transaction/:id"
-              element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>}
-            />
-            <Route
-              path="notifications"
-              element={<ProtectedRoute><Notifications /></ProtectedRoute>}
-            />
-            <Route
-              path="profile"
-              element={<ProtectedRoute><Profile /></ProtectedRoute>}
-            />
-            <Route
-              path="favorites"
-              element={<ProtectedRoute><Favorites /></ProtectedRoute>}
-            />
-            <Route
-              path="settings"
-              element={<ProtectedRoute><Settings /></ProtectedRoute>}
-            />
+          <Route path="client" element={<ProtectedRoute><ClientLayout /></ProtectedRoute>}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="transactions" element={<Transactions />} />
+            <Route path="transactions/:id" element={<TransactionDetail />} />
+            <Route path="transaction/:id" element={<TransactionDetail />} />
+            <Route path="notifications" element={<Notifications />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="favorites" element={<Favorites />} />
+            <Route path="settings" element={<Settings />} />
+
+            {/* Redirections temporaires le temps de finir la refonte du Dashboard */}
+            <Route path="requests" element={<Dashboard />} />
+            <Route path="appointments" element={<Dashboard />} />
+            <Route path="history" element={<Dashboard />} />
+            <Route path="documents" element={<Dashboard />} />
+            <Route path="loan" element={<Dashboard />} />
           </Route>
 
           {/* ── Catch-all ─────────────────────────────────────────────────────── */}
