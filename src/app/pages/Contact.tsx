@@ -10,6 +10,8 @@ import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { supabase } from "../../hooks/useSupabaseAuth";
 
+const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || "promotions@msfcongo.com";
+
 const contactFormSchema = z.object({
   name: z.string()
     .min(2, "Le nom doit contenir au moins 2 caractères")
@@ -51,14 +53,12 @@ export default function Contact() {
     setIsSubmitting(true);
 
     try {
-      // 1. Vérification que le système anti-bot est chargé
       if (!executeRecaptcha) {
         setSubmitError("Le système de sécurité n'est pas encore initialisé. Veuillez patienter.");
         setIsSubmitting(false);
         return;
       }
 
-      // 2. Génération du Jeton Invisible V3
       const token = await executeRecaptcha('contact_form_submit');
 
       if (!token) {
@@ -67,7 +67,6 @@ export default function Contact() {
         return;
       }
 
-      // 3. Validation locale des données (Zod)
       const validationResult = contactFormSchema.safeParse(formData);
 
       if (!validationResult.success) {
@@ -77,7 +76,6 @@ export default function Contact() {
         return;
       }
 
-      // 4. Rate Limiting de courtoisie côté client
       const lastSubmit = localStorage.getItem('last_contact_submit');
       const now = Date.now();
       if (lastSubmit && now - parseInt(lastSubmit) < 60000) {
@@ -86,7 +84,6 @@ export default function Contact() {
         return;
       }
 
-      // 5. LA STRATÉGIE SÉCURISÉE : Délégation à l'Edge Function
       const { data, error } = await supabase.functions.invoke('submit-contact', {
         body: {
           token: token,
@@ -94,17 +91,14 @@ export default function Contact() {
         }
       });
 
-      // Gestion des erreurs réseau (timeout, fonction introuvable...)
       if (error) {
         throw new Error(error.message || "Erreur de connexion au serveur.");
       }
 
-      // Gestion des erreurs applicatives renvoyées par notre propre code backend (ex: bot détecté)
       if (data && data.error) {
         throw new Error(data.error);
       }
 
-      // 6. Succès et Nettoyage
       localStorage.setItem('last_contact_submit', now.toString());
       setSubmitted(true);
       setFormData({
@@ -232,16 +226,18 @@ export default function Contact() {
       );
     }
 
+    const mapUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=Maisons+Sans+Frontieres+Pointe-Noire+Congo&language=fr`;
+
     return (
       <div className="h-80 rounded-xl overflow-hidden border border-gray-200">
         <iframe
           width="100%"
           height="100%"
-          frameBorder="0"
           style={{ border: 0 }}
-          referrerPolicy="no-referrer-when-downgrade"
-          src={`https://googleusercontent.com/maps.google.com/0{apiKey}&q=6R2W%2BJ28+Pointe-Noire+Congo-Brazzaville&zoom=16&language=fr`}
+          loading="lazy"
           allowFullScreen
+          referrerPolicy="no-referrer-when-downgrade"
+          src={mapUrl}
           title="Localisation MSF Congo"
         />
       </div>
