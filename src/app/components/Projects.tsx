@@ -87,7 +87,7 @@ const projects = [
 
 export function Projects() {
   return (
-    <section className="py-24 px-6 bg-gradient-to-b from-[#1e3a5f]/20 to-[#0a0f1e]">
+    <section className="py-24 px-6 bg-gray-50">
       <div className="container mx-auto">
         {/* Header */}
         <div className="text-center mb-16">
@@ -95,10 +95,10 @@ export function Projects() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1e3a5f]/40 backdrop-blur-md border border-[#d4af37]/30 mb-4"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#d4af37]/30 shadow-sm mb-4"
           >
             <Building2 className="w-4 h-4 text-[#d4af37]" />
-            <span className="text-xs text-[#d4af37] tracking-wider uppercase">Nos Réalisations</span>
+            <span className="text-xs text-[#0a0f1e] font-bold tracking-wider uppercase">Nos Réalisations</span>
           </motion.div>
 
           <motion.h2
@@ -106,12 +106,9 @@ export function Projects() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-4xl md:text-5xl mb-4"
+            className="text-4xl md:text-5xl mb-4 font-black text-[#0a0f1e]"
           >
-            <span className="text-white">Projets </span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">
-              Phares
-            </span>
+            Projets <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">Phares</span>
           </motion.h2>
 
           <motion.p
@@ -119,14 +116,14 @@ export function Projects() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="text-gray-400 max-w-3xl mx-auto text-lg"
+            className="text-gray-600 max-w-3xl mx-auto text-lg"
           >
             Des villes nouvelles qui transforment le paysage urbain congolais
           </motion.p>
         </div>
 
         {/* Projects */}
-        <div className="space-y-12">
+        <div className="space-y-20">
           {projects.map((project, index) => (
             <motion.div
               key={project.id}
@@ -134,46 +131,46 @@ export function Projects() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className={`group relative ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'} flex flex-col lg:flex gap-8 items-center`}
+              className={`group relative ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'} flex flex-col lg:flex gap-12 items-center`}
             >
               {/* Image */}
-              <div className="lg:w-1/2 relative">
-                <div className="relative rounded-3xl overflow-hidden">
+              <div className="lg:w-1/2 relative w-full">
+                <div className="relative rounded-3xl overflow-hidden shadow-xl border border-gray-100 bg-white">
                   <img
                     src={project.image}
                     alt={project.name}
-                    className="w-full h-[400px] object-cover group-hover:scale-110 transition-transform duration-700"
+                    className="w-full h-[400px] md:h-[450px] object-cover group-hover:scale-105 transition-transform duration-700"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e]/80 via-[#0a0f1e]/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e]/60 via-transparent to-transparent" />
                   
                   {/* Tag */}
-                  <div className={`absolute top-6 left-6 px-4 py-2 rounded-full backdrop-blur-md border font-semibold ${
-                    project.color === 'emerald' ? 'bg-emerald-500/30 border-emerald-400/60 text-emerald-200' :
-                    project.color === 'blue' ? 'bg-blue-500/30 border-blue-400/60 text-blue-200' :
-                    'bg-amber-500/30 border-amber-400/60 text-amber-200'
+                  <div className={`absolute top-6 left-6 px-4 py-2 rounded-full font-bold text-sm shadow-md ${
+                    project.color === 'emerald' ? 'bg-emerald-100 border border-emerald-200 text-emerald-800' :
+                    project.color === 'blue' ? 'bg-blue-100 border border-blue-200 text-blue-800' :
+                    'bg-amber-100 border border-amber-200 text-amber-800'
                   }`}>
                     {project.tag}
                   </div>
                 </div>
 
                 {/* Decorative */}
-                <div className={`absolute -z-10 ${index % 2 === 0 ? '-right-8' : '-left-8'} -bottom-8 w-full h-full bg-gradient-to-br from-[#d4af37]/10 to-transparent rounded-3xl`} />
+                <div className={`absolute -z-10 ${index % 2 === 0 ? '-right-4 md:-right-8' : '-left-4 md:-left-8'} -bottom-4 md:-bottom-8 w-full h-full bg-[#d4af37]/10 rounded-3xl`} />
               </div>
 
               {/* Content */}
-              <div className="lg:w-1/2 space-y-6">
+              <div className="lg:w-1/2 space-y-6 w-full">
                 <div>
-                  <div className="flex items-center gap-2 text-gray-300 mb-3">
+                  <div className="flex items-center gap-2 text-gray-500 mb-3">
                     <MapPin className="w-5 h-5 text-[#d4af37]" />
-                    <span className="font-medium">{project.location}</span>
+                    <span className="font-semibold">{project.location}</span>
                   </div>
-                  <h3 className="text-3xl md:text-4xl text-white mb-2">
+                  <h3 className="text-3xl md:text-4xl text-[#0a0f1e] font-bold mb-2 leading-tight">
                     {project.name}
                   </h3>
-                  <p className="text-[#d4af37] text-xl mb-4 font-medium">
+                  <p className="text-[#d4af37] text-xl mb-6 font-bold">
                     {project.tagline}
                   </p>
-                  <p className="text-gray-300 leading-relaxed">
+                  <p className="text-gray-600 leading-relaxed text-lg">
                     {project.description}
                   </p>
                 </div>
@@ -181,15 +178,15 @@ export function Projects() {
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-4">
                   {project.stats.map((stat, idx) => (
-                    <div key={idx} className="p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-                      <div className="text-2xl text-[#d4af37] mb-1 font-bold">{stat.value}</div>
-                      <div className="text-xs text-gray-300 font-medium">{stat.label}</div>
+                    <div key={idx} className="p-4 bg-white rounded-2xl border border-gray-200 shadow-sm hover:border-[#d4af37]/30 transition-colors">
+                      <div className="text-2xl text-[#d4af37] mb-1 font-black">{stat.value}</div>
+                      <div className="text-xs text-gray-500 font-bold uppercase tracking-wider">{stat.label}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* CTA */}
-                <Link to={`/projet/${project.slug}`} className="group/btn inline-flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm text-white font-medium rounded-xl border border-[#d4af37]/40 hover:bg-[#d4af37] hover:text-[#0a0f1e] transition-all">
+                <Link to={`/vitrine/projet/${project.slug}`} className="group/btn mt-4 inline-flex items-center gap-2 px-8 py-4 bg-[#0a0f1e] text-white font-semibold rounded-xl hover:bg-[#d4af37] hover:text-[#0a0f1e] transition-all shadow-md hover:shadow-lg">
                   <span>En Savoir Plus</span>
                   <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
                 </Link>
