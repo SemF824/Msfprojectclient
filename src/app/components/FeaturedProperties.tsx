@@ -42,15 +42,12 @@ export function FeaturedProperties({
     const fetchProperties = async () => {
       if (!supabase) return;
       setIsLoading(true);
-
       try {
         const { data, error } = await supabase
           .from("properties")
           .select("*")
           .order("created_at", { ascending: false });
-
         if (error) throw error;
-
         if (data) {
           setProperties(data);
         }
@@ -63,11 +60,9 @@ export function FeaturedProperties({
         setIsLoading(false);
       }
     };
-
     fetchProperties();
   }, []);
 
-  // Formatage intelligent du prix (qu'il soit stocké en texte ou en nombre dans la DB)
   const formatPrice = (price: string | number) => {
     if (typeof price === "number") {
       return `${new Intl.NumberFormat("fr-FR").format(price)} FCFA`;
@@ -75,11 +70,8 @@ export function FeaturedProperties({
     return price;
   };
 
-  // Moteur de filtrage Front-End
   const filteredProperties = properties.filter((property) => {
     if (!filters) return true;
-
-    // Filtre par type
     let typeMatch = true;
     if (filters.type !== "all") {
       const typeMap: Record<string, string> = {
@@ -93,15 +85,12 @@ export function FeaturedProperties({
         typeMap[filters.type] || filters.type;
       typeMatch = property.type === expectedType;
     }
-
-    // Filtre par localisation
     let locationMatch = true;
     if (filters.location) {
       locationMatch = property.location
         .toLowerCase()
         .includes(filters.location.toLowerCase());
     }
-
     return typeMatch && locationMatch;
   });
 
@@ -120,7 +109,6 @@ export function FeaturedProperties({
               Collection Premium
             </span>
           </motion.div>
-
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -133,7 +121,6 @@ export function FeaturedProperties({
               en Vedette
             </span>
           </motion.h2>
-
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -147,7 +134,6 @@ export function FeaturedProperties({
           </motion.p>
         </div>
 
-        {/* Gestion du statut de chargement */}
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <Loader2 className="w-12 h-12 text-[#d4af37] animate-spin" />
@@ -179,37 +165,31 @@ export function FeaturedProperties({
                     src={property.image}
                     alt={property.title}
                     loading="lazy"
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e] via-transparent to-transparent opacity-60" />
-
                   {property.tag && (
                     <div className="absolute top-4 right-4 px-3 py-1 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] text-xs font-bold rounded-full">
                       {property.tag}
                     </div>
                   )}
-
                   <div className="absolute top-4 left-4 px-3 py-1 bg-[#0a0f1e]/70 backdrop-blur-md text-white text-xs font-medium rounded-full border border-[#d4af37]/40">
                     {property.type}
                   </div>
                 </div>
-
                 <div className="p-6">
                   <h3 className="text-xl text-white mb-2 group-hover:text-[#d4af37] transition-colors">
                     {property.title}
                   </h3>
-
                   <div className="flex items-center gap-2 text-gray-400 mb-4">
                     <MapPin className="w-4 h-4 text-[#d4af37]" />
                     <span className="text-sm">
                       {property.location}
                     </span>
                   </div>
-
                   <div className="text-3xl text-[#d4af37] mb-6 font-bold">
                     {formatPrice(property.price)}
                   </div>
-
                   <div className="flex items-center justify-between pt-4 border-t border-white/10">
                     <div className="flex items-center gap-1 text-gray-400">
                       <Bed className="w-4 h-4" />
@@ -230,9 +210,9 @@ export function FeaturedProperties({
                       </span>
                     </div>
                   </div>
-
+                  {/* CORRECTION DU LIEN ICI */}
                   <Link
-                    to={`/propriete/${property.id}`}
+                    to={`/vitrine/propriete/${property.id}`}
                     className="block w-full mt-6 py-3 bg-white/10 backdrop-blur-sm text-white font-medium text-center rounded-lg border border-[#d4af37]/40 hover:bg-[#d4af37] hover:text-[#0a0f1e] transition-all"
                   >
                     Voir les Détails
@@ -243,7 +223,6 @@ export function FeaturedProperties({
           </div>
         )}
 
-        {/* Bouton Voir Tout */}
         {!isLoading && filteredProperties.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -251,8 +230,9 @@ export function FeaturedProperties({
             viewport={{ once: true }}
             className="text-center mt-12"
           >
+            {/* CORRECTION DU LIEN ICI AUSSI */}
             <Link
-              to="/proprietes"
+              to="/vitrine/proprietes"
               className="inline-block px-8 py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] font-bold rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all"
             >
               Voir Toutes les Propriétés

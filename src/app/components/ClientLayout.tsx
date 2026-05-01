@@ -26,12 +26,13 @@ export default function ClientLayout() {
     navigate("/connexion");
   };
 
+  // CORRECTION : L'ID doit correspondre à la route réelle pour que le statut "actif" fonctionne.
   const navItems = [
     { id: "/client/dashboard", icon: Home, label: "Vue d'ensemble" },
     { id: "/client/requests", icon: FileText, label: "Mes Demandes" },
     { id: "/client/favorites", icon: Heart, label: "Favoris" },
     { id: "/client/appointments", icon: Calendar, label: "Rendez-vous" },
-    { id: "/client/history", icon: Clock, label: "Historique" },
+    { id: "/client/transactions", icon: Clock, label: "Historique" }, // Pointait vers /history avant
     { id: "/client/documents", icon: Lock, label: "Documents Sécurisés" },
     { id: "/client/loan", icon: Calculator, label: "Simulateur Prêt" },
   ];
@@ -54,7 +55,7 @@ export default function ClientLayout() {
 
               <div className="mb-4 pb-4 border-b border-gray-200">
                 <Link to="/vitrine" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-[#d4af37] transition-colors rounded-xl hover:bg-gray-50">
-                  <Home className="w-4 h-4" /><span>← Retour au site</span>
+                  <Home className="w-4 h-4" /><span>Retour au site</span>
                 </Link>
               </div>
 
@@ -65,7 +66,7 @@ export default function ClientLayout() {
                     to={item.id}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
                       location.pathname === item.id || location.pathname.startsWith(item.id + '/')
-                        ? "bg-[#d4af37] text-[#0a0f1e] shadow-sm"
+                        ? "bg-[#d4af37] text-[#0a0f1e] shadow-sm font-semibold"
                         : "text-gray-600 hover:bg-gray-100"
                     }`}
                   >
@@ -79,7 +80,8 @@ export default function ClientLayout() {
                 <Link to="/client/profile" className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"><User className="w-4 h-4" />Mon Profil</Link>
                 <Link to="/client/notifications" className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"><Bell className="w-4 h-4" />Notifications</Link>
                 <Link to="/client/settings" className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"><Settings className="w-4 h-4" />Paramètres</Link>
-                <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                
+                <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-xl transition-colors font-medium mt-2">
                   <LogOut className="w-4 h-4" />Déconnexion
                 </button>
               </div>

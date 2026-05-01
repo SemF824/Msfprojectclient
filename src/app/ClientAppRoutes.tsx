@@ -4,7 +4,7 @@ import Layout from "./components/Layout";
 import ClientLayout from "./components/ClientLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-// ── Pages publiques (import synchrone → SEO / LCP)
+// Pages publiques (import synchrone SEO / LCP)
 import Home            from "./pages/Home";
 import Contact         from "./pages/Contact";
 import Services        from "./pages/Services";
@@ -16,7 +16,7 @@ import Signup          from "./pages/Signup";
 import Properties      from "./pages/Properties";
 import About           from "./pages/About";
 
-// ── Espace client protégé (lazy)
+// Espace client protégé (lazy)
 const Dashboard          = lazy(() => import("./pages/Dashboard"));
 const Transactions       = lazy(() => import("./pages/Transactions"));
 const TransactionDetail  = lazy(() => import("./pages/TransactionDetail"));
@@ -26,7 +26,7 @@ const Favorites          = lazy(() => import("./pages/Favorites"));
 const Settings           = lazy(() => import("./pages/Settings"));
 const NotFound           = lazy(() => import("./pages/NotFound"));
 
-// ── Nouvelles pages extraites du Dashboard
+// Nouvelles pages extraites du Dashboard
 const ClientRequests     = lazy(() => import("./pages/ClientRequests"));
 const ClientAppointments = lazy(() => import("./pages/ClientAppointments"));
 const ClientDocuments    = lazy(() => import("./pages/ClientDocuments"));
@@ -55,11 +55,10 @@ export default function ClientAppRoutes() {
       <ScrollToTopOnRouteChange />
       <Suspense fallback={<ClientLoader />}>
         <Routes>
-
-          {/* ── Redirection racine → vitrine ── */}
+          {/* Redirection racine vitrine */}
           <Route index element={<Navigate to="/vitrine" replace />} />
 
-          {/* ── VITRINE PUBLIQUE ── */}
+          {/* VITRINE PUBLIQUE */}
           <Route path="vitrine" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="contact" element={<Contact />} />
@@ -68,15 +67,15 @@ export default function ClientAppRoutes() {
             <Route path="devis/:propertyId" element={<DevisRequest />} />
             <Route path="propriete/:id" element={<PropertyDetails />} />
             <Route path="projet/:slug" element={<ProjectDetail />} />
-            {/* Les routes vers les nouvelles pages pleines */}
-            <Route path="properties" element={<Properties />} />
+            {/* Routes unifiées en Français */}
+            <Route path="proprietes" element={<Properties />} />
             <Route path="about" element={<About />} />
           </Route>
 
           <Route path="connexion" element={<Login />} />
           <Route path="inscription" element={<Signup />} />
 
-          {/* ── ALIAS SANS PRÉFIXE ── */}
+          {/* ALIAS SANS PRÉFIXE */}
           <Route path="dashboard" element={<Navigate to="/client/dashboard" replace />} />
           <Route path="transactions" element={<Navigate to="/client/transactions" replace />} />
           <Route path="transaction/:id" element={<Navigate to={`/client/transaction/${useLocation().pathname.split('/').pop()}`} replace />} />
@@ -85,7 +84,7 @@ export default function ClientAppRoutes() {
           <Route path="favorites" element={<Navigate to="/client/favorites" replace />} />
           <Route path="settings" element={<Navigate to="/client/settings" replace />} />
 
-          {/* ── ESPACE CLIENT PROTÉGÉ ── */}
+          {/* ESPACE CLIENT PROTÉGÉ */}
           <Route path="client" element={<ProtectedRoute><ClientLayout /></ProtectedRoute>}>
             <Route index element={<Navigate to="dashboard" replace />} />
             
@@ -97,13 +96,11 @@ export default function ClientAppRoutes() {
             <Route path="profile" element={<Profile />} />
             <Route path="favorites" element={<Favorites />} />
             <Route path="settings" element={<Settings />} />
-
-            {/* Nouvelles routes fonctionnelles */}
+            
             <Route path="requests" element={<ClientRequests />} />
             <Route path="appointments" element={<ClientAppointments />} />
             <Route path="documents" element={<ClientDocuments />} />
             <Route path="loan" element={<ClientLoan />} />
-            <Route path="history" element={<Navigate to="transactions" replace />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
