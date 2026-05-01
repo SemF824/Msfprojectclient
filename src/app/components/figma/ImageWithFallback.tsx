@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 
 const ERROR_IMG_SRC =
   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODgiIGhlaWdodD0iODgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgc3Ryb2tlPSIjMDAwIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBvcGFjaXR5PSIuMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIyIj48cmVjdCB3aWR0aD0iODgiIGhlaWdodD0iODgiIHJ4PSI4Ii8+PHBhdGggZD0iTTI4IDM0bDMyIDMyTTYwIDM0bC0zMiAzMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+'
@@ -25,15 +25,15 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
       style={style}
     >
       <div className="flex items-center justify-center w-full h-full">
-        <img src={ERROR_IMG_SRC} alt="Error loading image" {...rest} data-original-url={src} />
+        <img src={ERROR_IMG_SRC} alt="Erreur de chargement" {...rest} data-original-url={src} />
       </div>
     </div>
   ) : (
     <img
       src={src}
       alt={alt}
-      loading={loading as React.ImgHTMLAttributes<HTMLImageElement>['loading']}
-      className={`${className ?? ''} ${!isLoaded ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+      loading={loading}
+      className={`${className ?? ''} ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
       style={style}
       onError={handleError}
       onLoad={handleLoad}

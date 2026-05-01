@@ -1,12 +1,15 @@
 import { Award, Building2, Globe, Users } from "lucide-react";
-import { motion } from "motion/react";
+// CORRECTION : Import explicite du type Variants
+import { motion, type Variants } from "motion/react";
 
-// ─── Stagger variants (anti-clignotement) ─────────────────────────────────────
-const containerVariants = {
+// CORRECTION : Typage strict de l'objet avec : Variants
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
 };
-const itemVariants = {
+
+// CORRECTION : Typage strict de l'objet avec : Variants
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 16 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
 };
@@ -41,7 +44,6 @@ const stats = [
 export function Statistics() {
   return (
     <section className="py-20 px-6 relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      {/* Background Elements */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
           backgroundImage: 'radial-gradient(circle at 2px 2px, #d4af37 1px, transparent 0)',
@@ -58,26 +60,21 @@ export function Statistics() {
           whileInView="visible"
           viewport={{ once: true, amount: 0.1 }}
         >
-          {stats.map((stat, index) => {
+          {stats.map((stat) => {
             const Icon = stat.icon;
             return (
               <motion.div
-                key={index}
+                key={stat.label}
                 variants={itemVariants}
                 className="relative group h-full"
               >
                 <div className="relative bg-white backdrop-blur-xl rounded-2xl p-8 border border-gray-200 hover:border-[#d4af37]/50 transition-all duration-500 hover:shadow-xl hover:shadow-[#d4af37]/20 h-full flex flex-col">
-                  {/* Icon */}
                   <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#d4af37]/20 to-[#f4e3b2]/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                     <Icon className="w-7 h-7 text-[#d4af37]" />
                   </div>
-                  {/* Value */}
                   <div className="text-4xl text-[#0a0f1e] mb-2 font-bold">{stat.value}</div>
-                  {/* Label */}
                   <div className="text-lg text-[#d4af37] mb-2 font-semibold">{stat.label}</div>
-                  {/* Description */}
                   <div className="text-sm text-gray-600 leading-relaxed">{stat.description}</div>
-                  {/* Decorative Element */}
                   <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#d4af37]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               </motion.div>

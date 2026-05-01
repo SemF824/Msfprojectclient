@@ -31,7 +31,6 @@ const expertiseAreas = [
 export function Expertise() {
   return (
     <section className="py-24 px-6 bg-gradient-to-br from-white via-slate-50 to-blue-50 relative overflow-hidden">
-      {/* Background Elements */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
           backgroundImage: 'radial-gradient(circle at 2px 2px, #d4af37 1px, transparent 0)',
@@ -40,7 +39,6 @@ export function Expertise() {
       </div>
 
       <div className="container mx-auto relative z-10">
-        {/* Header */}
         <div className="text-center mb-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -51,7 +49,6 @@ export function Expertise() {
             <Building2 className="w-4 h-4 text-[#d4af37]" />
             <span className="text-xs text-[#d4af37] tracking-wider uppercase">Nos Expertises</span>
           </motion.div>
-
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -64,7 +61,6 @@ export function Expertise() {
               l'Immobilier
             </span>
           </motion.h2>
-
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -76,50 +72,40 @@ export function Expertise() {
           </motion.p>
         </div>
 
-        {/* Expertise Grid - OPTIMISÉ POUR ÉVITER LE FLICKERING */}
         <div className="grid md:grid-cols-2 gap-8">
-          {expertiseAreas.map((area, index) => (
+          {expertiseAreas.map((area) => (
             <motion.div
-              key={index}
+              key={area.title}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-              transition={{ delay: index * 0.1 }}
               className="group relative p-8 bg-white backdrop-blur-xl rounded-3xl border border-gray-200 hover:border-[#d4af37]/50 transition-all duration-500 shadow-sm flex flex-col min-h-[350px]"
             >
-              {/* Icon Container - Hauteur fixe */}
               <div className="relative mb-6 flex-shrink-0">
                 <div className="w-20 h-20 bg-gradient-to-br from-[#d4af37]/20 to-transparent rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 flex-shrink-0">
                   <area.icon className="w-10 h-10 text-[#d4af37]" />
                 </div>
                 <div className="absolute -top-2 -right-2 w-16 h-16 bg-[#d4af37]/10 rounded-full blur-2xl group-hover:bg-[#d4af37]/20 transition-colors duration-500" />
               </div>
-
-              {/* Content - Remplit l'espace */}
               <h3 className="text-2xl text-[#0a0f1e] mb-4 group-hover:text-[#d4af37] transition-colors flex-shrink-0">
                 {area.title}
               </h3>
               <p className="text-gray-600 mb-6 leading-relaxed flex-1">
                 {area.description}
               </p>
-
-              {/* Highlights - En bas, non resizable */}
               <ul className="space-y-2 flex-shrink-0">
-                {area.highlights.map((highlight, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-gray-700">
+                {area.highlights.map((highlight) => (
+                  <li key={highlight} className="flex items-center gap-2 text-gray-700">
                     <div className="w-1.5 h-1.5 bg-[#d4af37] rounded-full flex-shrink-0" />
                     <span className="text-sm">{highlight}</span>
                   </li>
                 ))}
               </ul>
-
-              {/* Hover Effect */}
               <div className="absolute inset-0 bg-gradient-to-br from-[#d4af37]/0 to-[#d4af37]/0 group-hover:from-[#d4af37]/5 group-hover:to-transparent rounded-3xl transition-all duration-500 pointer-events-none" />
             </motion.div>
           ))}
         </div>
 
-        {/* Bottom Statement */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
