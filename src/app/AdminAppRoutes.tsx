@@ -3,6 +3,7 @@ import { lazy, Suspense } from "react";
 import AdminLayout from "./components/AdminLayout";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 import SuperAdminGuard from "./components/SuperAdminGuard";
+import TeamManagement from "./pages/admin/TeamManagement";
 
 // Lazy imports des pages admin
 const AdminLogin          = lazy(() => import("./pages/admin/AdminLogin"));
@@ -39,6 +40,7 @@ export default function AdminAppRoutes() {
           <Route path="documents"    element={<ClientsDocuments />} />
           <Route path="statistiques" element={<StatistiquesPage />} />
           <Route path="parametres"   element={<ParametresPage />} />
+          <Route path="equipe" element={<TeamManagement />} />
 
           {/* Routes superadmin */}
           <Route path="equipe" element={

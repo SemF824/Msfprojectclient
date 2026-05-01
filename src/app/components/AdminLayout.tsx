@@ -50,7 +50,7 @@ export default function AdminLayout() {
   const getRoleBadge = () => {
     if (userRole === 'superadmin') {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-[10px] font-bold rounded-full">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 border border-purple-200 text-[10px] font-bold rounded-full">
           <Shield className="w-3 h-3" />
           SUPERADMIN
         </span>
@@ -58,7 +58,7 @@ export default function AdminLayout() {
     }
     if (userRole === 'admin') {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] text-[10px] font-bold rounded-full">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#d4af37]/20 text-[#0a0f1e] border border-[#d4af37]/40 text-[10px] font-bold rounded-full">
           ADMIN
         </span>
       );
@@ -71,6 +71,9 @@ export default function AdminLayout() {
     if (!supabase) return;
 
     const fetchUnreadContacts = async () => {
+      // Re-vérification stricte pour le compilateur TypeScript dans la closure
+      if (!supabase) return; 
+      
       const { count, error } = await supabase
         .from('contact_requests')
         .select('*', { count: 'exact', head: true })
@@ -93,7 +96,10 @@ export default function AdminLayout() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      // Re-vérification pour la fonction de nettoyage
+      if (supabase) {
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 
@@ -240,10 +246,10 @@ export default function AdminLayout() {
           {/* Bouton retour au site public AVEC DÉCONNEXION */}
           <button
             onClick={handlePublicSiteReturn}
-            className="w-full flex items-center gap-3 px-4 py-3 mb-4 rounded-xl text-red-600 bg-red-50 hover:bg-red-100 hover:text-red-700 transition-all border border-red-100 font-medium"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl text-red-600 bg-red-50 hover:bg-red-100 hover:text-red-700 transition-all border border-red-100 font-bold"
           >
-            <Home className="w-5 h-5" />
-            <span>← Quitter (Déconnexion)</span>
+            <LogOut className="w-4 h-4" />
+            <span className="text-sm">Quitter (Déconnexion)</span>
           </button>
         </div>
 
@@ -251,26 +257,28 @@ export default function AdminLayout() {
           {navigation.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
-            const isSuperadminOnly = 'superadminOnly' in item && item.superadminOnly;
+            // Conversion stricte en booléen pour apaiser TypeScript
+            const isSuperadminOnly = 'superadminOnly' in item ? Boolean(item.superadminOnly) : false;
 
             return (
               <Link
                 key={item.name}
                 to={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
                   active
                     ? isSuperadminOnly
-                      ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold shadow-md'
-                      : 'bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] font-semibold shadow-md'
+                      ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20'
+                      : 'bg-[#d4af37] text-[#0a0f1e] shadow-md shadow-[#d4af37]/20'
                     : isSuperadminOnly
-                    ? 'text-purple-700 hover:bg-purple-50 border border-purple-100'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'text-purple-700 hover:bg-purple-50 border border-transparent hover:border-purple-100'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-[#0a0f1e]'
                 }`}
               >
                 <Icon className="w-5 h-5" />
-                <span className="flex-1">{item.name}</span>
-                {isSuperadminOnly && (
-                  <Shield className="w-4 h-4" />
+                <span className="flex-1 text-sm">{item.name}</span>
+                {/* L'évaluation est maintenant strictement booléenne */}
+                {isSuperadminOnly && !active && (
+                  <Shield className="w-4 h-4 opacity-50" />
                 )}
               </Link>
             );
@@ -279,16 +287,16 @@ export default function AdminLayout() {
 
         {/* Quick Stats in Sidebar */}
         <div className="p-4 mt-auto border-t border-gray-100">
-          <div className="bg-gradient-to-br from-[#d4af37]/10 to-transparent rounded-xl border border-[#d4af37]/30 p-4">
-            <h3 className="text-sm text-[#0a0f1e] font-semibold mb-3">Aujourd'hui</h3>
-            <div className="space-y-2">
+          <div className="bg-gray-50 rounded-xl border border-gray-200 p-4">
+            <h3 className="text-sm text-[#0a0f1e] font-bold mb-3">Aujourd'hui</h3>
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-600">Nouvelles demandes</span>
-                <span className="text-sm text-[#0a0f1e] font-bold">{unreadContactsCount}</span>
+                <span className="text-xs text-gray-500 font-medium">Nouvelles demandes</span>
+                <span className="text-sm text-[#0a0f1e] font-black">{unreadContactsCount}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-600">Visites planifiées</span>
-                <span className="text-sm text-[#0a0f1e] font-bold">0</span>
+                <span className="text-xs text-gray-500 font-medium">Visites planifiées</span>
+                <span className="text-sm text-[#0a0f1e] font-black">0</span>
               </div>
             </div>
           </div>
@@ -301,7 +309,9 @@ export default function AdminLayout() {
           isSidebarOpen ? 'ml-64' : 'ml-0'
         }`}
       >
-        <Outlet />
+        <div className="p-6 md:p-8">
+          <Outlet />
+        </div>
       </main>
     </div>
   );
