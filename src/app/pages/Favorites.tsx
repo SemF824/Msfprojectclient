@@ -1,219 +1,222 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { useState, useEffect } from "react";
+import { motion } from "motion/react";
 import { Link } from "react-router";
 import {
-  Heart, Bed, Bath, Square, MapPin,
-  TrendingUp, Filter, Grid3x3, List, Trash2,
-  Share2, Eye, Calendar, Search
+  Heart, MapPin, Bed, Bath, Maximize,
+  Trash2, ExternalLink, Loader2, Home, 
+  TrendingUp, AlertCircle
 } from "lucide-react";
+import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 import Breadcrumb from "../components/Breadcrumb";
+import { EmptyState } from "../components/EmptyState";
 
-interface FavoriteProperty {
+interface Property {
   id: string;
-  name: string;
+  title: string;
   location: string;
-  price: number;
+  price: string | number;
   image: string;
-  bedrooms: number;
-  bathrooms: number;
-  surface: number;
+  beds: number;
+  baths: number;
+  sqft: string | number;
   type: string;
-  status: "available" | "reserved" | "sold";
-  addedDate: string;
+  tag?: string;
 }
 
 export default function Favorites() {
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [filterType, setFilterType] = useState<string>("all");
-  const [searchTerm, setSearchTerm] = useState("");
+  const { user } = useSupabaseAuth();
+  const [favorites, setFavorites] = useState<Property[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [favorites, setFavorites] = useState<FavoriteProperty[]>([
-    {
-      id: "tchikobo-villa-5",
-      name: "Villa Tchikobo Prestige",
-      location: "Lotissement ROC Tchikobo, Pointe-Noire",
-      price: 295200000,
-      image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800",
-      bedrooms: 5,
-      bathrooms: 4,
-      surface: 450,
-      type: "Villa",
-      status: "available",
-      addedDate: "2026-04-10",
-    },
-    {
-      id: "caraibes-apt-12",
-      name: "Appartement Vue Mer - Résidences Caraïbes",
-      location: "Centre-Ville, Pointe-Noire",
-      price: 118080000,
-      image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800",
-      bedrooms: 3,
-      bathrooms: 2,
-      surface: 180,
-      type: "Appartement",
-      status: "available",
-      addedDate: "2026-04-08",
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchFavorites = async () => {
+      if (!user || !supabase) return;
+      setIsLoading(true);
+
+      try {
+        // 1. On récupère les IDs des favoris de CE client
+        const { data: favData, error: favError } = await supabase
+          .from("favorites")
+          .select("property_id")
+          .eq("user_id", user.id); // SÉCURITÉ FRONT-END
+
+        if (favError) throw favError;
+
+        if (favData && favData.length > 0) {
+          const propertyIds = favData.map((f) => f.property_id);
+          
+          // 2. On récupère les détails des propriétés
+          const { data: propData, error: propError } = await supabase
+            .from("properties")
+            .select("*")
+            .in("id", propertyIds);
+            
+          if (propError) throw propError;
+          if (propData && isMounted) {
+            setFavorites(propData);
+          }
+        } else {
+          if (isMounted) setFavorites([]);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération des favoris:", error);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    fetchFavorites();
+
+    return () => { isMounted = false; };
+  }, [user]);
+
+  const removeFavorite = async (propertyId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!user || !supabase) return;
+
+    try {
+      await supabase
+        .from("favorites")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("property_id", propertyId);
+
+      setFavorites(favorites.filter(f => f.id !== propertyId));
+    } catch (error) {
+      console.error("Erreur suppression favoris", error);
     }
-  ]);
-
-  const toggleFavorite = (id: string) => {
-    setFavorites(prevFavorites => prevFavorites.filter(prop => prop.id !== id));
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "available": return <span className="px-3 py-1 bg-green-500/20 text-green-600 border border-green-500/30 rounded-full text-xs font-medium">Disponible</span>;
-      case "reserved": return <span className="px-3 py-1 bg-yellow-500/20 text-yellow-600 border border-yellow-500/30 rounded-full text-xs font-medium">Réservé</span>;
-      case "sold": return <span className="px-3 py-1 bg-red-500/20 text-red-600 border border-red-500/30 rounded-full text-xs font-medium">Vendu</span>;
-      default: return null;
+  const formatPrice = (price: string | number) => {
+    if (typeof price === "number") {
+      return `${new Intl.NumberFormat("fr-FR").format(price)} FCFA`;
     }
+    return price;
   };
-
-  const propertyTypes = ["all", "Villa", "Appartement", "Penthouse", "Duplex", "Terrain"];
-
-  const filteredFavorites = favorites.filter((property) => {
-    const matchesType = filterType === "all" || property.type === filterType;
-    const matchesSearch = property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         property.location.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesType && matchesSearch;
-  });
-
-  const totalValue = favorites.reduce((sum, prop) => sum + prop.price, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <Breadcrumb items={[
           { label: "Dashboard", path: "/client/dashboard" },
           { label: "Favoris", path: "/client/favorites" }
         ]} />
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mb-2">
-              Mes <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">Favoris</span>
-            </h1>
-            <p className="text-gray-600">{filteredFavorites.length} propriétés sauvegardées</p>
-          </div>
-          <div className="flex items-center gap-2 bg-white rounded-xl border border-gray-200 p-1 shadow-sm">
-            <button
-              onClick={() => setViewMode("grid")}
-              className={`p-2 rounded-lg transition-colors ${viewMode === "grid" ? "bg-[#d4af37] text-[#0a0f1e]" : "text-gray-600 hover:bg-gray-100"}`}
+        <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mb-2 font-bold break-words">
+          Propriétés <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">Favorites</span>
+        </h1>
+        <p className="text-gray-600 text-sm sm:text-base">Gérez votre sélection de biens immobiliers</p>
+      </div>
+
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+          <Loader2 className="w-12 h-12 text-[#d4af37] animate-spin" />
+          <p className="text-gray-500 font-medium">Récupération de vos coups de cœur...</p>
+        </div>
+      ) : favorites.length === 0 ? (
+        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm min-h-[400px] flex items-center justify-center p-6">
+          <div className="text-center">
+            <Heart className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-[#0a0f1e] mb-2">Aucun favori pour le moment</h2>
+            <p className="text-gray-500 mb-6 max-w-md mx-auto">
+              Explorez notre catalogue et utilisez l'icône cœur pour sauvegarder les propriétés qui vous intéressent.
+            </p>
+            <Link 
+              to="/vitrine/proprietes" 
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#d4af37] text-[#0a0f1e] font-bold rounded-xl hover:bg-[#b8952e] transition-colors"
             >
-              <Grid3x3 className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setViewMode("list")}
-              className={`p-2 rounded-lg transition-colors ${viewMode === "list" ? "bg-[#d4af37] text-[#0a0f1e]" : "text-gray-600 hover:bg-gray-100"}`}
-            >
-              <List className="w-5 h-5" />
-            </button>
+              <Home className="w-5 h-5" />
+              Explorer les propriétés
+            </Link>
           </div>
         </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center"><Heart className="w-6 h-6 text-white" /></div>
-            <div><p className="text-2xl text-[#0a0f1e] font-semibold">{favorites.length}</p><p className="text-sm text-gray-600">Favoris</p></div>
-          </div>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center"><TrendingUp className="w-6 h-6 text-white" /></div>
-            <div><p className="text-xl text-[#0a0f1e] font-semibold">{(totalValue / 1000000).toFixed(0)}M</p><p className="text-sm text-gray-600">Valeur Totale (FCFA)</p></div>
-          </div>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center"><Calendar className="w-6 h-6 text-white" /></div>
-            <div><p className="text-2xl text-[#0a0f1e] font-semibold">{favorites.filter(f => f.status === "available").length}</p><p className="text-sm text-gray-600">Disponibles</p></div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 mb-8">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input type="text" placeholder="Rechercher une propriété..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] placeholder-gray-400 focus:border-[#d4af37] focus:outline-none transition-colors" />
-          </div>
-          <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-gray-600" />
-            <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none transition-colors">
-              {propertyTypes.map((type) => (<option key={type} value={type}>{type === "all" ? "Tous les types" : type}</option>))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Properties List */}
-      {filteredFavorites.length === 0 ? (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-2xl border border-gray-200 shadow-lg p-12 text-center">
-          <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-xl text-[#0a0f1e] font-semibold mb-2">Aucun favori trouvé</h3>
-          <Link to="/vitrine" className="inline-flex items-center gap-2 px-6 py-3 bg-[#d4af37] text-[#0a0f1e] rounded-xl hover:shadow-xl transition-all font-medium mt-4">Parcourir les Propriétés</Link>
-        </motion.div>
       ) : (
-        <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 gap-6" : "space-y-4"}>
-          <AnimatePresence>
-            {filteredFavorites.map((property) => (
-              <motion.div
-                key={property.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className={viewMode === "grid" ? "bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden group" : "bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden flex gap-6 p-6"}
-              >
-                <div className={viewMode === "grid" ? "relative" : "relative w-48 h-48 flex-shrink-0"}>
-                  <img src={property.image} alt={property.name} className={`w-full ${viewMode === "grid" ? "h-56" : "h-full rounded-xl"} object-cover group-hover:scale-105 transition-transform duration-500`} />
-                  <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
-                    {getStatusBadge(property.status)}
-                    {viewMode === "grid" && (
-                      <button onClick={() => toggleFavorite(property.id)} className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-pink-500 hover:bg-pink-500 hover:text-white transition-colors">
-                        <Heart className="w-5 h-5 fill-current" />
-                      </button>
-                    )}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
+          {favorites.map((property, index) => (
+            <motion.div
+              key={property.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="group relative bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-lg hover:shadow-xl hover:border-[#d4af37]/50 transition-all duration-300 flex flex-col"
+            >
+              {/* Image Section */}
+              <div className="relative h-56 sm:h-64 overflow-hidden flex-shrink-0">
+                <img
+                  src={property.image}
+                  alt={property.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e]/80 via-transparent to-transparent opacity-80" />
+                
+                <button 
+                  onClick={(e) => removeFavorite(property.id, e)}
+                  className="absolute top-4 right-4 p-3 bg-white/90 backdrop-blur-md rounded-full text-pink-600 hover:bg-pink-50 hover:scale-110 transition-all shadow-md z-10"
+                  title="Retirer des favoris"
+                >
+                  <Heart className="w-5 h-5 fill-current" />
+                </button>
+
+                {property.tag && (
+                  <div className="absolute top-4 left-4 px-3 py-1 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] text-xs font-bold rounded-full shadow-md z-10">
+                    {property.tag}
+                  </div>
+                )}
+              </div>
+
+              {/* Content Section */}
+              <div className="p-5 sm:p-6 flex-1 flex flex-col min-w-0">
+                <div className="mb-2">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{property.type}</span>
+                </div>
+                
+                <h3 className="text-lg sm:text-xl font-bold text-[#0a0f1e] mb-2 group-hover:text-[#d4af37] transition-colors truncate">
+                  {property.title}
+                </h3>
+                
+                <div className="flex items-start gap-2 text-gray-500 mb-4">
+                  <MapPin className="w-4 h-4 text-[#d4af37] flex-shrink-0 mt-0.5" />
+                  <span className="text-xs sm:text-sm line-clamp-2">{property.location}</span>
+                </div>
+                
+                <div className="text-xl sm:text-2xl text-[#d4af37] font-black mb-6 mt-auto break-words">
+                  {formatPrice(property.price)}
+                </div>
+                
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100 flex-shrink-0">
+                  <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-2 py-1 rounded-lg">
+                    <Bed className="w-4 h-4 text-[#d4af37]" />
+                    <span className="text-xs sm:text-sm font-semibold">{property.beds}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-2 py-1 rounded-lg">
+                    <Bath className="w-4 h-4 text-[#d4af37]" />
+                    <span className="text-xs sm:text-sm font-semibold">{property.baths}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-2 py-1 rounded-lg">
+                    <Maximize className="w-4 h-4 text-[#d4af37]" />
+                    <span className="text-xs sm:text-sm font-semibold">{property.sqft}m²</span>
                   </div>
                 </div>
 
-                <div className={viewMode === "grid" ? "p-6" : "flex-1 flex flex-col justify-between"}>
-                  <div>
-                    <div className="flex justify-between items-start">
-                      <h3 className="text-[#0a0f1e] font-semibold text-lg mb-2">{property.name}</h3>
-                      {viewMode === "list" && (
-                        <button onClick={() => toggleFavorite(property.id)} className="w-10 h-10 bg-pink-50 rounded-full flex items-center justify-center text-pink-500 hover:bg-pink-500 hover:text-white transition-colors">
-                          <Heart className="w-5 h-5 fill-current" />
-                        </button>
-                      )}
-                    </div>
-                    <p className="text-gray-600 text-sm flex items-center gap-2 mb-4"><MapPin className="w-4 h-4" />{property.location}</p>
-                    {property.type !== "Terrain" && (
-                      <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
-                        <span className="flex items-center gap-1"><Bed className="w-4 h-4" />{property.bedrooms}</span>
-                        <span className="flex items-center gap-1"><Bath className="w-4 h-4" />{property.bathrooms}</span>
-                        <span className="flex items-center gap-1"><Square className="w-4 h-4" />{property.surface}m²</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-200 mt-auto">
-                    <div>
-                      <p className="text-[#d4af37] font-bold text-lg">{(property.price / 1000000).toFixed(1)}M FCFA</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Link to={`/propriete/${property.id}`} className="px-4 py-2 bg-[#d4af37] text-[#0a0f1e] rounded-lg hover:shadow-lg transition-all font-medium text-sm">Détails</Link>
-                      <button onClick={() => toggleFavorite(property.id)} className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-red-500 hover:text-white transition-colors"><Trash2 className="w-5 h-5" /></button>
-                    </div>
-                  </div>
+                <div className="grid grid-cols-2 gap-3 mt-6 flex-shrink-0">
+                  <Link 
+                    to={`/vitrine/propriete/${property.id}`}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 text-[#0a0f1e] font-semibold rounded-xl hover:bg-gray-200 transition-colors text-sm"
+                  >
+                    <ExternalLink className="w-4 h-4" /> Détails
+                  </Link>
+                  <button 
+                    onClick={(e) => removeFavorite(property.id, e)}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 font-semibold rounded-xl hover:bg-red-100 transition-colors text-sm"
+                  >
+                    <Trash2 className="w-4 h-4" /> Retirer
+                  </button>
                 </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+              </div>
+            </motion.div>
+          ))}
         </div>
       )}
     </div>
