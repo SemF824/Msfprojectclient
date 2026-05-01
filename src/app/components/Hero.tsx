@@ -1,5 +1,6 @@
 import { ArrowRight, Play } from "lucide-react";
 import { motion } from "motion/react";
+import { Link } from "react-router";
 
 export function Hero() {
   return (
@@ -89,14 +90,14 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="flex flex-wrap gap-4"
           >
-            <button className="group flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-lg hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all">
-              <span>Explorer les Propriétés</span>
+            <Link to="/vitrine/properties" className="group flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-lg hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all">
+              <span className="font-bold">Explorer les Propriétés</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button className="flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-md text-white rounded-lg border border-[#d4af37]/30 hover:bg-white/20 transition-all">
-              <Play className="w-5 h-5" />
+            </Link>
+            <a href="#visite" className="flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-md text-white rounded-lg border border-[#d4af37]/30 hover:bg-white/20 transition-all font-medium">
+              <Play className="w-5 h-5 text-[#d4af37]" />
               <span>Visite Virtuelle</span>
-            </button>
+            </a>
           </motion.div>
         </div>
       </div>

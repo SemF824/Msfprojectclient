@@ -52,7 +52,8 @@ export function Header() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/vitrine?search=${encodeURIComponent(searchQuery)}#proprietes`);
+      // On redirige vers la page propriétés avec la query de recherche
+      navigate(`/vitrine/properties?search=${encodeURIComponent(searchQuery)}`);
       setIsSearchOpen(false);
       setSearchQuery("");
     }
@@ -76,11 +77,11 @@ export function Header() {
 
           {/* ── Navigation Desktop ──────────────────────────────────────────── */}
           <nav className="hidden lg:flex items-center gap-8">
-            <Link to="/vitrine"           className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors">Accueil</Link>
-            <Link to="/vitrine#proprietes" className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors">Propriétés</Link>
-            <Link to="/vitrine/services"  className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors">Services</Link>
-            <Link to="/vitrine#apropos"   className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors">À Propos</Link>
-            <Link to="/vitrine/contact"   className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors">Contact</Link>
+            <Link to="/vitrine"            className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors">Accueil</Link>
+            <Link to="/vitrine/properties" className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors">Propriétés</Link>
+            <Link to="/vitrine/services"   className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors">Services</Link>
+            <Link to="/vitrine/about"      className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors">À Propos</Link>
+            <Link to="/vitrine/contact"    className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors">Contact</Link>
           </nav>
 
           {/* ── Boutons d'action ────────────────────────────────────────────── */}
@@ -238,9 +239,9 @@ export function Header() {
           <div className="lg:hidden py-4 border-t border-gray-100">
             <nav className="flex flex-col gap-4">
               <Link to="/vitrine"            className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors" onClick={() => setIsMenuOpen(false)}>Accueil</Link>
-              <Link to="/vitrine#proprietes"  className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors" onClick={() => setIsMenuOpen(false)}>Propriétés</Link>
+              <Link to="/vitrine/properties"  className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors" onClick={() => setIsMenuOpen(false)}>Propriétés</Link>
               <Link to="/vitrine/services"   className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors" onClick={() => setIsMenuOpen(false)}>Services</Link>
-              <Link to="/vitrine#apropos"    className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors" onClick={() => setIsMenuOpen(false)}>À Propos</Link>
+              <Link to="/vitrine/about"      className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors" onClick={() => setIsMenuOpen(false)}>À Propos</Link>
               <Link to="/vitrine/contact"    className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors" onClick={() => setIsMenuOpen(false)}>Contact</Link>
 
               {isLoggedIn ? (

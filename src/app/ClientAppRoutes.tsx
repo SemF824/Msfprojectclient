@@ -13,6 +13,8 @@ import PropertyDetails from "./pages/PropertyDetails";
 import ProjectDetail   from "./pages/ProjectDetail";
 import Login           from "./pages/Login";
 import Signup          from "./pages/Signup";
+import Properties      from "./pages/Properties";
+import About           from "./pages/About";
 
 // ── Espace client protégé (lazy)
 const Dashboard          = lazy(() => import("./pages/Dashboard"));
@@ -66,6 +68,9 @@ export default function ClientAppRoutes() {
             <Route path="devis/:propertyId" element={<DevisRequest />} />
             <Route path="propriete/:id" element={<PropertyDetails />} />
             <Route path="projet/:slug" element={<ProjectDetail />} />
+            {/* Les routes vers les nouvelles pages pleines */}
+            <Route path="properties" element={<Properties />} />
+            <Route path="about" element={<About />} />
           </Route>
 
           <Route path="connexion" element={<Login />} />
