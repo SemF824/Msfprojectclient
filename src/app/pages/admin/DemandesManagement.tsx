@@ -41,7 +41,7 @@ export default function DemandesManagement() {
   const [filterStatus, setFilterStatus] = useState("tous");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || "promotions@msfcongo.com";
+  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
 
   const fetchDemandes = async () => {
     try {

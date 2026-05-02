@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { Calendar as CalendarIcon, Clock, MapPin, Loader2, Plus, ArrowRight } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Loader2, Plus } from "lucide-react";
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 import Breadcrumb from "../components/Breadcrumb";
 import { EmptyState } from "../components/EmptyState";
@@ -11,8 +11,8 @@ export default function ClientAppointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Remplace ceci par le lien réel de ton compte Calendly
-  const CALENDLY_LINK = "https://calendly.com/ton-compte-msf"; 
+  // Récupération sécurisée du lien depuis les variables d'environnement
+  const CALENDLY_LINK = import.meta.env.VITE_CALENDLY_URL;
 
   useEffect(() => {
     let isMounted = true;
@@ -58,6 +58,11 @@ export default function ClientAppointments() {
   };
 
   const handleBookAppointment = () => {
+    if (!CALENDLY_LINK) {
+      console.error("VITE_CALENDLY_URL n'est pas défini dans le fichier .env");
+      alert("Le service de prise de rendez-vous est momentanément indisponible.");
+      return;
+    }
     // Ouvre le lien Calendly dans un nouvel onglet
     window.open(CALENDLY_LINK, "_blank");
   };
