@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
           user_id: profile.id,
           title: payload.scheduled_event?.name || "Rendez-vous MSF",
           property_name: "Rendez-vous Conseil MSF",
-          type: "consultation",
+          type: "visite",
           date: dateStr,            
           time: timeStr,            
           status: "planifie",
