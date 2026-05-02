@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
           type: "consultation",
           date: dateStr,            
           time: timeStr,            
-          status: "scheduled",
+          status: "planifie",
           agent_name: "Équipe MSF",
           appointment_date: dateStr,   // Format YYYY-MM-DD
           appointment_time: timeStr,   // Format HH:MM
