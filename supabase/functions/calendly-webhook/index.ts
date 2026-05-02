@@ -61,11 +61,12 @@ Deno.serve(async (req) => {
           title: payload.scheduled_event?.name || "Rendez-vous Conseil MSF",
           property_name: "Rendez-vous Conseil MSF",
           type: "consultation",
-          date: dateStr,
-          time: timeStr,
+          date: dateStr,            // Stockage séparé de la date et de l'heure pour faciliter les requêtes
+          time: timeStr,            // Stockage séparé de la date et de l'heure pour faciliter les requêtes
           status: "scheduled",
           agent_name: "Équipe MSF",
-          appointment_date: startTime // LA NOUVELLE CLÉ EXIGÉE PAR TA BASE
+          appointment_date: startTime, // Stockage séparé de la date et de l'heure pour faciliter les requêtes
+          appointment_time: timeStr    // Stockage séparé de la date et de l'heure pour faciliter les requêtes
         });
 
       if (insertError) {
