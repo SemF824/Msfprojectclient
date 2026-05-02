@@ -58,6 +58,7 @@ Deno.serve(async (req) => {
         .from('appointments')
         .insert({
           user_id: profile.id,
+          title: payload.scheduled_event?.name || "Rendez-vous Conseil MSF", // L'AJOUT VITAL EST ICI
           property_name: "Rendez-vous Conseil MSF",
           type: "consultation",
           date: dateStr,
