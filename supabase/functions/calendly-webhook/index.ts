@@ -1,37 +1,25 @@
-// Initialisation des types natifs pour l'Edge Runtime de Supabase
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-// Import de la librairie Supabase
 import { createClient } from "npm:@supabase/supabase-js@2"
 
-console.log("Démarrage du Webhook Calendly - Version 2.0 (Blindée)...")
+console.log("Démarrage du Webhook Calendly - Version FORCE UPDATE...")
 
 Deno.serve(async (req) => {
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), { 
-      status: 405, 
-      headers: { "Content-Type": "application/json" } 
-    })
-  }
+  if (req.method !== 'POST') return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405 })
 
   try {
     const body = await req.json()
-    
-    // Log pour debug : permet de voir la structure réelle envoyée par Calendly dans tes logs Supabase
     console.log("Payload reçu de Calendly:", JSON.stringify(body))
 
     if (body.event === 'invitee.created') {
       const payload = body.payload;
-      
-      // Extraction sécurisée : On vérifie plusieurs chemins possibles pour la date
       const inviteeEmail = payload.email;
       const startTime = payload.scheduled_event?.start_time || payload.event?.start_time; 
 
       if (!startTime) {
-        console.error("ERREUR : Impossible de trouver start_time dans le payload.");
-        return new Response(JSON.stringify({ error: "Missing start_time in payload" }), { status: 400 });
+        console.error("ERREUR : Impossible de trouver start_time.");
+        return new Response(JSON.stringify({ error: "Missing start_time" }), { status: 400 });
       }
 
-      // Découpage de la date et de l'heure
       const dateParts = startTime.split('T');
       const dateStr = dateParts[0]; 
       const timeStr = dateParts[1] ? dateParts[1].substring(0, 5) : "00:00"; 
@@ -41,7 +29,6 @@ Deno.serve(async (req) => {
         Deno.env.get('SERVICE_ROLE_KEY') ?? ''
       )
 
-      // Recherche du profil
       const { data: profile, error: profileError } = await supabaseAdmin
         .from('profiles')
         .select('id')
@@ -49,11 +36,10 @@ Deno.serve(async (req) => {
         .single();
 
       if (profileError || !profile) {
-        console.warn(`Webhook ignoré : Aucun compte trouvé pour l'email ${inviteeEmail}`);
         return new Response(JSON.stringify({ message: "Client non reconnu" }), { status: 200 });
       }
 
-      // Insertion du rendez-vous
+      // LE BLOC D'INSERTION BLINDÉ
       const { error: insertError } = await supabaseAdmin
         .from('appointments')
         .insert({
@@ -61,33 +47,26 @@ Deno.serve(async (req) => {
           title: payload.scheduled_event?.name || "Rendez-vous Conseil MSF",
           property_name: "Rendez-vous Conseil MSF",
           type: "consultation",
-          date: dateStr,            // Stockage séparé de la date et de l'heure pour faciliter les requêtes
-          time: timeStr,            // Stockage séparé de la date et de l'heure pour faciliter les requêtes
+          date: dateStr,            
+          time: timeStr,            
           status: "scheduled",
           agent_name: "Équipe MSF",
-          appointment_date: startTime, // Stockage séparé de la date et de l'heure pour faciliter les requêtes
-          appointment_time: timeStr    // Stockage séparé de la date et de l'heure pour faciliter les requêtes
+          appointment_date: startTime, 
+          appointment_time: timeStr    // CETTE LIGNE DOIT ÊTRE LUE PAR LE SERVEUR
         });
 
       if (insertError) {
         console.error("Erreur insertion Supabase:", insertError);
         throw insertError;
       }
-
-      console.log(`[SUCCÈS] Rendez-vous inséré pour : ${inviteeEmail} le ${dateStr}`);
+      console.log(`[SUCCÈS] Rendez-vous inséré pour : ${inviteeEmail}`);
     }
 
-    return new Response(JSON.stringify({ success: true }), { 
-      status: 200, 
-      headers: { "Content-Type": "application/json" } 
-    })
+    return new Response(JSON.stringify({ success: true }), { status: 200 })
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Erreur critique dans le Webhook Calendly:", errorMessage);
-    return new Response(JSON.stringify({ error: errorMessage }), { 
-      status: 400, 
-      headers: { "Content-Type": "application/json" } 
-    });
+    return new Response(JSON.stringify({ error: errorMessage }), { status: 400 });
   }
 })
