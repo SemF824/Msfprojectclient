@@ -58,13 +58,14 @@ Deno.serve(async (req) => {
         .from('appointments')
         .insert({
           user_id: profile.id,
-          title: payload.scheduled_event?.name || "Rendez-vous Conseil MSF", // L'AJOUT VITAL EST ICI
+          title: payload.scheduled_event?.name || "Rendez-vous Conseil MSF",
           property_name: "Rendez-vous Conseil MSF",
           type: "consultation",
           date: dateStr,
           time: timeStr,
           status: "scheduled",
-          agent_name: "Équipe MSF"
+          agent_name: "Équipe MSF",
+          appointment_date: startTime // LA NOUVELLE CLÉ EXIGÉE PAR TA BASE
         });
 
       if (insertError) {
