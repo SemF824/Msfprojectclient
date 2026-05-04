@@ -81,6 +81,8 @@ export interface Appointment {
   notes?: string;
   created_at: string;
   updated_at: string;
+  cancel_url?: string;
+  reschedule_url?: string;
 }
 
 // Table: devis_requests

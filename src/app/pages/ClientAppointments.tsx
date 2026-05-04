@@ -90,9 +90,11 @@ export default function ClientAppointments() {
 
               if (rawDate && rawTime) {
                   try {
-                      // LE SCALPEL EST ICI : On force l'extraction des 5 premiers caractères ("11:45")
-                      const cleanTime = rawTime.substring(0, 5); 
-                      const dateObj = new Date(`${rawDate}T${cleanTime}:00Z`);
+                      // NETTOYAGE EXTRÊME : On trim les espaces et on découpe strictement
+                      const cleanDate = String(rawDate).trim();
+                      const cleanTime = String(rawTime).trim().substring(0, 5); 
+                      
+                      const dateObj = new Date(`${cleanDate}T${cleanTime}:00Z`);
                       
                       if (!isNaN(dateObj.getTime())) { 
                           localDate = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -107,7 +109,7 @@ export default function ClientAppointments() {
                 <motion.div 
                   key={apt.id} 
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                  className={`border rounded-xl transition-all duration-300 overflow-hidden ${isExpanded ? 'border-[#d4af37] shadow-md bg-[#d4af37]/5' : 'border-gray-200 hover:border-[#d4af37]/50 bg-white'}`}
+                  className={`border rounded-xl transition-all duration-300 overflow-hidden flex flex-col ${isExpanded ? 'border-[#d4af37] shadow-md bg-[#d4af37]/5' : 'border-gray-200 hover:border-[#d4af37]/50 bg-white'}`}
                 >
                   <button 
                     onClick={() => toggleExpand(apt.id)}
@@ -157,7 +159,7 @@ export default function ClientAppointments() {
                                   Rejoindre la visioconférence
                                 </a>
                               ) : (
-                                <p className="text-[#0a0f1e] font-medium">{apt.location || "Adresse à confirmer"}</p>
+                                <p className="text-[#0a0f1e] font-medium whitespace-pre-line">{apt.location || "Adresse à confirmer"}</p>
                               )}
                             </div>
                           </div>
@@ -172,7 +174,33 @@ export default function ClientAppointments() {
                                </a>
                              </div>
                           </div>
-                          
+
+                          {/* BOUTONS D'ACTION CALENDLY */}
+                          {(apt.cancel_url || apt.reschedule_url) && (
+                            <div className="pt-4 border-t border-gray-100 flex flex-wrap items-center gap-4 mt-2">
+                              {apt.reschedule_url && (
+                                <a 
+                                  href={apt.reschedule_url} 
+                                  target="_blank" 
+                                  rel="noreferrer"
+                                  className="text-sm font-bold text-[#d4af37] hover:text-[#b5952f] transition-colors"
+                                >
+                                  Reprogrammer
+                                </a>
+                              )}
+                              {apt.cancel_url && (
+                                <a 
+                                  href={apt.cancel_url} 
+                                  target="_blank" 
+                                  rel="noreferrer"
+                                  className="text-sm font-bold text-red-500 hover:text-red-700 transition-colors"
+                                >
+                                  Annuler le rendez-vous
+                                </a>
+                              )}
+                            </div>
+                          )}
+
                         </div>
                       </motion.div>
                     )}

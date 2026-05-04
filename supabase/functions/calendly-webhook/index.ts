@@ -63,8 +63,9 @@ Deno.serve(async (req) => {
           agent_name: "Équipe MSF",
           appointment_date: dateStr,   
           appointment_time: timeStr,   
-          location: locationStr
-          // (Suppression de la colonne "notes" qui faisait crasher la DB)
+          location: locationStr,
+          cancel_url: payload.cancel_url,        
+          reschedule_url: payload.reschedule_url 
         });
 
       if (insertError) throw insertError;
