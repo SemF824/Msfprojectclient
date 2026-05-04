@@ -25,7 +25,6 @@ export default function ClientAppointments() {
           .select("*")
           .eq("user_id", user.id)
           .neq("status", "cancelled")
-          // On s'assure de bien trier sur les nouvelles colonnes
           .order("appointment_date", { ascending: true })
           .order("appointment_time", { ascending: true });
 
@@ -42,7 +41,6 @@ export default function ClientAppointments() {
   }, [user]);
 
   const toggleExpand = (id: string) => {
-    // Si on clique sur le même, on ferme. Sinon, on ouvre le nouveau.
     setExpandedId(prevId => prevId === id ? null : id);
   };
 
@@ -84,18 +82,19 @@ export default function ClientAppointments() {
             {appointments.map((apt) => {
               const isExpanded = expandedId === apt.id;
               
-              // LE CRASH TEST : Sécurisation de la lecture de l'heure
               let localDate = "Date inconnue";
               let localTime = "--:--";
               
-              // On utilise les nouvelles colonnes si elles existent, sinon les anciennes
               const rawDate = apt.appointment_date || apt.date;
               const rawTime = apt.appointment_time || apt.time;
 
               if (rawDate && rawTime) {
                   try {
-                      const dateObj = new Date(`${rawDate}T${rawTime}:00Z`);
-                      if (!isNaN(dateObj.getTime())) { // Vérifie si la date est valide
+                      // LE SCALPEL EST ICI : On force l'extraction des 5 premiers caractères ("11:45")
+                      const cleanTime = rawTime.substring(0, 5); 
+                      const dateObj = new Date(`${rawDate}T${cleanTime}:00Z`);
+                      
+                      if (!isNaN(dateObj.getTime())) { 
                           localDate = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
                           localTime = dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
                       }
@@ -110,7 +109,6 @@ export default function ClientAppointments() {
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                   className={`border rounded-xl transition-all duration-300 overflow-hidden ${isExpanded ? 'border-[#d4af37] shadow-md bg-[#d4af37]/5' : 'border-gray-200 hover:border-[#d4af37]/50 bg-white'}`}
                 >
-                  {/* HEADER CLIQUABLE */}
                   <button 
                     onClick={() => toggleExpand(apt.id)}
                     className="w-full p-5 text-left flex items-start justify-between gap-4 focus:outline-none cursor-pointer"
@@ -137,7 +135,6 @@ export default function ClientAppointments() {
                     </div>
                   </button>
 
-                  {/* CONTENU DÉPLIABLE (ACCORDÉON) */}
                   <AnimatePresence>
                     {isExpanded && (
                       <motion.div 
@@ -147,7 +144,6 @@ export default function ClientAppointments() {
                         className="border-t border-gray-100 bg-white"
                       >
                         <div className="p-5 space-y-4">
-                          {/* Emplacement / Visio */}
                           <div className="flex items-start gap-3">
                             {isVideoLink(apt.location) ? (
                               <Video className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
@@ -166,7 +162,6 @@ export default function ClientAppointments() {
                             </div>
                           </div>
 
-                          {/* Agent */}
                           <div className="flex items-start gap-3">
                              <User className="w-5 h-5 text-[#d4af37] flex-shrink-0 mt-0.5" />
                              <div>
