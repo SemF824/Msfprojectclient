@@ -78,7 +78,7 @@ export default function ClientAppointments() {
         ) : appointments.length === 0 ? (
           <EmptyState icon={Calendar} title="Aucun rendez-vous" description="Vous n'avez aucun rendez-vous planifié pour le moment." />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          <div className="flex flex-col gap-4">
             {appointments.map((apt) => {
               const isExpanded = expandedId === apt.id;
               
@@ -90,7 +90,6 @@ export default function ClientAppointments() {
 
               if (rawDate && rawTime) {
                   try {
-                      // NETTOYAGE EXTRÊME : On trim les espaces et on découpe strictement
                       const cleanDate = String(rawDate).trim();
                       const cleanTime = String(rawTime).trim().substring(0, 5); 
                       
@@ -175,10 +174,9 @@ export default function ClientAppointments() {
                              </div>
                           </div>
 
-                          {/* BOUTONS D'ACTION CALENDLY */}
                           {(apt.cancel_url || apt.reschedule_url) && (
                             <div className="pt-4 border-t border-gray-100 flex flex-wrap items-center gap-4 mt-2">
-                              {apt.reschedule_url && (
+                              {apt.reschedule_url ? (
                                 <a 
                                   href={apt.reschedule_url} 
                                   target="_blank" 
@@ -187,7 +185,10 @@ export default function ClientAppointments() {
                                 >
                                   Reprogrammer
                                 </a>
+                              ) : (
+                                <span className="text-sm text-gray-400 italic">Liens indisponibles (Ancien RDV)</span>
                               )}
+                              
                               {apt.cancel_url && (
                                 <a 
                                   href={apt.cancel_url} 
