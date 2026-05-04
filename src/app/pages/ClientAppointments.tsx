@@ -78,7 +78,7 @@ export default function ClientAppointments() {
         ) : appointments.length === 0 ? (
           <EmptyState icon={Calendar} title="Aucun rendez-vous" description="Vous n'avez aucun rendez-vous planifié pour le moment." />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {appointments.map((apt) => {
               const isExpanded = expandedId === apt.id;
               
