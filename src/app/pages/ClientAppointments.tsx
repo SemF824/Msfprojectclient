@@ -1,160 +1,172 @@
 import { useState, useEffect } from "react";
-import { motion } from "motion/react";
-import { Calendar as CalendarIcon, Clock, Loader2, Plus } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { Calendar, Clock, MapPin, Video, User, Phone, ChevronDown } from "lucide-react";
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
-import Breadcrumb from "../components/Breadcrumb";
 import { EmptyState } from "../components/EmptyState";
+import Breadcrumb from "../components/Breadcrumb";
 import type { Appointment } from "../../types/database.types";
 
 export default function ClientAppointments() {
   const { user } = useSupabaseAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Récupération sécurisée du lien depuis les variables d'environnement
-  const CALENDLY_LINK = import.meta.env.VITE_CALENDLY_URL;
+  // Le lien Calendly dynamique via ta variable d'environnement (réparée par vite-env.d.ts)
+  const CALENDLY_LINK = import.meta.env.VITE_CALENDLY_URL || "#";
 
   useEffect(() => {
     let isMounted = true;
-    
     const fetchAppointments = async () => {
       if (!user || !supabase) return;
       setIsLoading(true);
-      
       try {
         const { data, error } = await supabase
-          .from('appointments')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('date', { ascending: true });
+          .from("appointments")
+          .select("*")
+          .eq("user_id", user.id)
+          .neq("status", "cancelled") // On masque les événements annulés
+          .order("appointment_date", { ascending: true })
+          .order("appointment_time", { ascending: true });
 
-        if (!error && data && isMounted) {
-          setAppointments(data);
-        }
+        if (error) throw error;
+        if (data && isMounted) setAppointments(data);
       } catch (err) {
         console.error("Erreur chargement rendez-vous:", err);
       } finally {
         if (isMounted) setIsLoading(false);
       }
     };
-    
     fetchAppointments();
-    
     return () => { isMounted = false; };
   }, [user]);
 
-  const getStatusDisplay = (status: string) => {
-    switch(status) {
-      case 'scheduled': 
-      case 'planifie': return { label: "Planifié", color: "bg-blue-100 text-blue-700 border-blue-200" };
-      case 'confirmed': 
-      case 'confirme': return { label: "Confirmé", color: "bg-green-100 text-green-700 border-green-200" };
-      case 'completed': 
-      case 'termine': return { label: "Terminé", color: "bg-gray-100 text-gray-700 border-gray-200" };
-      case 'cancelled': 
-      case 'annule': return { label: "Annulé", color: "bg-red-100 text-red-700 border-red-200" };
-      default: return { label: "En attente", color: "bg-amber-100 text-amber-700 border-amber-200" };
-    }
+  const toggleExpand = (id: string) => {
+    setExpandedId(expandedId === id ? null : id);
   };
 
-  const handleBookAppointment = () => {
-    if (!CALENDLY_LINK) {
-      console.error("VITE_CALENDLY_URL n'est pas défini dans le fichier .env");
-      alert("Le service de prise de rendez-vous est momentanément indisponible.");
-      return;
-    }
-    // Ouvre le lien Calendly dans un nouvel onglet
-    window.open(CALENDLY_LINK, "_blank");
-  };
+  const isVideoLink = (url: string) => url?.includes("http");
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <Breadcrumb items={[
             { label: "Dashboard", path: "/client/dashboard" },
             { label: "Rendez-vous", path: "/client/appointments" }
           ]} />
-          <h1 className="text-3xl text-[#0a0f1e] mt-2 mb-2 font-bold">Mes Rendez-vous</h1>
-          <p className="text-gray-600">Consultez et planifiez vos visites immobilières.</p>
+          <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mb-2 font-bold break-words">
+            Mes <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">Rendez-vous</span>
+          </h1>
+          <p className="text-gray-600">Gérez vos réunions et visites avec l'équipe MSF.</p>
         </div>
-        
-        <button 
-          onClick={handleBookAppointment}
-          className="flex items-center justify-center gap-2 px-6 py-3 bg-[#d4af37] text-[#0a0f1e] font-bold rounded-xl hover:bg-[#b8952e] transition-colors shadow-md"
+        <a 
+          href={CALENDLY_LINK} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#d4af37] text-[#0a0f1e] rounded-xl font-bold hover:shadow-lg hover:shadow-[#d4af37]/30 transition-all"
         >
-          <Plus className="w-5 h-5" />
-          Prendre un Rendez-vous
-        </button>
+          <Calendar className="w-5 h-5" />
+          Nouveau Rendez-vous
+        </a>
       </div>
 
-      {/* Content */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden min-h-[400px]">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center h-[400px] gap-4">
-            <Loader2 className="w-10 h-10 text-[#d4af37] animate-spin" />
-            <p className="text-gray-500">Chargement de votre agenda...</p>
+          <div className="flex justify-center py-12">
+            <div className="w-8 h-8 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : appointments.length === 0 ? (
-          <div className="flex items-center justify-center h-[400px]">
-            <EmptyState 
-              icon={CalendarIcon} 
-              title="Aucun rendez-vous" 
-              description="Vous n'avez pas de visite prévue pour le moment." 
-            />
-          </div>
+          <EmptyState icon={Calendar} title="Aucun rendez-vous" description="Vous n'avez aucun rendez-vous planifié pour le moment." />
         ) : (
-          <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {appointments.map((apt, index) => {
-              const statusDisplay = getStatusDisplay(apt.status);
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {appointments.map((apt: any) => {
+              const isExpanded = expandedId === apt.id;
               
+              // LA CORRECTION DU FUSEAU HORAIRE : On force Javascript à lire l'heure en UTC (avec le 'Z')
+              // et à la convertir automatiquement dans le fuseau horaire de l'utilisateur.
+              const dateObj = new Date(`${apt.appointment_date}T${apt.appointment_time}:00Z`);
+              const localDate = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+              const localTime = dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
               return (
                 <motion.div 
-                  key={apt.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="p-6 rounded-2xl border border-gray-200 hover:border-[#d4af37]/50 transition-colors shadow-sm bg-gray-50/50"
+                  key={apt.id} 
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  className={`border rounded-xl transition-all duration-300 overflow-hidden ${isExpanded ? 'border-[#d4af37] shadow-md bg-[#d4af37]/5' : 'border-gray-200 hover:border-[#d4af37]/50 bg-white'}`}
                 >
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center border border-gray-200 shadow-sm">
-                        <CalendarIcon className="w-6 h-6 text-[#d4af37]" />
+                  {/* HEADER CLIQUABLE */}
+                  <button 
+                    onClick={() => toggleExpand(apt.id)}
+                    className="w-full p-5 text-left flex items-start justify-between gap-4 focus:outline-none cursor-pointer"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#d4af37]/20 to-[#f4e3b2]/10 flex items-center justify-center flex-shrink-0">
+                        <Calendar className="w-6 h-6 text-[#d4af37]" />
                       </div>
                       <div>
-                        <h3 className="text-[#0a0f1e] font-bold">{apt.property_name || "Rendez-vous Conseil"}</h3>
-                        <p className="text-sm text-gray-500 capitalize">{apt.type === 'visit' ? 'Visite' : apt.type}</p>
-                      </div>
-                    </div>
-                    <span className={`text-[10px] uppercase font-bold px-3 py-1 rounded-full border ${statusDisplay.color}`}>
-                      {statusDisplay.label}
-                    </span>
-                  </div>
-
-                  <div className="space-y-3 bg-white p-4 rounded-xl border border-gray-100">
-                    <div className="flex items-center gap-3 text-sm text-[#0a0f1e]">
-                      <Clock className="w-4 h-4 text-gray-400" />
-                      <span className="font-medium">
-                        {new Date(apt.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} à {apt.time}
-                      </span>
-                    </div>
-                    
-                    {apt.agent_name && (
-                      <div className="flex items-center gap-3 text-sm text-[#0a0f1e]">
-                        <div className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-[8px] font-bold text-gray-600">{apt.agent_name.charAt(0)}</span>
+                        <h3 className="text-lg font-bold text-[#0a0f1e]">{apt.title || apt.property_name}</h3>
+                        <p className="text-sm text-gray-500 capitalize">{apt.type}</p>
+                        
+                        <div className="flex items-center gap-3 mt-3 text-sm font-medium text-gray-700">
+                           <div className="flex items-center gap-1.5">
+                             <Clock className="w-4 h-4 text-[#d4af37]"/> 
+                             {localDate} à {localTime}
+                           </div>
                         </div>
-                        <span className="text-gray-600">Avec <strong className="text-[#0a0f1e]">{apt.agent_name}</strong></span>
                       </div>
-                    )}
-                  </div>
-                  
-                  {apt.notes && (
-                    <div className="mt-4 p-3 bg-blue-50/50 border border-blue-100 rounded-lg text-sm text-blue-800">
-                      <strong>Note :</strong> {apt.notes}
                     </div>
-                  )}
+                    <div className="flex flex-col items-end gap-2">
+                       <span className="px-3 py-1 bg-blue-100 text-blue-700 border border-blue-200 rounded-full text-xs font-bold uppercase tracking-wider">Planifié</span>
+                       <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180 text-[#d4af37]' : ''}`} />
+                    </div>
+                  </button>
+
+                  {/* CONTENU DÉPLIABLE (ACCORDÉON) */}
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }} 
+                        animate={{ height: "auto", opacity: 1 }} 
+                        exit={{ height: 0, opacity: 0 }}
+                        className="border-t border-gray-100 bg-white"
+                      >
+                        <div className="p-5 space-y-4">
+                          {/* Emplacement / Visio */}
+                          <div className="flex items-start gap-3">
+                            {isVideoLink(apt.location) ? (
+                              <Video className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                            ) : (
+                              <MapPin className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                            )}
+                            <div>
+                              <p className="text-xs text-gray-500 font-semibold uppercase mb-1">Lieu de la rencontre</p>
+                              {isVideoLink(apt.location) ? (
+                                <a href={apt.location} target="_blank" rel="noreferrer" className="text-blue-600 font-medium hover:underline break-all">
+                                  Rejoindre la visioconférence (Google Meet)
+                                </a>
+                              ) : (
+                                <p className="text-[#0a0f1e] font-medium">{apt.location || "Adresse à confirmer"}</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Agent */}
+                          <div className="flex items-start gap-3">
+                             <User className="w-5 h-5 text-[#d4af37] flex-shrink-0 mt-0.5" />
+                             <div>
+                               <p className="text-xs text-gray-500 font-semibold uppercase mb-1">Votre Conseiller</p>
+                               <p className="text-[#0a0f1e] font-medium">{apt.agent_name || "Équipe MSF"}</p>
+                               <a href="tel:+242064588618" className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-[#d4af37] mt-1">
+                                 <Phone className="w-3.5 h-3.5"/> +242 06 458 8618
+                               </a>
+                             </div>
+                          </div>
+                          
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               );
             })}

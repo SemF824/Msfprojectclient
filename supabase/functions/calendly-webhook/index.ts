@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from "npm:@supabase/supabase-js@2"
 
-console.log("Démarrage du Webhook Calendly - Gestion Création ET Annulation...")
+console.log("Démarrage du Webhook Calendly - Suppression Radicale...")
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405 })
@@ -13,9 +13,6 @@ Deno.serve(async (req) => {
     const payload = body.payload;
     const inviteeEmail = payload.email;
     const startTime = payload.scheduled_event?.start_time || payload.event?.start_time;
-    
-    // Le lien d'annulation unique (URI) sert d'identifiant pour retrouver la réunion exacte
-    const cancelUri = payload.cancel_url; 
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -30,18 +27,18 @@ Deno.serve(async (req) => {
 
     if (!profile) return new Response(JSON.stringify({ message: "Client non reconnu" }), { status: 200 });
 
-    // === GESTION DE L'ANNULATION ===
+    // === GESTION DE L'ANNULATION (Destruction de la ligne) ===
     if (body.event === 'invitee.canceled') {
-       // On cherche le rendez-vous lié à cet utilisateur et cette heure exacte pour le marquer annulé
+       // LA FRAPPE CHIRURGICALE : On efface purement et simplement la ligne
        const { error: cancelError } = await supabaseAdmin
           .from('appointments')
-          .update({ status: 'cancelled' })
+          .delete() 
           .eq('user_id', profile.id)
           .eq('appointment_date', startTime.split('T')[0])
           .eq('appointment_time', startTime.split('T')[1].substring(0, 5));
 
        if (cancelError) throw cancelError;
-       console.log(`[SUCCÈS] Rendez-vous ANNULÉ pour : ${inviteeEmail}`);
+       console.log(`[SUCCÈS] Ancien rendez-vous DÉTRUIT pour : ${inviteeEmail}`);
     }
 
     // === GESTION DE LA CRÉATION ===
@@ -66,18 +63,25 @@ Deno.serve(async (req) => {
           agent_name: "Équipe MSF",
           appointment_date: dateStr,   
           appointment_time: timeStr,   
-          location: locationStr,
-          notes: cancelUri // On stocke l'URL d'annulation dans 'notes' pour l'avoir sous la main
+          location: locationStr
+          // (Suppression de la colonne "notes" qui faisait crasher la DB)
         });
 
       if (insertError) throw insertError;
-      console.log(`[SUCCÈS] Rendez-vous CRÉÉ pour : ${inviteeEmail}`);
+      console.log(`[SUCCÈS] Nouveau rendez-vous CRÉÉ pour : ${inviteeEmail}`);
     }
 
     return new Response(JSON.stringify({ success: true }), { status: 200 })
 
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
+  } catch (error: any) {
+    // EXTRACTION PRÉCISE DE L'ERREUR SUPABASE
+    let errorMessage = "Erreur inconnue";
+    if (error && typeof error === 'object') {
+        errorMessage = error.message || error.details || error.hint || JSON.stringify(error);
+    } else {
+        errorMessage = String(error);
+    }
+    
     console.error("Erreur critique Webhook:", errorMessage);
     return new Response(JSON.stringify({ error: errorMessage }), { status: 400 });
   }
