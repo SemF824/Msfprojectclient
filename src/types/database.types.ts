@@ -69,10 +69,14 @@ export interface Appointment {
   user_id: string;
   property_id: string;
   property_name: string;
-  type: 'visit' | 'consultation' | 'signature';
-  date: string;
-  time: string;
-  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled';
+  title?: string;             
+  type: 'visit' | 'consultation' | 'signature' | 'visite'; 
+  date: string;               
+  time: string;               
+  appointment_date: string;   
+  appointment_time: string;   
+  location?: string;          
+  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'planifie'; 
   agent_name?: string;
   notes?: string;
   created_at: string;

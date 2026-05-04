@@ -12,7 +12,6 @@ export default function ClientAppointments() {
   const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Le lien Calendly dynamique via ta variable d'environnement (réparée par vite-env.d.ts)
   const CALENDLY_LINK = import.meta.env.VITE_CALENDLY_URL || "#";
 
   useEffect(() => {
@@ -25,7 +24,8 @@ export default function ClientAppointments() {
           .from("appointments")
           .select("*")
           .eq("user_id", user.id)
-          .neq("status", "cancelled") // On masque les événements annulés
+          .neq("status", "cancelled")
+          // On s'assure de bien trier sur les nouvelles colonnes
           .order("appointment_date", { ascending: true })
           .order("appointment_time", { ascending: true });
 
@@ -42,10 +42,11 @@ export default function ClientAppointments() {
   }, [user]);
 
   const toggleExpand = (id: string) => {
-    setExpandedId(expandedId === id ? null : id);
+    // Si on clique sur le même, on ferme. Sinon, on ouvre le nouveau.
+    setExpandedId(prevId => prevId === id ? null : id);
   };
 
-  const isVideoLink = (url: string) => url?.includes("http");
+  const isVideoLink = (url: string | undefined) => url?.includes("http");
 
   return (
     <div className="space-y-6">
@@ -80,14 +81,28 @@ export default function ClientAppointments() {
           <EmptyState icon={Calendar} title="Aucun rendez-vous" description="Vous n'avez aucun rendez-vous planifié pour le moment." />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {appointments.map((apt: any) => {
+            {appointments.map((apt) => {
               const isExpanded = expandedId === apt.id;
               
-              // LA CORRECTION DU FUSEAU HORAIRE : On force Javascript à lire l'heure en UTC (avec le 'Z')
-              // et à la convertir automatiquement dans le fuseau horaire de l'utilisateur.
-              const dateObj = new Date(`${apt.appointment_date}T${apt.appointment_time}:00Z`);
-              const localDate = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-              const localTime = dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+              // LE CRASH TEST : Sécurisation de la lecture de l'heure
+              let localDate = "Date inconnue";
+              let localTime = "--:--";
+              
+              // On utilise les nouvelles colonnes si elles existent, sinon les anciennes
+              const rawDate = apt.appointment_date || apt.date;
+              const rawTime = apt.appointment_time || apt.time;
+
+              if (rawDate && rawTime) {
+                  try {
+                      const dateObj = new Date(`${rawDate}T${rawTime}:00Z`);
+                      if (!isNaN(dateObj.getTime())) { // Vérifie si la date est valide
+                          localDate = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                          localTime = dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                      }
+                  } catch (e) {
+                      console.error("Erreur de parsing de date", e);
+                  }
+              }
 
               return (
                 <motion.div 
@@ -105,7 +120,7 @@ export default function ClientAppointments() {
                         <Calendar className="w-6 h-6 text-[#d4af37]" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-[#0a0f1e]">{apt.title || apt.property_name}</h3>
+                        <h3 className="text-lg font-bold text-[#0a0f1e]">{apt.title || apt.property_name || 'Rendez-vous MSF'}</h3>
                         <p className="text-sm text-gray-500 capitalize">{apt.type}</p>
                         
                         <div className="flex items-center gap-3 mt-3 text-sm font-medium text-gray-700">
@@ -143,7 +158,7 @@ export default function ClientAppointments() {
                               <p className="text-xs text-gray-500 font-semibold uppercase mb-1">Lieu de la rencontre</p>
                               {isVideoLink(apt.location) ? (
                                 <a href={apt.location} target="_blank" rel="noreferrer" className="text-blue-600 font-medium hover:underline break-all">
-                                  Rejoindre la visioconférence (Google Meet)
+                                  Rejoindre la visioconférence
                                 </a>
                               ) : (
                                 <p className="text-[#0a0f1e] font-medium">{apt.location || "Adresse à confirmer"}</p>
