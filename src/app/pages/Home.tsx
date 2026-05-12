@@ -7,8 +7,15 @@ import { Projects } from "../components/Projects";
 import { Expertise } from "../components/Expertise";
 import { PropertyFilter } from "../components/PropertyFilter";
 import { FeaturedProperties } from "../components/FeaturedProperties";
+import { useSEO } from "../../hooks/useSEO";
 
 export default function Home() {
+  // INJECTION SEO DYNAMIQUE
+  useSEO({
+    title: "Promoteur Immobilier d'Excellence",
+    description: "Découvrez MSF Congo et notre nouveau projet Résidences Caraïbes à Pointe-Noire. Investissez dans des appartements et villas de haut standing."
+  });
+
   // L'état qui va stocker les critères de recherche
   const [searchFilters, setSearchFilters] = useState({
     type: "all",
@@ -43,17 +50,15 @@ export default function Home() {
 
       {/* SECTION : Investissez en toute sérénité */}
       <section className="py-24 bg-[#0a0f1e] text-white">
-        <div className="max-w-7xl mx-auto px-6 md:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-black mb-4">Investissez en toute sérénité</h2>
-            <p className="text-gray-400 text-lg">
-              Chez MSF Congo, nous construisons la confiance brique par brique. Votre capital est sécurisé par un processus de paiement calqué sur la réalité de l'avancement du chantier.
-            </p>
+        <div className="container mx-auto px-6">
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Investissez en toute sérénité</h2>
+            <p className="text-gray-400">Un processus transparent et sécurisé en 3 étapes clés, conçu pour vous garantir une tranquillité d'esprit totale.</p>
           </div>
-
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { title: "Démarrage & Fondations", pct: "30%", desc: "Ce premier palier couvre l'acquisition de votre terrain, l'établissement du titre foncier à votre nom, la signature du contrat et la réalisation complète des fondations." },
+              { title: "Réservation & Gros Œuvre", pct: "30%", desc: "Sécurisez votre villa avec un premier apport. Ce montant couvre l'acquisition du terrain, les études préliminaires et la réalisation complète des fondations." },
               { title: "Élévation & Toiture", pct: "30%", desc: "Vous réglez 10% pour l'élévation des murs de la structure, puis 20% supplémentaires à la mise hors d'eau (installation de la toiture). Vous ne payez que ce que vous voyez s'élever." },
               { title: "Finitions & Clés en main", pct: "40%", desc: "Ce dernier versement sécurise la finalisation de votre villa : plomberie, électricité, finitions intérieures/extérieures et la remise officielle de vos clés." }
             ].map((feature, i) => (
@@ -73,7 +78,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }

@@ -4,6 +4,7 @@ import {
   Home, Heart, Calendar, FileText, Calculator, LogOut,
   Bell, Settings, User, Clock, Lock
 } from "lucide-react";
+import FloatingWhatsApp from "./FloatingWhatsApp";
 
 export default function ClientLayout() {
   const { user: authUser, isLoading, signOut } = useSupabaseAuth();
@@ -26,19 +27,18 @@ export default function ClientLayout() {
     navigate("/connexion");
   };
 
-  // CORRECTION : L'ID doit correspondre à la route réelle pour que le statut "actif" fonctionne.
   const navItems = [
     { id: "/client/dashboard", icon: Home, label: "Vue d'ensemble" },
     { id: "/client/requests", icon: FileText, label: "Mes Demandes" },
     { id: "/client/favorites", icon: Heart, label: "Favoris" },
     { id: "/client/appointments", icon: Calendar, label: "Rendez-vous" },
-    { id: "/client/transactions", icon: Clock, label: "Historique" }, // Pointait vers /history avant
+    { id: "/client/transactions", icon: Clock, label: "Historique" }, 
     { id: "/client/documents", icon: Lock, label: "Documents Sécurisés" },
     { id: "/client/loan", icon: Calculator, label: "Simulateur Prêt" },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 pt-20">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 pt-20 relative">
       <div className="container mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           
@@ -95,6 +95,9 @@ export default function ClientLayout() {
 
         </div>
       </div>
+      
+      {/* BOUTON WHATSAPP FLOTTANT */}
+      <FloatingWhatsApp />
     </div>
   );
 }

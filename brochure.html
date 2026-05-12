@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brochure Résidences Caraïbes - MSF Congo</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
+
+        :root {
+            --navy: #0a0f1e;
+            --gold: #d4af37;
+            --light-gold: #f4e3b2;
+            --gray: #4b5563;
+            --light-gray: #f9fafb;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--navy);
+            background: #e5e7eb; /* Background externe pour visualisation */
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* CONFIGURATION A4 STRICTE */
+        .page {
+            width: 210mm;
+            height: 297mm;
+            background: white;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+            page-break-after: always;
+        }
+
+        /* --- PAGE 1: COUVERTURE --- */
+        .cover {
+            background-image: linear-gradient(to bottom, rgba(10, 15, 30, 0.2), rgba(10, 15, 30, 0.9)), url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 40mm 20mm;
+        }
+        .cover-header {
+            text-align: center;
+        }
+        .cover-logo {
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: var(--gold);
+            margin-bottom: 20px;
+        }
+        .cover-title {
+            font-size: 56px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+        }
+        .cover-subtitle {
+            font-size: 20px;
+            font-weight: 300;
+            color: var(--light-gold);
+            letter-spacing: 1px;
+        }
+        .cover-footer {
+            text-align: center;
+            border-top: 1px solid rgba(212, 175, 55, 0.5);
+            padding-top: 20px;
+        }
+
+        /* --- STANDARD PAGES --- */
+        .content-page {
+            padding: 25mm 20mm;
+            display: flex;
+            flex-direction: column;
+        }
+        .section-title {
+            font-size: 36px;
+            color: var(--navy);
+            margin-bottom: 10px;
+        }
+        .gold-line {
+            width: 60px;
+            height: 4px;
+            background: var(--gold);
+            margin-bottom: 30px;
+        }
+        p {
+            font-size: 14px;
+            line-height: 1.8;
+            color: var(--gray);
+            margin-bottom: 20px;
+        }
+        
+        /* Layouts spécifiques */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .image-box {
+            width: 100%;
+            height: 200px;
+            background-color: var(--light-gray);
+            border-radius: 8px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* --- PAGE FINANCEMENT (Timeline) --- */
+        .timeline {
+            margin-top: 30px;
+        }
+        .timeline-step {
+            display: flex;
+            margin-bottom: 30px;
+        }
+        .step-pct {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--gold);
+            width: 80px;
+            flex-shrink: 0;
+        }
+        .step-content h4 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        /* --- PAGE CONTACT --- */
+        .contact-page {
+            background: var(--navy);
+            color: white;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .contact-page h2 {
+            color: white;
+            font-size: 48px;
+        }
+        .contact-info {
+            margin-top: 40px;
+            font-size: 18px;
+            line-height: 2;
+        }
+        .contact-info span {
+            color: var(--gold);
+            display: block;
+            margin-bottom: 10px;
+        }
+        .qr-placeholder {
+            width: 150px;
+            height: 150px;
+            background: white;
+            margin: 40px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--navy);
+            font-size: 12px;
+            border-radius: 10px;
+        }
+
+        /* IMPRESSION */
+        @media print {
+            body { background: white; }
+            .page { box-shadow: none; margin: 0; }
+            @page { size: A4; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page cover">
+        <div class="cover-header">
+            <div class="cover-logo">MSF CONGO</div>
+            <h1 class="cover-title">Résidences Caraïbes</h1>
+            <div class="cover-subtitle">L'Excellence Résidentielle à Pointe-Noire</div>
+        </div>
+        <div class="cover-footer">
+            <p style="color: white; margin: 0;">Un projet immobilier exclusif par Maisons Sans Frontières Congo</p>
+        </div>
+    </div>
+
+    <div class="page content-page">
+        <h2 class="section-title">Investissez l'esprit tranquille</h2>
+        <div class="gold-line"></div>
+        
+        <p>L'acquisition immobilière est souvent source d'anxiété. Chez Maisons Sans Frontières Congo, nous avons bâti notre réputation sur un pilier non négociable : la sécurité juridique et technique absolue.</p>
+        
+        <div class="grid-2" style="margin-top: 40px;">
+            <div>
+                <h4 style="font-size: 22px; margin-bottom: 15px; color: var(--gold);">Titre Foncier Garanti</h4>
+                <p>Oubliez les litiges fonciers. Chaque parcelle des Résidences Caraïbes est scrupuleusement immatriculée. Nous vous livrons non seulement les clés de votre villa, mais surtout le Titre Foncier définitif, certifiant votre propriété indiscutable.</p>
+            </div>
+            <div class="image-box" style="background-image: url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80');"></div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 40px;">
+            <div class="image-box" style="background-image: url('https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=600&q=80');"></div>
+            <div>
+                <h4 style="font-size: 22px; margin-bottom: 15px; color: var(--gold);">Excellence Architecturale</h4>
+                <p>Nos constructions respectent les normes d'ingénierie les plus strictes. Du choix des fondations à la plomberie, nous assurons une supervision rigoureuse pour garantir la longévité de votre investissement face au climat équatorial.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="page content-page">
+        <h2 class="section-title">Un Emplacement Stratégique</h2>
+        <div class="gold-line"></div>
+        <p>Situées dans un quartier en plein essor de Pointe-Noire, les Résidences Caraïbes offrent l'équilibre parfait entre l'accessibilité urbaine et la tranquillité résidentielle.</p>
+        
+        <div class="image-box" style="height: 350px; margin: 30px 0; background-image: url('https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=1200&q=80');">
+            </div>
+
+        <ul style="list-style: none; margin-top: 20px;">
+            <li style="margin-bottom: 15px; display: flex; align-items: center; gap: 15px;">
+                <div style="width: 10px; height: 10px; background: var(--gold); border-radius: 50%;"></div>
+                <strong style="color: var(--navy);">À 10 minutes</strong> du centre-ville de Pointe-Noire.
+            </li>
+            <li style="margin-bottom: 15px; display: flex; align-items: center; gap: 15px;">
+                <div style="width: 10px; height: 10px; background: var(--gold); border-radius: 50%;"></div>
+                <strong style="color: var(--navy);">À 5 minutes</strong> de l'Aéroport International.
+            </li>
+            <li style="margin-bottom: 15px; display: flex; align-items: center; gap: 15px;">
+                <div style="width: 10px; height: 10px; background: var(--gold); border-radius: 50%;"></div>
+                <strong style="color: var(--navy);">Proximité immédiate</strong> des commerces, écoles et centres de santé.
+            </li>
+        </ul>
+    </div>
+
+    <div class="page content-page">
+        <h2 class="section-title">Design & Prestations</h2>
+        <div class="gold-line"></div>
+        
+        <div class="grid-2">
+            <div>
+                <h4 style="font-size: 20px; margin-bottom: 10px;">Design Bioclimatique</h4>
+                <p>Nos villas et appartements sont pensés pour favoriser la circulation naturelle de l'air et optimiser l'éclairage naturel, réduisant ainsi la dépendance à la climatisation.</p>
+                
+                <h4 style="font-size: 20px; margin-bottom: 10px; margin-top: 30px;">Finitions Premium</h4>
+                <ul style="font-size: 14px; color: var(--gray); line-height: 1.8; margin-left: 20px;">
+                    <li>Carrelage importé de haute résistance.</li>
+                    <li>Baies vitrées en menuiserie aluminium.</li>
+                    <li>Sanitaires modernes et équipements de marque.</li>
+                    <li>Pré-installation pour fibre optique et climatisation.</li>
+                </ul>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="image-box" style="height: 180px; background-image: url('https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=600&q=80');"></div>
+                <div class="image-box" style="height: 180px; background-image: url('https://images.unsplash.com/photo-1600566753086-00f18efc2291?auto=format&fit=crop&w=600&q=80');"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page content-page">
+        <h2 class="section-title">Investissez à votre rythme</h2>
+        <div class="gold-line"></div>
+        <p>Un processus transparent et sécurisé en 3 étapes clés. Un échéancier strictement aligné sur l'avancement réel des travaux : vous ne payez que ce que vous voyez s'élever.</p>
+
+        <div class="timeline">
+            <div class="timeline-step">
+                <div class="step-pct">30%</div>
+                <div class="step-content">
+                    <h4>Réservation & Gros Œuvre</h4>
+                    <p>Sécurisez votre lot avec un premier apport. Ce montant couvre l'acquisition définitive du terrain, les études préliminaires et la réalisation complète des fondations de votre villa.</p>
+                </div>
+            </div>
+
+            <div class="timeline-step">
+                <div class="step-pct">30%</div>
+                <div class="step-content">
+                    <h4>Élévation & Toiture</h4>
+                    <p>Vous réglez 10% pour l'élévation des murs de la structure principale, puis 20% supplémentaires à la mise hors d'eau, marquant l'installation complète de la charpente et de la toiture.</p>
+                </div>
+            </div>
+
+            <div class="timeline-step">
+                <div class="step-pct">40%</div>
+                <div class="step-content">
+                    <h4>Finitions & Remise des Clés</h4>
+                    <p>Ce dernier versement sécurise la finalisation de votre bien : réseaux de plomberie et d'électricité, menuiseries, revêtements intérieurs/extérieurs et la remise officielle de vos clés avec le Titre Foncier.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page content-page contact-page">
+        <div style="max-width: 600px;">
+            <div class="cover-logo" style="margin-bottom: 30px;">MSF CONGO</div>
+            <h2>Réservez votre bien dès aujourd'hui.</h2>
+            <p style="color: var(--light-gold); font-size: 18px; margin-top: 20px;">L'immobilier n'attend pas.</p>
+            
+            <div class="qr-placeholder">
+                [ Placez votre QR Code Calendly ici ]
+            </div>
+
+            <div class="contact-info">
+                <span>+242 06 458 8618</span>
+                <span>contact@msfcongo.com</span>
+                <span style="color: white; font-size: 14px; margin-top: 20px; opacity: 0.8;">
+                    Immeuble Maisons Sans Frontières<br>
+                    1 place Antonetti, 7ème étage<br>
+                    Centre-ville, Pointe-Noire, Congo
+                </span>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -3,8 +3,9 @@ import { motion } from "motion/react";
 import { 
   ArrowLeft, MapPin, Calendar, Building2, Users, 
   CheckCircle2, Home, ShoppingBag, GraduationCap,
-  Activity, Church, Palmtree, Briefcase
+  Activity, Church, Palmtree, Briefcase, Download // <-- AJOUT DE DOWNLOAD
 } from "lucide-react";
+import { useSEO } from "../../hooks/useSEO"; // <-- AJOUT DU HOOK SEO
 
 const projectsData = {
   "tchikobo": {
@@ -237,6 +238,12 @@ export default function ProjectDetail() {
   const { slug } = useParams();
   const project = slug ? projectsData[slug as keyof typeof projectsData] : null;
 
+  // L'INJECTION SEO QUI PARLERA A GOOGLE
+  useSEO({
+    title: project ? `Projet ${project.name}` : "Projet Immobilier",
+    description: project ? project.description.substring(0, 150) + "..." : "Découvrez les détails de notre projet immobilier MSF Congo."
+  });
+
   if (!project) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -293,9 +300,21 @@ export default function ProjectDetail() {
                 <span className="text-xl">{project.location}</span>
               </div>
 
-              <p className="text-2xl text-[#d4af37]">
+              <p className="text-2xl text-[#d4af37] mb-6">
                 {project.tagline}
               </p>
+
+              {/* LE PREMIER BOUTON DE BROCHURE (Visible dès l'arrivée si c'est Caraïbes) */}
+              {slug === 'caraibes' && (
+                <a 
+                  href="/brochure-caraibes.pdf" 
+                  download="Brochure_Residences_Caraibes_MSF.pdf"
+                  className="inline-flex items-center gap-3 px-6 py-3 bg-[#d4af37] text-[#0a0f1e] rounded-xl font-bold hover:shadow-lg hover:shadow-[#d4af37]/30 hover:-translate-y-0.5 transition-all"
+                >
+                  <Download className="w-5 h-5" />
+                  Télécharger la Brochure
+                </a>
+              )}
             </motion.div>
           </div>
         </div>
@@ -485,13 +504,27 @@ export default function ProjectDetail() {
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
               Contactez-nous pour plus d'informations ou pour planifier une visite
             </p>
-            <Link
-              to="/contact"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-[#d4af37] text-[#0a0f1e] rounded-xl hover:bg-[#f4e3b2] transition-all text-lg"
-            >
-              <span>Contactez-Nous</span>
-              <ArrowLeft className="w-5 h-5 rotate-180" />
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                to="/contact"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#d4af37] text-[#0a0f1e] rounded-xl hover:bg-[#f4e3b2] transition-all text-lg font-bold"
+              >
+                <span>Contactez-Nous</span>
+                <ArrowLeft className="w-5 h-5 rotate-180" />
+              </Link>
+
+              {/* LE SECOND BOUTON DE BROCHURE (Dans la zone d'action finale) */}
+              {slug === 'caraibes' && (
+                <a
+                  href="/brochure-caraibes.pdf"
+                  download="Brochure_Residences_Caraibes_MSF.pdf"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-transparent border-2 border-[#d4af37] text-[#d4af37] rounded-xl hover:bg-[#d4af37]/10 transition-all text-lg font-bold"
+                >
+                  <Download className="w-5 h-5" />
+                  Brochure PDF
+                </a>
+              )}
+            </div>
           </motion.div>
         </div>
       </section>
