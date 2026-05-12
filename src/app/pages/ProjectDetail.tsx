@@ -305,7 +305,6 @@ export default function ProjectDetail() {
               </p>
 
               {/* LE PREMIER BOUTON DE BROCHURE (Visible dès l'arrivée si c'est Caraïbes) */}
-              {slug === 'caraibes' && (
                 <a 
                   href="/brochure-caraibes.pdf" 
                   download="Brochure_Residences_Caraibes_MSF.pdf"
@@ -314,7 +313,6 @@ export default function ProjectDetail() {
                   <Download className="w-5 h-5" />
                   Télécharger la Brochure
                 </a>
-              )}
             </motion.div>
           </div>
         </div>
@@ -514,7 +512,6 @@ export default function ProjectDetail() {
               </Link>
 
               {/* LE SECOND BOUTON DE BROCHURE (Dans la zone d'action finale) */}
-              {slug === 'caraibes' && (
                 <a
                   href="/brochure-caraibes.pdf"
                   download="Brochure_Residences_Caraibes_MSF.pdf"
@@ -523,7 +520,6 @@ export default function ProjectDetail() {
                   <Download className="w-5 h-5" />
                   Brochure PDF
                 </a>
-              )}
             </div>
           </motion.div>
         </div>
