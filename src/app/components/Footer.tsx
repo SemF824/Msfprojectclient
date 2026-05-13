@@ -1,4 +1,4 @@
-import { Building2, Facebook, Instagram, Linkedin, Mail, MapPin, Phone, Twitter } from "lucide-react";
+import { Building2, Facebook, Instagram, Linkedin, Mail, MapPin, Phone, Twitter, Download } from "lucide-react";
 import { Link } from "react-router";
 
 export function Footer() {
@@ -80,7 +80,21 @@ export function Footer() {
               </li>
             </ul>
 
-            <div className="mt-6 p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+            {/* LE BOUTON BROCHURE INTÉGRÉ DANS TON DESIGN */}
+            <div className="mt-6 p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-[#d4af37]/30">
+              <p className="text-xs text-[#d4af37] mb-2 font-semibold uppercase tracking-wider">Ressources</p>
+              <p className="text-sm text-gray-300 mb-3">Découvrez notre projet Résidences Caraïbes en détail.</p>
+              <a 
+                href="/brochure-caraibes.pdf" 
+                download="Brochure_Residences_Caraibes_MSF.pdf"
+                className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#d4af37] text-[#0a0f1e] rounded-lg hover:bg-[#f4e3b2] transition-all font-bold text-sm"
+              >
+                <Download className="w-4 h-4" />
+                Télécharger la Brochure
+              </a>
+            </div>
+
+            <div className="mt-4 p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
               <p className="text-xs text-gray-400 mb-1">Succursale Brazzaville</p>
               <p className="text-sm text-gray-300">Également présents dans la capitale</p>
             </div>
@@ -97,14 +111,12 @@ export function Footer() {
               <a href="#" className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors">Politique de Confidentialité</a>
               <a href="#" className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors">Conditions d'Utilisation</a>
               <a href="#" className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors">Mentions Légales</a>
-              {/* Lien admin : <a> natif pour forcer rechargement complet */}
               <a href="/admin" className="text-gray-500 text-xs hover:text-[#d4af37] transition-colors opacity-60 hover:opacity-100">Admin</a>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Décoration */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#d4af37]/50 to-transparent" />
     </footer>
   );
