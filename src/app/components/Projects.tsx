@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { MapPin, Home, Building2, TrendingUp, ArrowRight } from "lucide-react";
+import { MapPin, Building2, ArrowRight } from "lucide-react";
 import { Link } from "react-router";
 
 const projects = [
@@ -87,10 +87,10 @@ const projects = [
 
 export function Projects() {
   return (
-    <section className="py-24 px-6 bg-gray-50">
+    <section className="py-16 md:py-24 px-4 md:px-6 bg-gray-50">
       <div className="container mx-auto">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-12 md:mb-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -106,7 +106,7 @@ export function Projects() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-4xl md:text-5xl mb-4 font-black text-[#0a0f1e]"
+            className="text-3xl md:text-5xl mb-4 font-black text-[#0a0f1e]"
           >
             Projets <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">Phares</span>
           </motion.h2>
@@ -116,14 +116,14 @@ export function Projects() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="text-gray-600 max-w-3xl mx-auto text-lg"
+            className="text-gray-600 max-w-3xl mx-auto text-base md:text-lg"
           >
             Des villes nouvelles qui transforment le paysage urbain congolais
           </motion.p>
         </div>
 
         {/* Projects */}
-        <div className="space-y-20">
+        <div className="space-y-12 md:space-y-20">
           {projects.map((project, index) => (
             <motion.div
               key={project.id}
@@ -131,20 +131,20 @@ export function Projects() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className={`group relative ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'} flex flex-col lg:flex gap-12 items-center`}
+              className={`group relative flex flex-col ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-8 md:gap-12 items-center`}
             >
               {/* Image */}
-              <div className="lg:w-1/2 relative w-full">
-                <div className="relative rounded-3xl overflow-hidden shadow-xl border border-gray-100 bg-white">
+              <div className="w-full lg:w-1/2 relative">
+                <div className="relative rounded-2xl md:rounded-3xl overflow-hidden shadow-xl border border-gray-100 bg-white">
                   <img
                     src={project.image}
                     alt={project.name}
-                    className="w-full h-[400px] md:h-[450px] object-cover group-hover:scale-105 transition-transform duration-700"
+                    className="w-full h-[300px] md:h-[450px] object-cover group-hover:scale-105 transition-transform duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e]/60 via-transparent to-transparent" />
                   
                   {/* Tag */}
-                  <div className={`absolute top-6 left-6 px-4 py-2 rounded-full font-bold text-sm shadow-md ${
+                  <div className={`absolute top-4 md:top-6 left-4 md:left-6 px-3 md:px-4 py-1.5 md:py-2 rounded-full font-bold text-xs md:text-sm shadow-md ${
                     project.color === 'emerald' ? 'bg-emerald-100 border border-emerald-200 text-emerald-800' :
                     project.color === 'blue' ? 'bg-blue-100 border border-blue-200 text-blue-800' :
                     'bg-amber-100 border border-amber-200 text-amber-800'
@@ -153,42 +153,42 @@ export function Projects() {
                   </div>
                 </div>
 
-                {/* Decorative */}
-                <div className={`absolute -z-10 ${index % 2 === 0 ? '-right-4 md:-right-8' : '-left-4 md:-left-8'} -bottom-4 md:-bottom-8 w-full h-full bg-[#d4af37]/10 rounded-3xl`} />
+                {/* Decorative - Hidden on mobile for cleaner look */}
+                <div className={`hidden md:block absolute -z-10 ${index % 2 === 0 ? '-right-8' : '-left-8'} -bottom-8 w-full h-full bg-[#d4af37]/10 rounded-3xl`} />
               </div>
 
               {/* Content */}
-              <div className="lg:w-1/2 space-y-6 w-full">
+              <div className="w-full lg:w-1/2 space-y-4 md:space-y-6">
                 <div>
-                  <div className="flex items-center gap-2 text-gray-500 mb-3">
-                    <MapPin className="w-5 h-5 text-[#d4af37]" />
-                    <span className="font-semibold">{project.location}</span>
+                  <div className="flex items-center gap-2 text-gray-500 mb-2 md:mb-3">
+                    <MapPin className="w-4 h-4 md:w-5 md:h-5 text-[#d4af37]" />
+                    <span className="font-semibold text-sm md:text-base">{project.location}</span>
                   </div>
-                  <h3 className="text-3xl md:text-4xl text-[#0a0f1e] font-bold mb-2 leading-tight">
+                  <h3 className="text-2xl md:text-4xl text-[#0a0f1e] font-bold mb-2 leading-tight">
                     {project.name}
                   </h3>
-                  <p className="text-[#d4af37] text-xl mb-6 font-bold">
+                  <p className="text-[#d4af37] text-lg md:text-xl mb-4 md:mb-6 font-bold">
                     {project.tagline}
                   </p>
-                  <p className="text-gray-600 leading-relaxed text-lg">
+                  <p className="text-gray-600 leading-relaxed text-sm md:text-lg">
                     {project.description}
                   </p>
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-2 md:gap-4">
                   {project.stats.map((stat, idx) => (
-                    <div key={idx} className="p-4 bg-white rounded-2xl border border-gray-200 shadow-sm hover:border-[#d4af37]/30 transition-colors">
-                      <div className="text-2xl text-[#d4af37] mb-1 font-black">{stat.value}</div>
-                      <div className="text-xs text-gray-500 font-bold uppercase tracking-wider">{stat.label}</div>
+                    <div key={idx} className="p-3 md:p-4 bg-white rounded-xl md:rounded-2xl border border-gray-200 shadow-sm hover:border-[#d4af37]/30 transition-colors">
+                      <div className="text-lg md:text-2xl text-[#d4af37] mb-1 font-black">{stat.value}</div>
+                      <div className="text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-wider">{stat.label}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* CTA */}
-                <Link to={`/vitrine/projet/${project.slug}`} className="group/btn mt-4 inline-flex items-center gap-2 px-8 py-4 bg-[#0a0f1e] text-white font-semibold rounded-xl hover:bg-[#d4af37] hover:text-[#0a0f1e] transition-all shadow-md hover:shadow-lg">
+                <Link to={`/vitrine/projet/${project.slug}`} className="group/btn mt-4 inline-flex w-full md:w-auto items-center justify-center gap-2 px-6 md:px-8 py-3 md:py-4 bg-[#0a0f1e] text-white font-semibold rounded-xl hover:bg-[#d4af37] hover:text-[#0a0f1e] transition-all shadow-md hover:shadow-lg">
                   <span>En Savoir Plus</span>
-                  <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover/btn:translate-x-1 transition-transform" />
                 </Link>
               </div>
             </motion.div>
