@@ -18,7 +18,11 @@ interface Property {
 }
 
 interface FeaturedPropertiesProps {
-  filters?: { type: string; location: string; price: string; };
+  filters?: {
+    type: string;
+    location: string;
+    price: string;
+  };
 }
 
 export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
@@ -30,7 +34,10 @@ export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
       if (!supabase) return;
       setIsLoading(true);
       try {
-        const { data, error } = await supabase.from("properties").select("*").order("created_at", { ascending: false });
+        const { data, error } = await supabase
+          .from("properties")
+          .select("*")
+          .order("created_at", { ascending: false });
         if (error) throw error;
         if (data) setProperties(data);
       } catch (err) {
@@ -56,9 +63,7 @@ export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
       typeMatch = property.type === expectedType;
     }
     let locationMatch = true;
-    if (filters.location) {
-      locationMatch = property.location.toLowerCase().includes(filters.location.toLowerCase());
-    }
+    if (filters.location) locationMatch = property.location.toLowerCase().includes(filters.location.toLowerCase());
     return typeMatch && locationMatch;
   });
 
@@ -112,9 +117,16 @@ export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
                 key={property.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, margin: "-50px" }}
                 transition={{ delay: index * 0.1, duration: 0.4 }}
-                className="group relative bg-white/5 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 hover:border-[#d4af37]/50 transition-all duration-500 hover:shadow-2xl flex flex-col"
+                /* SAFARI ANTI-GLITCH HACK */
+                style={{
+                  WebkitBackfaceVisibility: "hidden",
+                  backfaceVisibility: "hidden",
+                  WebkitTransform: "translate3d(0,0,0)",
+                  WebkitMaskImage: "-webkit-radial-gradient(white, black)"
+                }}
+                className="group relative bg-white/5 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 hover:border-[#d4af37]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#d4af37]/20 will-change-transform isolate transform-gpu flex flex-col"
               >
                 <div className="relative h-56 md:h-64 overflow-hidden">
                   <img
@@ -133,34 +145,31 @@ export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
                     {property.type}
                   </div>
                 </div>
-                
                 <div className="p-4 md:p-6 flex flex-col flex-grow">
-                  <h3 className="text-lg md:text-xl text-white mb-2 group-hover:text-[#d4af37] transition-colors">{property.title}</h3>
+                  <h3 className="text-lg md:text-xl text-white mb-2 group-hover:text-[#d4af37] transition-colors">
+                    {property.title}
+                  </h3>
                   <div className="flex items-center gap-1.5 md:gap-2 text-gray-400 mb-3 md:mb-4">
                     <MapPin className="w-3 h-3 md:w-4 md:h-4 text-[#d4af37] flex-shrink-0" />
                     <span className="text-xs md:text-sm truncate">{property.location}</span>
                   </div>
-                  
-                  {/* AJUSTEMENT DU PRIX POUR MOBILE */}
                   <div className="text-xl md:text-3xl text-[#d4af37] mb-4 md:mb-6 font-bold truncate">
                     {formatPrice(property.price)}
                   </div>
-                  
-                  <div className="grid grid-cols-3 gap-2 pt-3 md:pt-4 border-t border-white/10 mt-auto">
-                    <div className="flex flex-col md:flex-row items-center justify-center gap-1 text-gray-400">
+                  <div className="flex items-center justify-between pt-3 md:pt-4 border-t border-white/10 mt-auto">
+                    <div className="flex flex-col md:flex-row items-center gap-1 text-gray-400">
                       <Bed className="w-3.5 h-3.5 md:w-4 md:h-4" />
                       <span className="text-[10px] md:text-xs">{property.beds} <span className="hidden md:inline">Chb</span></span>
                     </div>
-                    <div className="flex flex-col md:flex-row items-center justify-center gap-1 text-gray-400 border-x border-white/10">
+                    <div className="flex flex-col md:flex-row items-center gap-1 text-gray-400 border-x border-white/10 px-2 md:px-4">
                       <Bath className="w-3.5 h-3.5 md:w-4 md:h-4" />
                       <span className="text-[10px] md:text-xs">{property.baths} <span className="hidden md:inline">Sdb</span></span>
                     </div>
-                    <div className="flex flex-col md:flex-row items-center justify-center gap-1 text-gray-400">
+                    <div className="flex flex-col md:flex-row items-center gap-1 text-gray-400">
                       <Maximize className="w-3.5 h-3.5 md:w-4 md:h-4" />
                       <span className="text-[10px] md:text-xs">{property.sqft} m²</span>
                     </div>
                   </div>
-
                   <Link
                     to={`/vitrine/propriete/${property.id}`}
                     className="block w-full mt-4 md:mt-6 py-2.5 md:py-3 bg-white/10 backdrop-blur-sm text-white text-xs md:text-sm font-medium text-center rounded-lg border border-[#d4af37]/40 hover:bg-[#d4af37] hover:text-[#0a0f1e] transition-all"
@@ -182,7 +191,7 @@ export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
           >
             <Link
               to="/vitrine/proprietes"
-              className="inline-block w-full md:w-auto px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] text-sm md:text-base font-bold rounded-xl hover:shadow-lg hover:shadow-[#d4af37]/40 transition-all"
+              className="inline-block w-full md:w-auto px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] text-sm md:text-base font-bold rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all"
             >
               Voir Toutes les Propriétés
             </Link>

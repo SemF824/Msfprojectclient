@@ -29,10 +29,7 @@ export function Vision() {
     <section className="py-16 md:py-24 px-4 md:px-6 bg-gradient-to-br from-[#0a0f1e] via-[#1e3a5f] to-[#0a0f1e] relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle at 2px 2px, #d4af37 1px, transparent 0)',
-          backgroundSize: '40px 40px'
-        }} />
+        <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #d4af37 1px, transparent 0)', backgroundSize: '40px 40px' }} />
       </div>
 
       <div className="container mx-auto relative z-10">
@@ -42,12 +39,7 @@ export function Vision() {
             initial={{ opacity: 0, y: 20, z: 0 }}
             whileInView={{ opacity: 1, y: 0, z: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
-            style={{
-              WebkitBackfaceVisibility: "hidden",
-              backfaceVisibility: "hidden",
-              WebkitTransform: "translate3d(0,0,0)",
-              WebkitTransformStyle: "preserve-3d"
-            }}
+            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden", WebkitTransform: "translate3d(0,0,0)", WebkitTransformStyle: "preserve-3d" }}
             className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-[#d4af37]/10 backdrop-blur-md border border-[#d4af37]/30 mb-4"
           >
             <div className="w-2 h-2 bg-[#d4af37] rounded-full animate-pulse" />
@@ -59,18 +51,11 @@ export function Vision() {
             whileInView={{ opacity: 1, y: 0, z: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ delay: 0.1 }}
-            style={{
-              WebkitBackfaceVisibility: "hidden",
-              backfaceVisibility: "hidden",
-              WebkitTransform: "translate3d(0,0,0)",
-              WebkitTransformStyle: "preserve-3d"
-            }}
+            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden", WebkitTransform: "translate3d(0,0,0)", WebkitTransformStyle: "preserve-3d" }}
             className="text-3xl md:text-5xl mb-3 md:mb-4"
           >
             <span className="text-white">Bâtir des </span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">
-              Villes Durables
-            </span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">Villes Durables</span>
           </motion.h2>
 
           <motion.p
@@ -78,20 +63,14 @@ export function Vision() {
             whileInView={{ opacity: 1, y: 0, z: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ delay: 0.2 }}
-            style={{
-              WebkitBackfaceVisibility: "hidden",
-              backfaceVisibility: "hidden",
-              WebkitTransform: "translate3d(0,0,0)",
-              WebkitTransformStyle: "preserve-3d"
-            }}
+            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden", WebkitTransform: "translate3d(0,0,0)", WebkitTransformStyle: "preserve-3d" }}
             className="text-gray-300 max-w-3xl mx-auto text-sm md:text-lg px-2"
           >
-            La philosophie de Roger Roc : pallier le manque de logements en créant des villes nouvelles autonomes,
-            alliant modernité, culture africaine et respect de l'environnement.
+            La philosophie de Roger Roc : pallier le manque de logements en créant des villes nouvelles autonomes, alliant modernité, culture africaine et respect de l'environnement.
           </motion.p>
         </div>
 
-        {/* Vision Grid - SAFARI FIX INCLUS */}
+        {/* Vision Grid - SAFARI FIX */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           {visionPoints.map((point, index) => (
             <motion.div
@@ -107,19 +86,13 @@ export function Vision() {
                 WebkitTransformStyle: "preserve-3d",
                 WebkitMaskImage: "-webkit-radial-gradient(white, black)"
               }}
-              className="group relative p-6 md:p-8 bg-white/5 backdrop-blur-xl rounded-2xl md:rounded-3xl border border-[#d4af37]/20 hover:border-[#d4af37]/50 transition-all duration-500 hover:shadow-2xl"
+              className="group relative p-6 md:p-8 bg-white/5 backdrop-blur-xl rounded-2xl md:rounded-3xl border border-[#d4af37]/20 hover:border-[#d4af37]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#d4af37]/20 isolate transform-gpu"
             >
               <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-[#d4af37]/20 to-transparent rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-500">
                 <point.icon className="w-6 h-6 md:w-8 md:h-8 text-[#d4af37]" />
               </div>
-
-              <h3 className="text-xl md:text-2xl text-white mb-2 md:mb-4 group-hover:text-[#d4af37] transition-colors">
-                {point.title}
-              </h3>
-              <p className="text-sm md:text-base text-gray-300 leading-relaxed">
-                {point.description}
-              </p>
-
+              <h3 className="text-xl md:text-2xl text-white mb-2 md:mb-4 group-hover:text-[#d4af37] transition-colors">{point.title}</h3>
+              <p className="text-sm md:text-base text-gray-300 leading-relaxed">{point.description}</p>
               <div className="absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-[#d4af37]/10 to-transparent rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </motion.div>
           ))}
@@ -130,12 +103,7 @@ export function Vision() {
           initial={{ opacity: 0, y: 20, z: 0 }}
           whileInView={{ opacity: 1, y: 0, z: 0 }}
           viewport={{ once: true, margin: "0px 0px -80px 0px" }}
-          style={{
-            WebkitBackfaceVisibility: "hidden",
-            backfaceVisibility: "hidden",
-            WebkitTransform: "translate3d(0,0,0)",
-            WebkitTransformStyle: "preserve-3d"
-          }}
+          style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden", WebkitTransform: "translate3d(0,0,0)", WebkitTransformStyle: "preserve-3d" }}
           className="text-center mt-12 md:mt-16"
         >
           <div className="inline-block p-5 md:p-8 w-full md:w-auto bg-white/5 backdrop-blur-xl rounded-2xl md:rounded-3xl border border-[#d4af37]/20 shadow-xl">
