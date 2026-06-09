@@ -1,25 +1,12 @@
-import {
-  Building2,
-  Home,
-  MapPin,
-  Palette,
-  SlidersHorizontal,
-  LandPlot,
-} from "lucide-react";
+import { Building2, Home, MapPin, Palette, SlidersHorizontal, LandPlot } from "lucide-react";
 import { useState } from "react";
 import { motion } from "motion/react";
 
 interface PropertyFilterProps {
-  onSearch?: (filters: {
-    type: string;
-    location: string;
-    price: string;
-  }) => void;
+  onSearch?: (filters: { type: string; location: string; price: string; }) => void;
 }
 
-export function PropertyFilter({
-  onSearch,
-}: PropertyFilterProps) {
+export function PropertyFilter({ onSearch }: PropertyFilterProps) {
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedPrice, setSelectedPrice] = useState("all");
@@ -69,16 +56,16 @@ export function PropertyFilter({
   };
 
   return (
-    <section className="relative -mt-10 md:-mt-20 z-10 px-4 md:px-6">
+    <section className="relative -mt-12 sm:-mt-16 md:-mt-20 z-10 px-4 sm:px-6">
       <div className="container mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="bg-[#0a0f1e]/90 backdrop-blur-2xl rounded-2xl border border-[#d4af37]/30 p-4 md:p-8 shadow-2xl"
+          className="bg-[#0a0f1e]/90 backdrop-blur-2xl rounded-2xl border border-[#d4af37]/30 p-4 sm:p-6 md:p-8 shadow-2xl"
         >
-          {/* Property Type Filters - SCROLLABLE SUR MOBILE */}
-          <div className="w-full overflow-x-auto pb-4 mb-4 md:pb-0 md:mb-6 hide-scrollbar">
+          {/* Property Type Filters - Scrollable always safe */}
+          <div className="w-full overflow-x-auto pb-4 mb-2 sm:mb-4 hide-scrollbar">
             <div className="flex gap-2 min-w-max">
               {propertyTypes.map((type) => {
                 const Icon = type.icon;
@@ -86,14 +73,14 @@ export function PropertyFilter({
                   <button
                     key={type.value}
                     onClick={() => setActiveFilter(type.value)}
-                    className={`flex items-center gap-2 px-4 md:px-6 py-2.5 md:py-3 rounded-xl border transition-all ${
+                    className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl border transition-all ${
                       activeFilter === type.value
                         ? "bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] border-[#d4af37] font-semibold"
                         : "bg-white/10 text-white border-white/20 hover:border-[#d4af37]/50 hover:bg-white/15"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
-                    <span className="text-sm font-medium whitespace-nowrap">
+                    <span className="text-xs sm:text-sm font-medium whitespace-nowrap">
                       {type.label}
                     </span>
                   </button>
@@ -102,17 +89,16 @@ export function PropertyFilter({
             </div>
           </div>
 
-          {/* Search and Filter Controls */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {/* Location */}
+          {/* Search and Filter Controls - 1 col Mobile, 2 cols Tablet, 4 cols Desktop */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="relative">
-              <label className="block text-xs md:text-sm text-gray-300 mb-1 md:mb-2 font-medium">Localisation</label>
+              <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">Localisation</label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-[#d4af37]" />
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[#d4af37]" />
                 <select
                   value={selectedLocation}
                   onChange={(e) => setSelectedLocation(e.target.value)}
-                  className="w-full pl-10 md:pl-11 pr-4 py-2.5 md:py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer text-sm md:text-base"
+                  className="w-full pl-10 sm:pl-11 pr-4 py-2.5 sm:py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer text-sm"
                 >
                   <option value="">Toutes les Villes</option>
                   {cities.map((city) => (
@@ -122,13 +108,12 @@ export function PropertyFilter({
               </div>
             </div>
 
-            {/* Price Range */}
             <div className="relative">
-              <label className="block text-xs md:text-sm text-gray-300 mb-1 md:mb-2 font-medium">Gamme de Prix</label>
+              <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">Gamme de Prix</label>
               <select
                 value={selectedPrice}
                 onChange={(e) => setSelectedPrice(e.target.value)}
-                className="w-full px-4 py-2.5 md:py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer text-sm md:text-base"
+                className="w-full px-4 py-2.5 sm:py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer text-sm"
               >
                 {priceRanges.map((range) => (
                   <option key={range.value} value={range.value} className="bg-[#1e3a5f]">{range.label}</option>
@@ -136,10 +121,9 @@ export function PropertyFilter({
               </select>
             </div>
 
-            {/* Bedrooms */}
             <div className="relative">
-              <label className="block text-xs md:text-sm text-gray-300 mb-1 md:mb-2 font-medium">Chambres</label>
-              <select className="w-full px-4 py-2.5 md:py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer text-sm md:text-base">
+              <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">Chambres</label>
+              <select className="w-full px-4 py-2.5 sm:py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer text-sm">
                 <option value="" className="bg-[#1e3a5f]">Indifférent</option>
                 <option value="1" className="bg-[#1e3a5f]">1+</option>
                 <option value="2" className="bg-[#1e3a5f]">2+</option>
@@ -147,13 +131,12 @@ export function PropertyFilter({
               </select>
             </div>
 
-            {/* Advanced Filters Button */}
-            <div className="flex items-end">
+            <div className="flex items-end mt-2 sm:mt-0">
               <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="w-full flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 bg-[#1e3a5f]/80 backdrop-blur-sm text-white font-medium rounded-xl border border-[#d4af37]/40 hover:bg-[#1e3a5f] transition-all text-sm md:text-base"
+                className="w-full flex items-center justify-center gap-2 px-6 py-2.5 sm:py-3 bg-[#1e3a5f]/80 backdrop-blur-sm text-white font-medium rounded-xl border border-[#d4af37]/40 hover:bg-[#1e3a5f] transition-all text-sm"
               >
-                <SlidersHorizontal className="w-4 h-4 md:w-5 md:h-5" />
+                <SlidersHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span>Avancé</span>
               </button>
             </div>
@@ -165,30 +148,30 @@ export function PropertyFilter({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-white/20"
+              className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-white/20"
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-xs md:text-sm text-gray-300 mb-1 font-medium">Surface (m²)</label>
-                  <input type="text" placeholder="Min - Max" className="w-full px-4 py-2.5 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium placeholder:text-gray-400 focus:border-[#d4af37] focus:outline-none text-sm" />
+                  <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">Surface (m²)</label>
+                  <input type="text" placeholder="Min - Max" className="w-full px-4 py-2.5 sm:py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium placeholder:text-gray-400 focus:border-[#d4af37] focus:outline-none text-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs md:text-sm text-gray-300 mb-1 font-medium">Mode de Paiement</label>
-                  <select className="w-full px-4 py-2.5 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none appearance-none text-sm">
+                  <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">Mode de Paiement</label>
+                  <select className="w-full px-4 py-2.5 sm:py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none appearance-none text-sm cursor-pointer">
                     {paymentOptions.map((option) => (<option key={option.value} value={option.value} className="bg-[#1e3a5f]">{option.label}</option>))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs md:text-sm text-gray-300 mb-1 font-medium">Équipements</label>
-                  <select className="w-full px-4 py-2.5 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none appearance-none text-sm">
+                  <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">Équipements</label>
+                  <select className="w-full px-4 py-2.5 sm:py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none appearance-none text-sm cursor-pointer">
                     <option value="" className="bg-[#1e3a5f]">Sélectionner</option>
                     <option value="pool" className="bg-[#1e3a5f]">Piscine</option>
                     <option value="gym" className="bg-[#1e3a5f]">Salle de Sport</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs md:text-sm text-gray-300 mb-1 font-medium">Type de Vue</label>
-                  <select className="w-full px-4 py-2.5 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none appearance-none text-sm">
+                  <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">Type de Vue</label>
+                  <select className="w-full px-4 py-2.5 sm:py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none appearance-none text-sm cursor-pointer">
                     <option value="" className="bg-[#1e3a5f]">Toutes les Vues</option>
                     <option value="ocean" className="bg-[#1e3a5f]">Vue Océan</option>
                     <option value="city" className="bg-[#1e3a5f]">Vue Ville</option>
@@ -199,10 +182,10 @@ export function PropertyFilter({
           )}
 
           {/* Search Button */}
-          <div className="mt-4 md:mt-6">
+          <div className="mt-6">
             <button
               onClick={handleSearch}
-              className="w-full px-8 py-3 md:py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] font-bold rounded-xl hover:shadow-lg hover:shadow-[#d4af37]/40 transition-all text-sm md:text-base"
+              className="w-full sm:w-auto px-8 py-3.5 sm:py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] font-bold rounded-xl hover:shadow-lg hover:shadow-[#d4af37]/40 transition-all text-sm sm:text-base"
             >
               Rechercher des Propriétés
             </button>

@@ -13,13 +13,11 @@ const safariFix: React.CSSProperties = {
 export function Hero() {
   return (
     /*
-     * h-[100svh] = "Small Viewport Height" : hauteur réelle visible sur mobile
-     * après exclusion des barres du navigateur (adresse + navigation).
-     * Fallback : h-screen (100vh) sur les très vieux navigateurs.
-     * Sur desktop (md:) on garde h-screen car aucun problème de chrome UI.
+     * h-[100svh] est gardé mais on s'assure d'avoir un min-height
+     * conséquent pour que le contenu ne s'écrase pas sur les très petits écrans.
      */
     <section
-      className="relative w-full overflow-hidden md:h-screen"
+      className="relative w-full overflow-hidden md:h-screen min-h-[600px]"
       style={{ height: "100svh" }}
     >
       {/* Background Image with Overlay */}
@@ -33,10 +31,7 @@ export function Hero() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e] via-transparent to-transparent" />
       </div>
 
-      {/*
-       * Grid animé : caché sur mobile (hidden) — affiché uniquement sur desktop (md:block).
-       * Ce pattern est purement décoratif mais very coûteux en repaint sur WebKit mobile.
-       */}
+      {/* Grid animé : Affiché uniquement sur desktop */}
       <div className="hidden md:block absolute inset-0 opacity-10 pointer-events-none">
         <div
           className="absolute inset-0"
@@ -48,21 +43,15 @@ export function Hero() {
         />
       </div>
 
-      {/* Content */}
-      <div className="relative container mx-auto px-4 md:px-6 h-full flex items-center pt-16">
-        <div className="max-w-3xl">
-
+      {/* Content - Ajout d'un pb-24 pour dégager de l'espace en bas */}
+      <div className="relative container mx-auto px-4 md:px-6 h-full flex items-center pt-16 md:pt-0 pb-24 md:pb-0">
+        <div className="max-w-3xl w-full">
           {/* Label */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             style={safariFix}
-            /*
-             * Sur mobile : on enlève backdrop-blur-md (très cher sur WebKit)
-             * et on le remplace par un fond solide légèrement opaque.
-             * Sur desktop (md:) : on réactive backdrop-blur.
-             */
             className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-[#1e3a5f]/80 md:bg-[#1e3a5f]/40 md:backdrop-blur-md border border-[#d4af37]/30 mb-4 md:mb-6"
           >
             <div className="w-2 h-2 bg-[#d4af37] rounded-full animate-pulse" />
@@ -154,25 +143,15 @@ export function Hero() {
         </div>
       </div>
 
-      {/*
-       * Scroll Indicator
-       *
-       * env(safe-area-inset-bottom) = marge de sécurité iOS (home indicator,
-       * barre du navigateur). max(..., 16px) garantit un minimum de 16px même
-       * sur appareils sans notch.
-       * On garde le scroll indicator visible mais hors de portée du contenu.
-       */}
+      {/* Scroll Indicator : Ancré fermement en bas avec un espace garanti */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.5 }}
-        style={{
-          ...safariFix,
-          bottom: "max(16px, env(safe-area-inset-bottom))",
-        }}
-        className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 pointer-events-none"
+        style={safariFix}
+        className="absolute bottom-6 md:bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 pointer-events-none"
       >
-        <span className="text-[9px] md:text-xs text-gray-400 uppercase tracking-widest whitespace-nowrap">
+        <span className="text-[9px] md:text-xs text-gray-400 uppercase tracking-widest whitespace-nowrap drop-shadow-md">
           Défiler pour Découvrir
         </span>
         <div className="w-5 h-8 md:w-6 md:h-10 border-2 border-[#d4af37]/50 rounded-full flex items-start justify-center p-1 md:p-1.5">
