@@ -2,7 +2,7 @@ import { ArrowRight, Play } from "lucide-react";
 import { motion } from "motion/react";
 import { Link } from "react-router";
 
-// Styles partagés pour les hacks anti-clignotement Safari
+// Hack anti-clignotement WebKit / Safari
 const safariFix: React.CSSProperties = {
   WebkitBackfaceVisibility: "hidden",
   backfaceVisibility: "hidden",
@@ -12,7 +12,16 @@ const safariFix: React.CSSProperties = {
 
 export function Hero() {
   return (
-    <section className="relative h-[90vh] md:h-screen w-full overflow-hidden">
+    /*
+     * h-[100svh] = "Small Viewport Height" : hauteur réelle visible sur mobile
+     * après exclusion des barres du navigateur (adresse + navigation).
+     * Fallback : h-screen (100vh) sur les très vieux navigateurs.
+     * Sur desktop (md:) on garde h-screen car aucun problème de chrome UI.
+     */
+    <section
+      className="relative w-full overflow-hidden md:h-screen"
+      style={{ height: "100svh" }}
+    >
       {/* Background Image with Overlay */}
       <div className="absolute inset-0">
         <img
@@ -24,8 +33,11 @@ export function Hero() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e] via-transparent to-transparent" />
       </div>
 
-      {/* Animated Grid Pattern */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none">
+      {/*
+       * Grid animé : caché sur mobile (hidden) — affiché uniquement sur desktop (md:block).
+       * Ce pattern est purement décoratif mais very coûteux en repaint sur WebKit mobile.
+       */}
+      <div className="hidden md:block absolute inset-0 opacity-10 pointer-events-none">
         <div
           className="absolute inset-0"
           style={{
@@ -39,13 +51,19 @@ export function Hero() {
       {/* Content */}
       <div className="relative container mx-auto px-4 md:px-6 h-full flex items-center pt-16">
         <div className="max-w-3xl">
+
           {/* Label */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.5 }}
             style={safariFix}
-            className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-[#1e3a5f]/40 backdrop-blur-md border border-[#d4af37]/30 mb-4 md:mb-6 will-change-transform"
+            /*
+             * Sur mobile : on enlève backdrop-blur-md (très cher sur WebKit)
+             * et on le remplace par un fond solide légèrement opaque.
+             * Sur desktop (md:) : on réactive backdrop-blur.
+             */
+            className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-[#1e3a5f]/80 md:bg-[#1e3a5f]/40 md:backdrop-blur-md border border-[#d4af37]/30 mb-4 md:mb-6"
           >
             <div className="w-2 h-2 bg-[#d4af37] rounded-full animate-pulse" />
             <span className="text-[10px] md:text-xs text-[#d4af37] tracking-wider uppercase">
@@ -55,11 +73,11 @@ export function Hero() {
 
           {/* Main Heading */}
           <motion.h1
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
             style={safariFix}
-            className="text-4xl md:text-7xl mb-4 md:mb-6 tracking-tight font-bold will-change-transform"
+            className="text-4xl md:text-7xl mb-4 md:mb-6 tracking-tight font-bold"
           >
             <span className="block text-white">L'Excellence du</span>
             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">
@@ -69,25 +87,25 @@ export function Hero() {
 
           {/* Description */}
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
             style={safariFix}
-            className="text-sm md:text-lg text-gray-300 mb-6 md:mb-8 max-w-2xl leading-relaxed will-change-transform"
+            className="text-sm md:text-lg text-gray-300 mb-5 md:mb-8 max-w-2xl leading-relaxed"
           >
             Découvrez le summum de l'habitat côtier avec notre développement
-            exclusif en front de mer. L'architecture moderne rencontre l'élégance
-            africaine dans cette collection prestigieuse de résidences
-            ultra-luxueuses.
+            exclusif en front de mer. L'architecture moderne rencontre
+            l'élégance africaine dans cette collection prestigieuse de
+            résidences ultra-luxueuses.
           </motion.p>
 
           {/* Stats */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
             style={safariFix}
-            className="flex flex-wrap gap-4 md:gap-8 mb-8 md:mb-10 will-change-transform"
+            className="flex flex-wrap gap-4 md:gap-8 mb-6 md:mb-10"
           >
             {[
               { val: "4 500+", label: "Logements Prévus" },
@@ -108,17 +126,17 @@ export function Hero() {
             ))}
           </motion.div>
 
-          {/* CTAs — largeur réduite sur mobile */}
+          {/* CTAs */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
             style={safariFix}
-            className="flex flex-col sm:flex-row gap-4 will-change-transform"
+            className="flex flex-col sm:flex-row gap-3 md:gap-4"
           >
             <Link
               to="/vitrine/properties"
-              className="group flex items-center justify-center gap-2 px-6 py-3.5 md:px-8 md:py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-lg hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all max-w-xs sm:max-w-none"
+              className="group flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-lg hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all max-w-xs sm:max-w-none"
             >
               <span className="font-bold text-sm md:text-base">
                 Explorer les Propriétés
@@ -127,7 +145,7 @@ export function Hero() {
             </Link>
             <a
               href="#visite"
-              className="flex items-center justify-center gap-2 px-6 py-3.5 md:px-8 md:py-4 bg-white/10 backdrop-blur-md text-white rounded-lg border border-[#d4af37]/30 hover:bg-white/20 transition-all font-medium text-sm md:text-base max-w-xs sm:max-w-none"
+              className="flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-white/10 text-white rounded-lg border border-[#d4af37]/30 hover:bg-white/20 transition-all font-medium text-sm md:text-base max-w-xs sm:max-w-none"
             >
               <Play className="w-4 h-4 md:w-5 md:h-5 text-[#d4af37]" />
               <span>Visite Virtuelle</span>
@@ -136,20 +154,30 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Scroll Indicator — descendu plus bas */}
+      {/*
+       * Scroll Indicator
+       *
+       * env(safe-area-inset-bottom) = marge de sécurité iOS (home indicator,
+       * barre du navigateur). max(..., 16px) garantit un minimum de 16px même
+       * sur appareils sans notch.
+       * On garde le scroll indicator visible mais hors de portée du contenu.
+       */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 1, delay: 0.8 }}
-        style={safariFix}
-        className="absolute bottom-1 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none will-change-transform"
+        transition={{ duration: 0.8, delay: 0.5 }}
+        style={{
+          ...safariFix,
+          bottom: "max(16px, env(safe-area-inset-bottom))",
+        }}
+        className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 pointer-events-none"
       >
-        <span className="text-[10px] md:text-xs text-gray-400 uppercase tracking-widest whitespace-nowrap">
+        <span className="text-[9px] md:text-xs text-gray-400 uppercase tracking-widest whitespace-nowrap">
           Défiler pour Découvrir
         </span>
         <div className="w-5 h-8 md:w-6 md:h-10 border-2 border-[#d4af37]/50 rounded-full flex items-start justify-center p-1 md:p-1.5">
           <motion.div
-            animate={{ y: [0, 10, 0] }}
+            animate={{ y: [0, 8, 0] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
             style={safariFix}
             className="w-1.5 h-1.5 md:w-2 md:h-2 bg-[#d4af37] rounded-full"
