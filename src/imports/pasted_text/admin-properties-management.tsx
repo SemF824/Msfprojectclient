@@ -10,7 +10,7 @@ RÈGLES ABSOLUES
 4. Utilise TOUJOURS les imports depuis "react-router" (v7), jamais "react-router-dom"
 5. Toutes les routes admin sont préfixées /admin/* (ex: /admin/dashboard)
 6. Toutes les routes client protégées sont sous /client/* (ex: /client/dashboard)
-7. Le site public est sous /vitrine/* (ex: /vitrine, /vitrine/contact)
+7. Le site public est sous /* (ex: , /contact)
 8. Le hook d'auth est dans src/hooks/useSupabaseAuth.ts — ne pas recréer
 9. Le client Supabase s'importe via: import { supabase } from "../../hooks/useSupabaseAuth"
 10. Préfixe CSS Tailwind only — pas de styled-components, pas de CSS modules
@@ -340,7 +340,7 @@ B) src/app/components/AdminLayout.tsx
    /admin/clients, /admin/documents, /admin/statistiques, /admin/parametres
    Superadmin : /admin/equipe, /admin/systeme
    Déconnexion → navigate('/admin', { replace: true })
-   Retour site → /vitrine
+   Retour site → 
 
 C) src/app/components/ProtectedAdminRoute.tsx
    CORRECTION SÉCURITÉ CRITIQUE :

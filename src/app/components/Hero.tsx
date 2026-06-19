@@ -124,7 +124,7 @@ export function Hero() {
             className="flex flex-col sm:flex-row gap-3 md:gap-4"
           >
             <Link
-              to="/vitrine/properties"
+              to="/properties"
               className="group flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-lg hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all max-w-xs sm:max-w-none"
             >
               <span className="font-bold text-sm md:text-base">

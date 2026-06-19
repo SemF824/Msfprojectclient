@@ -1,20 +1,30 @@
 import {
-  Building2, Menu, Search, User, ChevronDown,
-  Bell, Heart, Settings, CreditCard, LogOut, X, Shield
+  Building2,
+  Menu,
+  Search,
+  User,
+  ChevronDown,
+  Bell,
+  Heart,
+  Settings,
+  CreditCard,
+  LogOut,
+  X,
+  Shield,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 
 export function Header() {
-  const [isMenuOpen,     setIsMenuOpen]     = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isSearchOpen,   setIsSearchOpen]   = useState(false);
-  const [searchQuery,    setSearchQuery]    = useState("");
-  const [unreadCount,    setUnreadCount]    = useState(0);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const { user, isAdmin, signOut } = useSupabaseAuth();
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
   const isLoggedIn = !!user;
 
   // ── Notifications non lues en temps réel ──────────────────────────────────
@@ -42,18 +52,20 @@ export function Header() {
           table: "notifications",
           filter: `user_id=eq.${user.id}`,
         },
-        fetchUnreadCount
+        fetchUnreadCount,
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       // On redirige vers la page propriétés avec la query de recherche
-      navigate(`/vitrine/properties?search=${encodeURIComponent(searchQuery)}`);
+      navigate(`/properties?search=${encodeURIComponent(searchQuery)}`);
       setIsSearchOpen(false);
       setSearchQuery("");
     }
@@ -63,30 +75,57 @@ export function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-20">
-
           {/* ── Logo ────────────────────────────────────────────────────────── */}
-          <Link to="/vitrine" className="flex items-center gap-3">
+          <Link to="" className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-lg flex items-center justify-center shadow-sm">
               <Building2 className="w-6 h-6 text-[#0a0f1e]" />
             </div>
             <div>
-              <h1 className="text-xl tracking-tight text-[#0a0f1e] font-bold">MSF CONGO</h1>
-              <p className="text-[10px] text-[#d4af37] tracking-[0.2em] uppercase font-semibold">Roger ROC</p>
+              <h1 className="text-xl tracking-tight text-[#0a0f1e] font-bold">
+                MSF CONGO
+              </h1>
+              <p className="text-[10px] text-[#d4af37] tracking-[0.2em] uppercase font-semibold">
+                Roger ROC
+              </p>
             </div>
           </Link>
 
           {/* ── Navigation Desktop ──────────────────────────────────────────── */}
           <nav className="hidden lg:flex items-center gap-8">
-            <Link to="/vitrine"            className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors">Accueil</Link>
-            <Link to="/vitrine/properties" className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors">Propriétés</Link>
-            <Link to="/vitrine/services"   className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors">Services</Link>
-            <Link to="/vitrine/about"      className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors">À Propos</Link>
-            <Link to="/vitrine/contact"    className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors">Contact</Link>
+            <Link
+              to=""
+              className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
+            >
+              Accueil
+            </Link>
+            <Link
+              to="/properties"
+              className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
+            >
+              Propriétés
+            </Link>
+            <Link
+              to="/services"
+              className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
+            >
+              Services
+            </Link>
+            <Link
+              to="/about"
+              className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
+            >
+              À Propos
+            </Link>
+            <Link
+              to="/contact"
+              className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
+            >
+              Contact
+            </Link>
           </nav>
 
           {/* ── Boutons d'action ────────────────────────────────────────────── */}
           <div className="flex items-center gap-4">
-
             {/* Recherche dynamique */}
             <div className="relative flex items-center">
               {isSearchOpen ? (
@@ -151,18 +190,26 @@ export function Header() {
                       <User className="w-3.5 h-3.5 text-[#0a0f1e]" />
                     </div>
                     <span className="text-sm text-[#0a0f1e] font-medium max-w-[100px] truncate">
-                      {user?.user_metadata?.first_name || user?.email?.split("@")[0] || "Compte"}
+                      {user?.user_metadata?.first_name ||
+                        user?.email?.split("@")[0] ||
+                        "Compte"}
                     </span>
-                    <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown
+                      className={`w-4 h-4 text-gray-600 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`}
+                    />
                   </button>
 
                   {isUserMenuOpen && (
                     <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl border border-gray-100 shadow-2xl py-2 overflow-hidden">
                       <div className="px-4 py-3 bg-gray-50/50 mb-2">
                         <p className="text-[#0a0f1e] font-bold text-sm truncate">
-                          {user?.user_metadata?.full_name || user?.user_metadata?.first_name || "Utilisateur"}
+                          {user?.user_metadata?.full_name ||
+                            user?.user_metadata?.first_name ||
+                            "Utilisateur"}
                         </p>
-                        <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {user?.email}
+                        </p>
                       </div>
 
                       <div className="px-2 space-y-1">
@@ -182,7 +229,9 @@ export function Header() {
                           className="flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#0a0f1e] transition-colors rounded-xl"
                         >
                           <Building2 className="w-4 h-4" />
-                          <span className="text-sm font-medium">Tableau de bord</span>
+                          <span className="text-sm font-medium">
+                            Tableau de bord
+                          </span>
                         </Link>
                         <Link
                           to="/client/profile"
@@ -190,7 +239,9 @@ export function Header() {
                           className="flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#0a0f1e] transition-colors rounded-xl"
                         >
                           <User className="w-4 h-4" />
-                          <span className="text-sm font-medium">Mon Profil</span>
+                          <span className="text-sm font-medium">
+                            Mon Profil
+                          </span>
                         </Link>
                         <Link
                           to="/client/favorites"
@@ -198,14 +249,19 @@ export function Header() {
                           className="flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#0a0f1e] transition-colors rounded-xl"
                         >
                           <Heart className="w-4 h-4" />
-                          <span className="text-sm font-medium">Mes Favoris</span>
+                          <span className="text-sm font-medium">
+                            Mes Favoris
+                          </span>
                         </Link>
                       </div>
 
                       <div className="border-t border-gray-100 mt-2 px-2 pt-2">
                         <button
                           className="w-full flex items-center gap-3 px-3 py-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-colors font-medium"
-                          onClick={async () => { await signOut(); setIsUserMenuOpen(false); }}
+                          onClick={async () => {
+                            await signOut();
+                            setIsUserMenuOpen(false);
+                          }}
                         >
                           <LogOut className="w-4 h-4" />
                           <span className="text-sm">Déconnexion</span>
@@ -238,11 +294,41 @@ export function Header() {
         {isMenuOpen && (
           <div className="lg:hidden py-4 border-t border-gray-100">
             <nav className="flex flex-col gap-4">
-              <Link to="/vitrine"            className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors" onClick={() => setIsMenuOpen(false)}>Accueil</Link>
-              <Link to="/vitrine/properties"  className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors" onClick={() => setIsMenuOpen(false)}>Propriétés</Link>
-              <Link to="/vitrine/services"   className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors" onClick={() => setIsMenuOpen(false)}>Services</Link>
-              <Link to="/vitrine/about"      className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors" onClick={() => setIsMenuOpen(false)}>À Propos</Link>
-              <Link to="/vitrine/contact"    className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors" onClick={() => setIsMenuOpen(false)}>Contact</Link>
+              <Link
+                to=""
+                className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Accueil
+              </Link>
+              <Link
+                to="/properties"
+                className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Propriétés
+              </Link>
+              <Link
+                to="/services"
+                className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Services
+              </Link>
+              <Link
+                to="/about"
+                className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                À Propos
+              </Link>
+              <Link
+                to="/contact"
+                className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Contact
+              </Link>
 
               {isLoggedIn ? (
                 <div className="border-t border-gray-100 pt-4 mt-2 space-y-3">
@@ -256,15 +342,49 @@ export function Header() {
                       <span className="text-sm">Espace MSF Congo</span>
                     </Link>
                   )}
-                  <Link to="/client/dashboard"     className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#d4af37] transition-colors" onClick={() => setIsMenuOpen(false)}><Building2 className="w-4 h-4" /><span>Tableau de bord</span></Link>
-                  <Link to="/client/profile"       className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#d4af37] transition-colors" onClick={() => setIsMenuOpen(false)}><User className="w-4 h-4" /><span>Mon Profil</span></Link>
-                  <Link to="/client/favorites"     className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#d4af37] transition-colors" onClick={() => setIsMenuOpen(false)}><Heart className="w-4 h-4" /><span>Mes Favoris</span></Link>
-                  <Link to="/client/notifications" className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#d4af37] transition-colors" onClick={() => setIsMenuOpen(false)}><Bell className="w-4 h-4" /><span>Notifications {unreadCount > 0 && `(${unreadCount})`}</span></Link>
+                  <Link
+                    to="/client/dashboard"
+                    className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#d4af37] transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Building2 className="w-4 h-4" />
+                    <span>Tableau de bord</span>
+                  </Link>
+                  <Link
+                    to="/client/profile"
+                    className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#d4af37] transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Mon Profil</span>
+                  </Link>
+                  <Link
+                    to="/client/favorites"
+                    className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#d4af37] transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Heart className="w-4 h-4" />
+                    <span>Mes Favoris</span>
+                  </Link>
+                  <Link
+                    to="/client/notifications"
+                    className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#d4af37] transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Bell className="w-4 h-4" />
+                    <span>
+                      Notifications {unreadCount > 0 && `(${unreadCount})`}
+                    </span>
+                  </Link>
                   <button
                     className="flex items-center gap-2 text-sm text-red-600 hover:text-red-700 transition-colors"
-                    onClick={async () => { await signOut(); setIsMenuOpen(false); }}
+                    onClick={async () => {
+                      await signOut();
+                      setIsMenuOpen(false);
+                    }}
                   >
-                    <LogOut className="w-4 h-4" /><span>Déconnexion</span>
+                    <LogOut className="w-4 h-4" />
+                    <span>Déconnexion</span>
                   </button>
                 </div>
               ) : (

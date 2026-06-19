@@ -2,9 +2,16 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Link } from "react-router";
 import {
-  Heart, MapPin, Bed, Bath, Maximize,
-  Trash2, ExternalLink, Loader2, Home,
-  AlertCircle
+  Heart,
+  MapPin,
+  Bed,
+  Bath,
+  Maximize,
+  Trash2,
+  ExternalLink,
+  Loader2,
+  Home,
+  AlertCircle,
 } from "lucide-react";
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 import Breadcrumb from "../components/Breadcrumb";
@@ -128,7 +135,9 @@ export default function Favorites() {
       {isLoading ? (
         <div className="min-h-[40vh] flex flex-col items-center justify-center gap-3">
           <Loader2 className="w-10 h-10 border-[#d4af37] animate-spin text-[#d4af37]" />
-          <p className="text-sm text-gray-500 font-medium">Chargement de vos favoris...</p>
+          <p className="text-sm text-gray-500 font-medium">
+            Chargement de vos favoris...
+          </p>
         </div>
       ) : error ? (
         <div className="p-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl flex items-center gap-3">
@@ -144,7 +153,7 @@ export default function Favorites() {
           />
           <div className="mt-6 flex justify-center">
             <Link
-              to="/vitrine/proprietes"
+              to="/proprietes"
               className="px-6 py-3 bg-[#0a0f1e] text-white text-sm font-semibold rounded-xl hover:bg-[#1a2540] transition-colors"
             >
               Découvrir les propriétés
@@ -170,7 +179,10 @@ export default function Favorites() {
                 {/* Image & Tag */}
                 <div className="relative aspect-[16/10] bg-gray-100 flex-shrink-0 overflow-hidden group">
                   <img
-                    src={property.image || "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800"}
+                    src={
+                      property.image ||
+                      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800"
+                    }
                     alt={property.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
@@ -202,15 +214,21 @@ export default function Favorites() {
                   <div className="grid grid-cols-3 gap-2 my-4 border-t border-b border-gray-100 py-3 flex-shrink-0">
                     <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-2 py-1 rounded-lg justify-center">
                       <Bed className="w-4 h-4 text-[#d4af37]" />
-                      <span className="text-xs sm:text-sm font-semibold">{property.beds}</span>
+                      <span className="text-xs sm:text-sm font-semibold">
+                        {property.beds}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-2 py-1 rounded-lg justify-center">
                       <Bath className="w-4 h-4 text-[#d4af37]" />
-                      <span className="text-xs sm:text-sm font-semibold">{property.baths}</span>
+                      <span className="text-xs sm:text-sm font-semibold">
+                        {property.baths}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-2 py-1 rounded-lg justify-center">
                       <Maximize className="w-4 h-4 text-[#d4af37]" />
-                      <span className="text-xs sm:text-sm font-semibold">{property.sqft}m²</span>
+                      <span className="text-xs sm:text-sm font-semibold">
+                        {property.sqft}m²
+                      </span>
                     </div>
                   </div>
 
@@ -218,13 +236,15 @@ export default function Favorites() {
                   <div className="space-y-4 pt-1 flex-shrink-0">
                     <p className="text-[#0a0f1e] font-black text-xl">
                       {typeof property.price === "number"
-                        ? new Intl.NumberFormat("fr-FR").format(property.price) + " FCFA"
+                        ? new Intl.NumberFormat("fr-FR").format(
+                            property.price,
+                          ) + " FCFA"
                         : property.price}
                     </p>
 
                     <div className="grid grid-cols-2 gap-3">
                       <Link
-                        to={`/vitrine/propriete/${property.id}`}
+                        to={`/propriete/${property.id}`}
                         className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 text-[#0a0f1e] font-semibold rounded-xl hover:bg-gray-200 transition-colors text-sm"
                       >
                         <ExternalLink className="w-4 h-4" /> Détails
@@ -233,7 +253,8 @@ export default function Favorites() {
                         onClick={(e) => removeFavorite(property.id, e)}
                         className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 font-semibold rounded-xl hover:bg-red-100 transition-colors text-sm group"
                       >
-                        <Trash2 className="w-4 h-4 transition-transform group-hover:scale-110" /> Supprimer
+                        <Trash2 className="w-4 h-4 transition-transform group-hover:scale-110" />{" "}
+                        Supprimer
                       </button>
                     </div>
                   </div>
