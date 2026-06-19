@@ -154,14 +154,7 @@ export default function Services() {
                   whileInView={{ opacity: 1, y: 0, z: 0 }}
                   viewport={{ once: true, margin: "0px 0px -100px 0px", amount: 0.1 }}
                   transition={{ delay: index * 0.08, duration: 0.4, ease: "easeOut" }}
-                  style={{
-                    WebkitBackfaceVisibility: "hidden",
-                    backfaceVisibility: "hidden",
-                    WebkitTransform: "translate3d(0,0,0)",
-                    WebkitTransformStyle: "preserve-3d",
-                    WebkitMaskImage: "-webkit-radial-gradient(white, black)"
-                  }}
-                  className="group bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden hover:shadow-2xl hover:border-[#d4af37] transition-all duration-300 flex flex-col min-h-[520px]"
+                  className="group bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden hover:shadow-2xl hover:border-[#d4af37] transition-all duration-300 flex flex-col min-h-[520px] transform-gpu isolate"
                 >
                   <div className="relative h-64 overflow-hidden bg-gray-200 flex-shrink-0">
                     <ImageWithFallback
@@ -287,14 +280,7 @@ export default function Services() {
                 whileInView={{ opacity: 1, y: 0, z: 0 }}
                 viewport={{ once: true, margin: "0px 0px -80px 0px", amount: 0.1 }}
                 transition={{ duration: 0.4, delay: index * 0.08 }}
-                style={{
-                  WebkitBackfaceVisibility: "hidden",
-                  backfaceVisibility: "hidden",
-                  WebkitTransform: "translate3d(0,0,0)",
-                  WebkitTransformStyle: "preserve-3d",
-                  WebkitMaskImage: "-webkit-radial-gradient(white, black)"
-                }}
-                className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 flex flex-col min-h-[300px]"
+                className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 flex flex-col min-h-[300px] transform-gpu isolate"
               >
                 <div className="flex gap-1 mb-4 flex-shrink-0">
                   {[...Array(testimonial.rating)].map((_, i) => (

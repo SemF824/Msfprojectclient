@@ -671,14 +671,7 @@ export default function Contact() {
                   whileInView={{ opacity: 1, y: 0, z: 0 }}
                   viewport={{ once: true, margin: "0px 0px -100px 0px", amount: 0.1 }}
                   transition={{ duration: 0.4, delay: index * 0.08 }}
-                  style={{
-                    WebkitBackfaceVisibility: "hidden",
-                    backfaceVisibility: "hidden",
-                    WebkitTransform: "translate3d(0,0,0)",
-                    WebkitTransformStyle: "preserve-3d",
-                    WebkitMaskImage: "-webkit-radial-gradient(white, black)"
-                  }}
-                  className="group bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden hover:shadow-2xl hover:border-[#d4af37] transition-all duration-300"
+                  className="group bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden hover:shadow-2xl hover:border-[#d4af37] transition-all duration-300 transform-gpu isolate"
                 >
                   <div className="relative h-80 overflow-hidden">
                     <ImageWithFallback

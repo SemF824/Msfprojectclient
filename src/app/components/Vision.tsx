@@ -74,8 +74,8 @@ export function Vision() {
               key={index}
               initial={{ opacity: 0, y: 20, z: 0 }}
               whileInView={{ opacity: 1, y: 0, z: 0 }}
-              viewport={{ once: true, margin: "0px 0px -100px 0px", amount: 0.1 }}
-              transition={{ delay: index * 0.08, duration: 0.4, ease: "easeOut" }}
+              viewport={{ once: true, margin: "0px 0px -80px 0px", amount: 0.1 }}
+              transition={{ delay: index * 0.08, duration: 0.5 }}
               style={{
                 WebkitBackfaceVisibility: "hidden",
                 backfaceVisibility: "hidden",
@@ -99,8 +99,7 @@ export function Vision() {
           initial={{ opacity: 0, y: 20, z: 0 }}
           whileInView={{ opacity: 1, y: 0, z: 0 }}
           viewport={{ once: true, margin: "0px 0px -80px 0px" }}
-          style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden", WebkitTransform: "translate3d(0,0,0)", WebkitTransformStyle: "preserve-3d" }}
-          className="text-center mt-12 sm:mt-16"
+          className="text-center mt-12 sm:mt-16 transform-gpu"
         >
           <div className="inline-block p-5 sm:p-8 w-full sm:w-auto bg-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-[#d4af37]/20 shadow-xl">
             <p className="text-gray-300 text-sm sm:text-lg mb-2 sm:mb-4">
