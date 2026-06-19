@@ -84,3 +84,6 @@ Thumbs.db
 *.key
 .env.test
 .env.test.local
+
+# Ignore the following files for code analysis
+analyze-repo.ts

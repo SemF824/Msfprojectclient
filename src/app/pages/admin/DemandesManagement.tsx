@@ -2,10 +2,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Search, Mail, Phone, Clock,
-  MoreVertical, CheckCircle2,
   Trash2, ChevronDown, ChevronUp,
-  MessageSquare, User, DollarSign, Building2,
-  Send, Archive, RefreshCcw
+  DollarSign, Building2, Send, RefreshCcw
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -14,12 +12,7 @@ import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "../../components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 interface ContactRequest {
   id: string;
@@ -36,16 +29,17 @@ interface ContactRequest {
 
 export default function DemandesManagement() {
   const [demandes, setDemandes] = useState<ContactRequest[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("tous");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<string>("tous");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+  // Cast de sécurité explicite
+  const adminEmail = (import.meta.env.VITE_ADMIN_EMAIL as string) || "";
 
-  const fetchDemandes = async () => {
+  const fetchDemandes = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
-      setLoading(true);
       const { data, error } = await supabase
         .from('contact_requests')
         .select('*')
@@ -55,13 +49,22 @@ export default function DemandesManagement() {
       setDemandes(data || []);
     } catch (error) {
       console.error("Erreur chargement demandes:", error);
+      toast.error("Impossible de synchroniser le pipeline des prospects.");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchDemandes();
+    let isMounted = true;
+
+    if (isMounted) {
+      fetchDemandes();
+    }
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const updateStatus = async (id: string, newStatus: string) => {
@@ -72,21 +75,29 @@ export default function DemandesManagement() {
         .eq('id', id);
 
       if (error) throw error;
-      setDemandes(demandes.map(d => d.id === id ? { ...d, status: newStatus as any } : d));
+      
+      setDemandes(prev => prev.map(d => d.id === id ? { ...d, status: newStatus as any } : d));
+      toast.success(`Statut mis à jour : ${newStatus.replace('_', ' ')}`);
     } catch (error) {
-      alert("Erreur lors de la mise à jour du statut.");
+      console.error(error);
+      toast.error("Échec de la transition de statut.");
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Supprimer définitivement ce prospect ?")) return;
+    // Remplacement par une confirmation Sonner ou validation standard sécurisée avant suppression destructive
+    if (!window.confirm("Supprimer définitivement ce prospect du pipeline ?")) return;
+    
     try {
       const { error } = await supabase.from('contact_requests').delete().eq('id', id);
       if (error) throw error;
-      setDemandes(demandes.filter(d => d.id !== id));
+      
+      setDemandes(prev => prev.filter(d => d.id !== id));
       if (expandedId === id) setExpandedId(null);
+      toast.success("Prospect éliminé avec succès.");
     } catch (error) {
-      alert("Erreur suppression.");
+      console.error(error);
+      toast.error("Erreur lors de la suppression du prospect.");
     }
   };
 
@@ -117,7 +128,12 @@ export default function DemandesManagement() {
           <h1 className="text-3xl font-bold text-[#0a0f1e]">Pipeline Prospects</h1>
           <p className="text-gray-500">Flux de conversion MSF Congo en temps réel</p>
         </div>
-        <Button onClick={fetchDemandes} variant="outline" size="sm" className="gap-2 bg-white text-[#0a0f1e] border-gray-200 hover:bg-gray-50">
+        <Button 
+          onClick={() => fetchDemandes(false)} 
+          variant="outline" 
+          size="sm" 
+          className="gap-2 bg-white text-[#0a0f1e] border-gray-200 hover:bg-gray-50"
+        >
           <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Actualiser
         </Button>
       </div>
@@ -157,9 +173,15 @@ export default function DemandesManagement() {
           </div>
         ) : (
           filteredDemandes.map((demande) => (
-            <Card key={demande.id} className={`overflow-hidden transition-all duration-300 bg-white border ${expandedId === demande.id ? 'border-l-4 border-l-[#d4af37] border-y-gray-200 border-r-gray-200 shadow-md' : 'border-gray-200 shadow-sm hover:border-[#d4af37]/50'}`}>
+            <Card 
+              key={demande.id} 
+              className={`overflow-hidden transition-all duration-300 bg-white border ${
+                expandedId === demande.id 
+                  ? 'border-l-4 border-l-[#d4af37] border-y-gray-200 border-r-gray-200 shadow-md' 
+                  : 'border-gray-200 shadow-sm hover:border-[#d4af37]/50'
+              }`}
+            >
               <CardContent className="p-0">
-                {/* Header de la ligne (cliquable pour déplier) */}
                 <div
                   onClick={() => toggleExpand(demande.id)}
                   className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors bg-white"
@@ -172,7 +194,8 @@ export default function DemandesManagement() {
                       <div className="font-semibold text-[#0a0f1e]">{demande.name}</div>
                       <div className="text-sm text-gray-600 hidden md:block">{demande.subject}</div>
                       <div className="text-xs text-gray-500 flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-gray-400" /> {format(new Date(demande.created_at), 'dd/MM/yyyy HH:mm')}
+                        <Clock className="w-3 h-3 text-gray-400" /> 
+                        {format(new Date(demande.created_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
                       </div>
                     </div>
                   </div>
@@ -184,7 +207,6 @@ export default function DemandesManagement() {
                   </div>
                 </div>
 
-                {/* Zone dépliée */}
                 <AnimatePresence>
                   {expandedId === demande.id && (
                     <motion.div
@@ -194,7 +216,6 @@ export default function DemandesManagement() {
                       className="border-t border-gray-100 bg-slate-50"
                     >
                       <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Détails techniques */}
                         <div className="space-y-4">
                           <h4 className="text-xs font-bold uppercase text-gray-400 tracking-widest">Informations</h4>
                           <div className="space-y-3">
@@ -221,14 +242,12 @@ export default function DemandesManagement() {
                           </div>
                         </div>
 
-                        {/* Le Message */}
                         <div className="lg:col-span-2 space-y-4">
                           <h4 className="text-xs font-bold uppercase text-gray-400 tracking-widest">Message du Prospect</h4>
                           <div className="bg-white p-5 rounded-xl border border-gray-200 text-[#0a0f1e] leading-relaxed text-sm whitespace-pre-wrap shadow-sm">
                             {demande.message}
                           </div>
 
-                          {/* Actions de Pipeline */}
                           <div className="flex flex-wrap items-center gap-3 pt-4">
                             <Button
                               size="sm"

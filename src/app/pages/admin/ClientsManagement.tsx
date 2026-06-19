@@ -2,10 +2,10 @@ import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Users, Search, Download, X, Loader2,
-  Mail, Phone, MapPin, Calendar, FileText,
-  ChevronRight, Star, User
+  Mail, Phone, MapPin, Calendar, ChevronRight
 } from "lucide-react";
 import { supabase } from "../../../hooks/useSupabaseAuth";
+import { toast } from "sonner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Client {
@@ -17,7 +17,6 @@ interface Client {
   profession?: string | null;
   company?: string | null;
   created_at?: string;
-  // calculés
   demandesCount: number;
   lastActivity: string | null;
 }
@@ -44,76 +43,90 @@ const fmtDate = (d: string | null | undefined) =>
 
 // ─────────────────────────────────────────────────────────────────────────────
 export default function ClientsManagement() {
-  const [clients,       setClients]       = useState<Client[]>([]);
-  const [isLoading,     setIsLoading]     = useState(true);
-  const [searchText,    setSearchText]    = useState("");
-  const [selectedClient,setSelectedClient]= useState<Client | null>(null);
-  const [drawerOpen,    setDrawerOpen]    = useState(false);
-  const [clientReqs,    setClientReqs]    = useState<DevisRequest[]>([]);
-  const [isDrawerLoad,  setIsDrawerLoad]  = useState(false);
+  const [clients,         setClients]         = useState<Client[]>([]);
+  const [isLoading,       setIsLoading]       = useState<boolean>(true);
+  const [searchText,      setSearchText]      = useState<string>("");
+  const [selectedClient,  setSelectedClient]  = useState<Client | null>(null);
+  const [drawerOpen,      setDrawerOpen]      = useState<boolean>(false);
+  const [clientReqs,      setClientReqs]      = useState<DevisRequest[]>([]);
+  const [isDrawerLoad,    setIsDrawerLoad]    = useState<boolean>(false);
 
   // ── Fetch clients (profiles + demandes) ───────────────────────────────────
   useEffect(() => {
     let isMounted = true;
-    const load = async () => {
+    
+    const loadData = async () => {
       if (!supabase) return;
       setIsLoading(true);
 
-      // 1. Profiles
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, phone, city, profession, company, created_at")
-        .order("created_at", { ascending: false });
+      try {
+        // Exécution en parallèle pour optimiser le pipe réseau
+        const [profilesResponse, requestsResponse] = await Promise.all([
+          supabase
+            .from("profiles")
+            .select("id, full_name, email, phone, city, profession, company, created_at")
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("devis_requests")
+            .select("client_email, created_at")
+        ]);
 
-      // 2. Devis requests pour compter les demandes et la dernière activité
-      const { data: allReqs } = await supabase
-        .from("devis_requests")
-        .select("client_email, created_at");
+        if (profilesResponse.error) throw profilesResponse.error;
+        if (requestsResponse.error) throw requestsResponse.error;
 
-      if (!isMounted) return;
+        const profiles = profilesResponse.data;
+        const allReqs = requestsResponse.data;
 
-      // Fusionner
-      const reqsMap: Record<string, { count: number; lastDate: string | null }> = {};
-      (allReqs || []).forEach(r => {
-        if (!r.client_email) return;
-        const e = r.client_email;
-        if (!reqsMap[e]) reqsMap[e] = { count: 0, lastDate: null };
-        reqsMap[e].count++;
-        if (!reqsMap[e].lastDate || r.created_at > reqsMap[e].lastDate!) {
-          reqsMap[e].lastDate = r.created_at;
+        if (!isMounted) return;
+
+        // Structuration de l'index des demandes
+        const reqsMap: Record<string, { count: number; lastDate: string | null }> = {};
+        (allReqs || []).forEach(r => {
+          if (!r.client_email) return;
+          const e = r.client_email;
+          if (!reqsMap[e]) reqsMap[e] = { count: 0, lastDate: null };
+          reqsMap[e].count++;
+          if (!reqsMap[e].lastDate || r.created_at > reqsMap[e].lastDate!) {
+            reqsMap[e].lastDate = r.created_at;
+          }
+        });
+
+        const merged: Client[] = (profiles || []).map(p => {
+          const info = p.email ? reqsMap[p.email] : undefined;
+          return {
+            ...p,
+            demandesCount: info?.count ?? 0,
+            lastActivity:  info?.lastDate ?? p.created_at ?? null,
+          };
+        });
+
+        // Fallback stratégique si aucun profil n'est synchronisé
+        if (merged.length === 0 && allReqs && allReqs.length > 0) {
+          const uniqueEmails = [...new Set(allReqs.map(r => r.client_email).filter(Boolean))];
+          const fallback: Client[] = uniqueEmails.map(email => ({
+            id:            email!,
+            email,
+            full_name:     null,
+            phone:         null,
+            city:          null,
+            demandesCount: reqsMap[email!]?.count ?? 0,
+            lastActivity:  reqsMap[email!]?.lastDate ?? null,
+          }));
+          setClients(fallback);
+        } else {
+          setClients(merged);
         }
-      });
-
-      const merged: Client[] = (profiles || []).map(p => {
-        const info = p.email ? reqsMap[p.email] : undefined;
-        return {
-          ...p,
-          demandesCount: info?.count ?? 0,
-          lastActivity:  info?.lastDate ?? p.created_at ?? null,
-        };
-      });
-
-      // Si aucun profil, déduire depuis devis_requests
-      if (merged.length === 0 && allReqs && allReqs.length > 0) {
-        const uniqueEmails = [...new Set(allReqs.map(r => r.client_email).filter(Boolean))];
-        const fallback: Client[] = uniqueEmails.map(email => ({
-          id:            email,
-          email,
-          full_name:     null,
-          phone:         null,
-          city:          null,
-          demandesCount: reqsMap[email]?.count ?? 0,
-          lastActivity:  reqsMap[email]?.lastDate ?? null,
-        }));
-        setClients(fallback);
-      } else {
-        setClients(merged);
+      } catch (err: any) {
+        console.error("Erreur critique CRM:", err);
+        toast.error("Échec de la synchronisation du listing client.");
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
-
-      setIsLoading(false);
     };
 
-    load();
+    loadData();
     return () => { isMounted = false; };
   }, []);
 
@@ -136,41 +149,56 @@ export default function ClientsManagement() {
     setClientReqs([]);
     setIsDrawerLoad(true);
 
-    if (!supabase || !client.email) { setIsDrawerLoad(false); return; }
+    if (!supabase || !client.email) { 
+      setIsDrawerLoad(false); 
+      return; 
+    }
 
-    const { data } = await supabase
-      .from("devis_requests")
-      .select("*")
-      .eq("client_email", client.email)
-      .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from("devis_requests")
+        .select("*")
+        .eq("client_email", client.email)
+        .order("created_at", { ascending: false });
 
-    setClientReqs(data || []);
-    setIsDrawerLoad(false);
+      if (error) throw error;
+      setClientReqs(data || []);
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Impossible d'extraire l'historique des requêtes de ce prospect.");
+    } finally {
+      setIsDrawerLoad(false);
+    }
   };
 
   // ── Export CSV ────────────────────────────────────────────────────────────
   const exportCSV = () => {
-    const headers = ["Nom", "Email", "Téléphone", "Ville", "Demandes", "Dernière activité", "Statut"];
-    const rows = filtered.map(c => {
-      const badge = getVipBadge(c.demandesCount);
-      return [
-        c.full_name ?? "",
-        c.email ?? "",
-        c.phone ?? "",
-        c.city ?? "",
-        c.demandesCount,
-        fmtDate(c.lastActivity),
-        badge.label,
-      ].join(",");
-    });
-    const csv = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url  = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href     = url;
-    link.download = `clients-msf-${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    try {
+      const headers = ["Nom", "Email", "Téléphone", "Ville", "Demandes", "Dernière activité", "Statut"];
+      const rows = filtered.map(c => {
+        const badge = getVipBadge(c.demandesCount);
+        return [
+          `"${c.full_name ?? ""}"`,
+          `"${c.email ?? ""}"`,
+          `"${c.phone ?? ""}"`,
+          `"${c.city ?? ""}"`,
+          c.demandesCount,
+          fmtDate(c.lastActivity),
+          badge.label,
+        ].join(",");
+      });
+      const csv = [headers.join(","), ...rows].join("\n");
+      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+      const url  = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href     = url;
+      link.download = `clients-msf-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success("Index client exporté avec succès.");
+    } catch (err) {
+      toast.error("Échec de l'export de données.");
+    }
   };
 
   const displayName = (c: Client) =>
@@ -181,10 +209,8 @@ export default function ClientsManagement() {
     return src[0].toUpperCase();
   };
 
-  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
-
       {/* ── Header ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
@@ -282,13 +308,11 @@ export default function ClientsManagement() {
       <AnimatePresence>
         {drawerOpen && selectedClient && (
           <>
-            {/* Overlay */}
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
               onClick={() => setDrawerOpen(false)}
             />
-            {/* Drawer */}
             <motion.div
               initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
@@ -346,7 +370,9 @@ export default function ClientsManagement() {
                       {clientReqs.map(r => (
                         <div key={r.id} className="p-3 bg-gray-50 rounded-xl border border-gray-100">
                           <div className="flex items-start justify-between">
-                            <p className="text-sm text-[#0a0f1e] font-medium truncate max-w-[200px]">{r.property_name || "Propriété"}</p>
+                            <p className="text-sm text-[#0a0f1e] font-medium truncate max-w-[200px]">
+                              {r.property_name || "Propriété"}
+                            </p>
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ml-2 flex-shrink-0 ${
                               r.status === "approuve" ? "bg-green-100 text-green-700 border-green-200" :
                               r.status === "rejete"   ? "bg-red-100 text-red-700 border-red-200" :

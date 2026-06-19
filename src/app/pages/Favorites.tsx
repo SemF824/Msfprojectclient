@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { Link } from "react-router";
 import {
   Heart, MapPin, Bed, Bath, Maximize,
-  Trash2, ExternalLink, Loader2, Home, 
-  TrendingUp, AlertCircle
+  Trash2, ExternalLink, Loader2, Home,
+  AlertCircle
 } from "lucide-react";
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 import Breadcrumb from "../components/Breadcrumb";
@@ -27,6 +27,7 @@ export default function Favorites() {
   const { user } = useSupabaseAuth();
   const [favorites, setFavorites] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -34,190 +35,213 @@ export default function Favorites() {
     const fetchFavorites = async () => {
       if (!user || !supabase) return;
       setIsLoading(true);
+      setError(null);
 
       try {
-        // 1. On récupère les IDs des favoris de CE client
+        // 1. Récupération des IDs des favoris de l'utilisateur
         const { data: favData, error: favError } = await supabase
           .from("favorites")
           .select("property_id")
-          .eq("user_id", user.id); // SÉCURITÉ FRONT-END
+          .eq("user_id", user.id);
 
         if (favError) throw favError;
 
-        if (favData && favData.length > 0) {
-          const propertyIds = favData.map((f) => f.property_id);
-          
-          // 2. On récupère les détails des propriétés
-          const { data: propData, error: propError } = await supabase
-            .from("properties")
-            .select("*")
-            .in("id", propertyIds);
-            
-          if (propError) throw propError;
-          if (propData && isMounted) {
-            setFavorites(propData);
+        if (!favData || favData.length === 0) {
+          if (isMounted) {
+            setFavorites([]);
+            setIsLoading(false);
           }
-        } else {
-          if (isMounted) setFavorites([]);
+          return;
         }
-      } catch (error) {
-        console.error("Erreur lors de la récupération des favoris:", error);
+
+        const propertyIds = favData.map((fav) => fav.property_id);
+
+        // 2. Récupération des détails des propriétés associées
+        const { data: propData, error: propError } = await supabase
+          .from("properties")
+          .select("*")
+          .in("id", propertyIds);
+
+        if (propError) throw propError;
+
+        if (isMounted) {
+          setFavorites(propData || []);
+        }
+      } catch (err: any) {
+        console.error("Erreur lors de la récupération des favoris :", err);
+        if (isMounted) {
+          setError("Impossible de charger vos favoris. Veuillez réessayer.");
+        }
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchFavorites();
 
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   const removeFavorite = async (propertyId: string, e: React.MouseEvent) => {
-    e.preventDefault();
+    e.preventDefault(); // Évite la navigation si le bouton est dans un lien enveloppant
     if (!user || !supabase) return;
 
     try {
-      await supabase
+      const { error: deleteError } = await supabase
         .from("favorites")
         .delete()
         .eq("user_id", user.id)
         .eq("property_id", propertyId);
 
-      setFavorites(favorites.filter(f => f.id !== propertyId));
-    } catch (error) {
-      console.error("Erreur suppression favoris", error);
-    }
-  };
+      if (deleteError) throw deleteError;
 
-  const formatPrice = (price: string | number) => {
-    if (typeof price === "number") {
-      return `${new Intl.NumberFormat("fr-FR").format(price)} FCFA`;
+      // Mise à jour optimiste de l'état local
+      setFavorites((prev) => prev.filter((item) => item.id !== propertyId));
+    } catch (err) {
+      console.error("Erreur lors de la suppression du favori :", err);
+      alert("Erreur lors de la suppression du favori. Veuillez réessayer.");
     }
-    return price;
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
+    <div className="space-y-6">
       <div className="mb-8">
-        <Breadcrumb items={[
-          { label: "Dashboard", path: "/client/dashboard" },
-          { label: "Favoris", path: "/client/favorites" }
-        ]} />
-        <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mb-2 font-bold break-words">
-          Propriétés <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">Favorites</span>
+        <Breadcrumb
+          items={[
+            { label: "Dashboard", path: "/client/dashboard" },
+            { label: "Mes Favoris", path: "/client/favorites" },
+          ]}
+        />
+        <h1 className="text-3xl text-[#0a0f1e] mt-2 mb-2 font-bold flex items-center gap-3">
+          <Heart className="w-8 h-8 text-red-500 fill-red-500" />
+          Mes Propriétés Favorites
         </h1>
-        <p className="text-gray-600 text-sm sm:text-base">Gérez votre sélection de biens immobiliers</p>
+        <p className="text-gray-500 text-sm">
+          Retrouvez ici tous les biens immobiliers que vous avez mis de côté.
+        </p>
       </div>
 
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-          <Loader2 className="w-12 h-12 text-[#d4af37] animate-spin" />
-          <p className="text-gray-500 font-medium">Récupération de vos coups de cœur...</p>
+        <div className="min-h-[40vh] flex flex-col items-center justify-center gap-3">
+          <Loader2 className="w-10 h-10 border-[#d4af37] animate-spin text-[#d4af37]" />
+          <p className="text-sm text-gray-500 font-medium">Chargement de vos favoris...</p>
+        </div>
+      ) : error ? (
+        <div className="p-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <span>{error}</span>
         </div>
       ) : favorites.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm min-h-[400px] flex items-center justify-center p-6">
-          <div className="text-center">
-            <Heart className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-[#0a0f1e] mb-2">Aucun favori pour le moment</h2>
-            <p className="text-gray-500 mb-6 max-w-md mx-auto">
-              Explorez notre catalogue et utilisez l'icône cœur pour sauvegarder les propriétés qui vous intéressent.
-            </p>
-            <Link 
-              to="/vitrine/proprietes" 
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#d4af37] text-[#0a0f1e] font-bold rounded-xl hover:bg-[#b8952e] transition-colors"
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
+          <EmptyState
+            icon={Home}
+            title="Aucun favori pour le moment"
+            description="Parcourez notre catalogue de biens et cliquez sur le cœur pour ajouter des propriétés à votre liste."
+          />
+          <div className="mt-6 flex justify-center">
+            <Link
+              to="/vitrine/proprietes"
+              className="px-6 py-3 bg-[#0a0f1e] text-white text-sm font-semibold rounded-xl hover:bg-[#1a2540] transition-colors"
             >
-              <Home className="w-5 h-5" />
-              Explorer les propriétés
+              Découvrir les propriétés
             </Link>
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
-          {favorites.map((property, index) => (
-            <motion.div
-              key={property.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="group relative bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-lg hover:shadow-xl hover:border-[#d4af37]/50 transition-all duration-300 flex flex-col"
-            >
-              {/* Image Section */}
-              <div className="relative h-56 sm:h-64 overflow-hidden flex-shrink-0">
-                <img
-                  src={property.image}
-                  alt={property.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e]/80 via-transparent to-transparent opacity-80" />
-                
-                <button 
-                  onClick={(e) => removeFavorite(property.id, e)}
-                  className="absolute top-4 right-4 p-3 bg-white/90 backdrop-blur-md rounded-full text-pink-600 hover:bg-pink-50 hover:scale-110 transition-all shadow-md z-10"
-                  title="Retirer des favoris"
-                >
-                  <Heart className="w-5 h-5 fill-current" />
-                </button>
-
-                {property.tag && (
-                  <div className="absolute top-4 left-4 px-3 py-1 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] text-xs font-bold rounded-full shadow-md z-10">
-                    {property.tag}
-                  </div>
-                )}
-              </div>
-
-              {/* Content Section */}
-              <div className="p-5 sm:p-6 flex-1 flex flex-col min-w-0">
-                <div className="mb-2">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{property.type}</span>
-                </div>
-                
-                <h3 className="text-lg sm:text-xl font-bold text-[#0a0f1e] mb-2 group-hover:text-[#d4af37] transition-colors truncate">
-                  {property.title}
-                </h3>
-                
-                <div className="flex items-start gap-2 text-gray-500 mb-4">
-                  <MapPin className="w-4 h-4 text-[#d4af37] flex-shrink-0 mt-0.5" />
-                  <span className="text-xs sm:text-sm line-clamp-2">{property.location}</span>
-                </div>
-                
-                <div className="text-xl sm:text-2xl text-[#d4af37] font-black mb-6 mt-auto break-words">
-                  {formatPrice(property.price)}
-                </div>
-                
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100 flex-shrink-0">
-                  <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-2 py-1 rounded-lg">
-                    <Bed className="w-4 h-4 text-[#d4af37]" />
-                    <span className="text-xs sm:text-sm font-semibold">{property.beds}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-2 py-1 rounded-lg">
-                    <Bath className="w-4 h-4 text-[#d4af37]" />
-                    <span className="text-xs sm:text-sm font-semibold">{property.baths}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-2 py-1 rounded-lg">
-                    <Maximize className="w-4 h-4 text-[#d4af37]" />
-                    <span className="text-xs sm:text-sm font-semibold">{property.sqft}m²</span>
-                  </div>
+        <motion.div
+          layout
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          <AnimatePresence mode="popLayout">
+            {favorites.map((property) => (
+              <motion.div
+                key={property.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                transition={{ duration: 0.25 }}
+                className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col h-full"
+              >
+                {/* Image & Tag */}
+                <div className="relative aspect-[16/10] bg-gray-100 flex-shrink-0 overflow-hidden group">
+                  <img
+                    src={property.image || "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800"}
+                    alt={property.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  {property.tag && (
+                    <span className="absolute top-3 left-3 bg-[#0a0f1e] text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm">
+                      {property.tag}
+                    </span>
+                  )}
+                  <span className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-[#0a0f1e] text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+                    {property.type}
+                  </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mt-6 flex-shrink-0">
-                  <Link 
-                    to={`/vitrine/propriete/${property.id}`}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 text-[#0a0f1e] font-semibold rounded-xl hover:bg-gray-200 transition-colors text-sm"
-                  >
-                    <ExternalLink className="w-4 h-4" /> Détails
-                  </Link>
-                  <button 
-                    onClick={(e) => removeFavorite(property.id, e)}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 font-semibold rounded-xl hover:bg-red-100 transition-colors text-sm"
-                  >
-                    <Trash2 className="w-4 h-4" /> Retirer
-                  </button>
+                {/* Contenu principal */}
+                <div className="p-5 flex flex-col flex-1 justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-[#0a0f1e] font-bold text-lg leading-snug line-clamp-1">
+                        {property.title}
+                      </h3>
+                    </div>
+                    <p className="text-gray-500 text-sm flex items-center gap-1.5">
+                      <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <span className="truncate">{property.location}</span>
+                    </p>
+                  </div>
+
+                  {/* Caractéristiques */}
+                  <div className="grid grid-cols-3 gap-2 my-4 border-t border-b border-gray-100 py-3 flex-shrink-0">
+                    <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-2 py-1 rounded-lg justify-center">
+                      <Bed className="w-4 h-4 text-[#d4af37]" />
+                      <span className="text-xs sm:text-sm font-semibold">{property.beds}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-2 py-1 rounded-lg justify-center">
+                      <Bath className="w-4 h-4 text-[#d4af37]" />
+                      <span className="text-xs sm:text-sm font-semibold">{property.baths}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-2 py-1 rounded-lg justify-center">
+                      <Maximize className="w-4 h-4 text-[#d4af37]" />
+                      <span className="text-xs sm:text-sm font-semibold">{property.sqft}m²</span>
+                    </div>
+                  </div>
+
+                  {/* Prix & Actions */}
+                  <div className="space-y-4 pt-1 flex-shrink-0">
+                    <p className="text-[#0a0f1e] font-black text-xl">
+                      {typeof property.price === "number"
+                        ? new Intl.NumberFormat("fr-FR").format(property.price) + " FCFA"
+                        : property.price}
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <Link
+                        to={`/vitrine/propriete/${property.id}`}
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 text-[#0a0f1e] font-semibold rounded-xl hover:bg-gray-200 transition-colors text-sm"
+                      >
+                        <ExternalLink className="w-4 h-4" /> Détails
+                      </Link>
+                      <button
+                        onClick={(e) => removeFavorite(property.id, e)}
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 font-semibold rounded-xl hover:bg-red-100 transition-colors text-sm group"
+                      >
+                        <Trash2 className="w-4 h-4 transition-transform group-hover:scale-110" /> Supprimer
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
       )}
     </div>
   );

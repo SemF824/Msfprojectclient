@@ -2,55 +2,59 @@ import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import {
   User, Lock, Bell, Shield, Database, Eye, EyeOff,
-  CheckCircle, AlertCircle, Loader2, Download, LogOut
+  Loader2, Download, LogOut
 } from "lucide-react";
-import { supabase } from "../../../hooks/useSupabaseAuth";
-import { useSupabaseAuth } from "../../../hooks/useSupabaseAuth";
+import { supabase, useSupabaseAuth } from "../../../hooks/useSupabaseAuth";
+import { toast } from "sonner";
 
-interface Toast { type: "ok" | "err"; text: string; }
 interface UserRole { user_id: string; role: string; email?: string; }
 
 export default function ParametresPage() {
   const { user, signOut } = useSupabaseAuth();
 
   // ── Mot de passe ──────────────────────────────────────────────────────────
-  const [newPassword,   setNewPassword]   = useState("");
-  const [showPwd,       setShowPwd]       = useState(false);
-  const [pwdLoading,    setPwdLoading]    = useState(false);
+  const [newPassword,   setNewPassword]   = useState<string>("");
+  const [showPwd,       setShowPwd]       = useState<boolean>(false);
+  const [pwdLoading,    setPwdLoading]    = useState<boolean>(false);
 
   // ── Notifications ─────────────────────────────────────────────────────────
-  const [notifNewReq,   setNotifNewReq]   = useState(true);
-  const [notifDocUp,    setNotifDocUp]    = useState(true);
-  const [notifSMS,      setNotifSMS]      = useState(false);
+  const [notifNewReq,   setNotifNewReq]   = useState<boolean>(true);
+  const [notifDocUp,    setNotifDocUp]    = useState<boolean>(true);
+  const [notifSMS,      setNotifSMS]      = useState<boolean>(false);
 
   // ── Sécurité ──────────────────────────────────────────────────────────────
   const [userRoles,     setUserRoles]     = useState<UserRole[]>([]);
-  const [rolesLoading,  setRolesLoading]  = useState(true);
-
-  // ── Toast ─────────────────────────────────────────────────────────────────
-  const [toast,         setToast]         = useState<Toast | null>(null);
-
-  const showToast = (type: "ok" | "err", text: string) => {
-    setToast({ type, text });
-    setTimeout(() => setToast(null), 3500);
-  };
+  const [rolesLoading,  setRolesLoading]  = useState<boolean>(true);
 
   // ── Fetch user_roles ──────────────────────────────────────────────────────
   useEffect(() => {
     let isMounted = true;
-    const load = async () => {
+    
+    const loadAdminRoles = async () => {
       if (!supabase) { setRolesLoading(false); return; }
       setRolesLoading(true);
-      const { data } = await supabase
-        .from("user_roles")
-        .select("user_id, role")
-        .in("role", ["admin", "superadmin"]);
-      if (isMounted) {
-        setUserRoles(data || []);
-        setRolesLoading(false);
+      try {
+        const { data, error } = await supabase
+          .from("user_roles")
+          .select("user_id, role")
+          .in("role", ["admin", "superadmin"]);
+          
+        if (error) throw error;
+
+        if (isMounted) {
+          setUserRoles(data || []);
+        }
+      } catch (err) {
+        console.error("Erreur rôles:", err);
+        toast.error("Impossible de charger la liste des comptes privilégiés.");
+      } finally {
+        if (isMounted) {
+          setRolesLoading(false);
+        }
       }
     };
-    load();
+
+    loadAdminRoles();
     return () => { isMounted = false; };
   }, []);
 
@@ -58,72 +62,82 @@ export default function ParametresPage() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase || !newPassword) return;
+    
     if (newPassword.length < 8) {
-      showToast("err", "Le mot de passe doit contenir au moins 8 caractères.");
+      toast.error("Le mot de passe doit contenir au moins 8 caractères.");
       return;
     }
+    
     setPwdLoading(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) showToast("err", "Erreur : " + error.message);
-    else       showToast("ok", "Mot de passe mis à jour avec succès.");
-    setNewPassword("");
-    setPwdLoading(false);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      
+      toast.success("Mot de passe mis à jour avec succès.");
+      setNewPassword("");
+    } catch (error: any) {
+      toast.error(`Erreur : ${error.message}`);
+    } finally {
+      setPwdLoading(false);
+    }
   };
 
   // ── Déconnexion globale ───────────────────────────────────────────────────
   const handleGlobalSignOut = async () => {
     if (!supabase) return;
-    await supabase.auth.signOut({ scope: "global" });
-    showToast("ok", "Déconnecté de toutes les sessions.");
+    try {
+      await supabase.auth.signOut({ scope: "global" });
+      toast.success("Déconnexion de toutes les sessions active.");
+    } catch (err) {
+      toast.error("Erreur lors de la déconnexion globale.");
+    }
   };
 
   // ── Export CSV demandes ───────────────────────────────────────────────────
   const handleExportCSV = async () => {
     if (!supabase) return;
-    const { data, error } = await supabase.from("devis_requests").select("*");
-    if (error || !data) { showToast("err", "Erreur lors de l'export."); return; }
-    const headers = Object.keys(data[0] || {}).join(",");
-    const rows    = data.map(r => Object.values(r).join(",")).join("\n");
-    const csv     = "\uFEFF" + headers + "\n" + rows;
-    const blob    = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url     = URL.createObjectURL(blob);
-    const link    = document.createElement("a");
-    link.href     = url;
-    link.download = `devis_requests_${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-    showToast("ok", "Export CSV lancé.");
+    try {
+      const { data, error } = await supabase.from("devis_requests").select("*");
+      if (error || !data) throw error || new Error("Aucune donnée disponible.");
+      
+      if (data.length === 0) {
+        toast.error("Aucune demande de devis n'est actuellement enregistrée.");
+        return;
+      }
+
+      const headers = Object.keys(data[0] || {}).join(",");
+      // Encapsulation sécurisée des valeurs pour éviter les ruptures de colonnes liées aux virgules
+      const rows = data.map(r => 
+        Object.values(r).map(v => typeof v === 'string' ? `"${v.replace(/"/g, '""')}"` : v).join(",")
+      ).join("\n");
+      
+      const csv     = "\uFEFF" + headers + "\n" + rows;
+      const blob    = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url     = URL.createObjectURL(blob);
+      const link    = document.createElement("a");
+      link.href     = url;
+      link.download = `devis_requests_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      
+      toast.success("Export du registre des demandes généré.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Erreur lors de l'extraction des données.");
+    }
   };
 
   const sectionClass = "bg-white rounded-2xl border border-gray-200 shadow-sm p-6";
 
-  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="p-6 md:p-8 max-w-3xl mx-auto">
-
-      {/* Toast */}
-      {toast && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-          className={`fixed top-20 right-6 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl border shadow-xl text-sm font-medium ${
-            toast.type === "ok"
-              ? "bg-green-50 border-green-200 text-green-700"
-              : "bg-red-50 border-red-200 text-red-700"
-          }`}
-        >
-          {toast.type === "ok" ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-          {toast.text}
-        </motion.div>
-      )}
-
       {/* ── Header ── */}
       <div className="mb-8">
         <h1 className="text-3xl text-[#0a0f1e] font-bold">Paramètres</h1>
-        <p className="text-gray-500 text-sm mt-1">Gérez votre compte et les préférences système</p>
+        <p className="text-gray-500 text-sm mt-1">Gerez votre compte et les préférences système</p>
       </div>
 
       <div className="space-y-6">
-
         {/* ══ MON COMPTE ADMIN ══════════════════════════════════════════════ */}
         <div className={sectionClass}>
           <div className="flex items-center gap-3 mb-5">
@@ -202,6 +216,7 @@ export default function ParametresPage() {
                   <p className="text-xs text-gray-500 mt-0.5">{item.desc}</p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => item.onChange(!item.value)}
                   className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ml-4 ${item.value ? "bg-[#d4af37]" : "bg-gray-300"}`}
                 >
@@ -221,13 +236,11 @@ export default function ParametresPage() {
             <h2 className="text-[#0a0f1e] font-semibold">Sécurité</h2>
           </div>
 
-          {/* Badge Supabase Auth actif */}
           <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-xl mb-5">
             <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse flex-shrink-0" />
             <p className="text-sm text-green-700 font-medium">Authentification Supabase Active</p>
           </div>
 
-          {/* Tableau user_roles */}
           <div className="mb-5">
             <p className="text-sm text-gray-700 font-medium mb-3">Comptes avec privilèges administrateur :</p>
             {rolesLoading ? (
@@ -253,6 +266,7 @@ export default function ParametresPage() {
           </div>
 
           <button
+            type="button"
             onClick={handleGlobalSignOut}
             className="flex items-center gap-2 px-4 py-2.5 border border-red-200 text-red-600 rounded-xl text-sm hover:bg-red-50 transition-colors"
           >
@@ -272,6 +286,7 @@ export default function ParametresPage() {
 
           <div className="space-y-3">
             <button
+              type="button"
               onClick={handleExportCSV}
               className="flex items-center gap-3 w-full p-4 bg-gray-50 border border-gray-200 rounded-xl hover:border-[#d4af37]/50 hover:bg-[#d4af37]/5 transition-all text-left"
             >
@@ -291,7 +306,6 @@ export default function ParametresPage() {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

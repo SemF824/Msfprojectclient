@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Building2, Plus, Search, Filter, Edit2, Trash2,
-  X, Loader2, AlertCircle, CheckCircle, ChevronLeft, ChevronRight,
-  Bed, Bath, Maximize, Tag, MapPin, DollarSign
+  Building2, Plus, Search, Edit2, Trash2,
+  X, Loader2, ChevronLeft, ChevronRight,
+  Bed, Bath, Maximize, MapPin
 } from "lucide-react";
-import { supabase } from "../../../hooks/useSupabaseAuth";
-import { useSupabaseAuth } from "../../../hooks/useSupabaseAuth";
+import { supabase, useSupabaseAuth } from "../../../hooks/useSupabaseAuth";
+import { toast } from "sonner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Property {
@@ -51,40 +51,47 @@ export default function PropertiesManagement() {
   const { userRole } = useSupabaseAuth();
 
   const [properties,    setProperties]    = useState<Property[]>([]);
-  const [isLoading,     setIsLoading]     = useState(true);
-  const [searchText,    setSearchText]    = useState("");
-  const [filterType,    setFilterType]    = useState("all");
-  const [filterStatus,  setFilterStatus]  = useState("all");
-  const [page,          setPage]          = useState(0);
-  const [isModalOpen,   setIsModalOpen]   = useState(false);
+  const [isLoading,     setIsLoading]     = useState<boolean>(true);
+  const [searchText,    setSearchText]    = useState<string>("");
+  const [filterType,    setFilterType]    = useState<string>("all");
+  const [filterStatus,  setFilterStatus]  = useState<string>("all");
+  const [page,          setPage]          = useState<number>(0);
+  const [isModalOpen,   setIsModalOpen]   = useState<boolean>(false);
   const [editingProp,   setEditingProp]   = useState<Property | null>(null);
   const [formData,      setFormData]      = useState<FormData>(EMPTY_FORM);
-  const [isSubmitting,  setIsSubmitting]  = useState(false);
-  const [toast,         setToast]         = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [isSubmitting,  setIsSubmitting]  = useState<boolean>(false);
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     let isMounted = true;
-    const fetch = async () => {
+    
+    const fetchProperties = async () => {
       if (!supabase) return;
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from("properties")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (isMounted) {
-        if (!error) setProperties(data || []);
-        setIsLoading(false);
+      try {
+        const { data, error } = await supabase
+          .from("properties")
+          .select("*")
+          .order("created_at", { ascending: false });
+          
+        if (error) throw error;
+
+        if (isMounted) {
+          setProperties(data || []);
+        }
+      } catch (error: any) {
+        console.error("Erreur catalogue:", error);
+        toast.error("Impossible de récupérer le catalogue de propriétés.");
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
-    fetch();
+
+    fetchProperties();
     return () => { isMounted = false; };
   }, []);
-
-  const showToast = (type: "ok" | "err", text: string) => {
-    setToast({ type, text });
-    setTimeout(() => setToast(null), 3000);
-  };
 
   // ── Filtres côté client ────────────────────────────────────────────────────
   const filtered = properties.filter(p => {
@@ -138,60 +145,47 @@ export default function PropertiesManagement() {
       status:   formData.status,
     };
 
-    if (editingProp) {
-      const { error } = await supabase.from("properties").update(payload).eq("id", editingProp.id);
-      if (error) { showToast("err", "Erreur : " + error.message); }
-      else {
+    try {
+      if (editingProp) {
+        const { error } = await supabase.from("properties").update(payload).eq("id", editingProp.id);
+        if (error) throw error;
+        
         setProperties(ps => ps.map(p => p.id === editingProp.id ? { ...p, ...payload } : p));
-        showToast("ok", "Propriété mise à jour.");
+        toast.success("Propriété mise à jour avec succès.");
         closeModal();
-      }
-    } else {
-      const { data, error } = await supabase.from("properties").insert(payload).select().single();
-      if (error) { showToast("err", "Erreur : " + error.message); }
-      else {
+      } else {
+        const { data, error } = await supabase.from("properties").insert(payload).select().single();
+        if (error) throw error;
+        
         setProperties(ps => [data, ...ps]);
-        showToast("ok", "Propriété ajoutée.");
+        toast.success("Nouvelle propriété indexée au catalogue.");
         closeModal();
       }
+    } catch (error: any) {
+      toast.error(`Échec de l'opération : ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   // ── Delete ─────────────────────────────────────────────────────────────────
   const handleDelete = async (p: Property) => {
-    if (!window.confirm(`Supprimer "${p.title}" ?`)) return;
+    if (!window.confirm(`Supprimer définitivement "${p.title}" du catalogue ?`)) return;
     if (!supabase) return;
-    const { error } = await supabase.from("properties").delete().eq("id", p.id);
-    if (!error) {
+    
+    try {
+      const { error } = await supabase.from("properties").delete().eq("id", p.id);
+      if (error) throw error;
+
       setProperties(ps => ps.filter(x => x.id !== p.id));
-      showToast("ok", `"${p.title}" supprimée.`);
-    } else {
-      showToast("err", "Erreur : " + error.message);
+      toast.success(`"${p.title}" a été retirée du marché.`);
+    } catch (error: any) {
+      toast.error(`Erreur de suppression : ${error.message}`);
     }
   };
 
-  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
-
-      {/* Toast */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className={`fixed top-20 right-6 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl border shadow-xl text-sm font-medium ${
-              toast.type === "ok"
-                ? "bg-green-50 border-green-200 text-green-700"
-                : "bg-red-50 border-red-200 text-red-700"
-            }`}
-          >
-            {toast.type === "ok" ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-            {toast.text}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* ── Header ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
@@ -221,7 +215,7 @@ export default function PropertiesManagement() {
         <select
           value={filterType}
           onChange={e => { setFilterType(e.target.value); resetPage(); }}
-          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none"
+          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none bg-white"
         >
           <option value="all">Tous les types</option>
           <option value="villa">Villa</option>
@@ -231,7 +225,7 @@ export default function PropertiesManagement() {
         <select
           value={filterStatus}
           onChange={e => { setFilterStatus(e.target.value); resetPage(); }}
-          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none"
+          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none bg-white"
         >
           <option value="all">Tous les statuts</option>
           <option value="disponible">Disponible</option>
@@ -392,7 +386,7 @@ export default function PropertiesManagement() {
                     <select
                       value={formData.type}
                       onChange={e => setFormData(f => ({ ...f, type: e.target.value }))}
-                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none"
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none bg-white"
                     >
                       <option value="villa">Villa</option>
                       <option value="appartement">Appartement</option>
@@ -428,7 +422,7 @@ export default function PropertiesManagement() {
                     <select
                       value={formData.status}
                       onChange={e => setFormData(f => ({ ...f, status: e.target.value }))}
-                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none"
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none bg-white"
                     >
                       <option value="disponible">Disponible</option>
                       <option value="reserve">Réservé</option>

@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
-  Shield, UserPlus, Trash2, Lock, AlertCircle, 
-  Loader2, CheckCircle, Search, KeyRound, X
+  Shield, UserPlus, Trash2, Lock,
+  Loader2, Search, KeyRound, X
 } from "lucide-react";
 import { supabase, useSupabaseAuth } from "../../../hooks/useSupabaseAuth";
+import { toast } from "sonner";
 
 interface TeamMember {
   user_id: string;
@@ -19,40 +20,32 @@ export default function TeamManagement() {
   // ── États de vérification & données ──
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean | null>(null);
   const [team, setTeam] = useState<TeamMember[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
 
   // ── États du formulaire d'ajout ──
-  const [newAdminEmail, setNewAdminEmail] = useState("");
-  const [newAdminRole, setNewAdminRole] = useState("admin");
+  const [newAdminEmail, setNewAdminEmail] = useState<string>("");
+  const [newAdminRole, setNewAdminRole] = useState<string>("admin");
   
   // ── États du test par mot de passe (Sécurité) ──
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [adminPassword, setAdminPassword] = useState("");
+  const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
+  const [adminPassword, setAdminPassword] = useState<string>("");
   const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null);
-  const [authError, setAuthError] = useState("");
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [authError, setAuthError] = useState<string>("");
+  const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
 
-  // ── Toasts ──
-  const [toast, setToast] = useState<{ type: "ok" | "err", text: string } | null>(null);
-  const showToast = (type: "ok" | "err", text: string) => {
-    setToast({ type, text });
-    setTimeout(() => setToast(null), 4000);
-  };
+  // 1. Vérifier les habilitations et charger l'équipe
+  const verifyAndLoadTeam = async (isMounted: boolean) => {
+    if (!user || !supabase) return;
 
-  // 1. Vérifier si l'utilisateur courant est superadmin et charger l'équipe
-  useEffect(() => {
-    let isMounted = true;
-    const verifyAndLoad = async () => {
-      if (!user || !supabase) return;
-
-      // Vérif rôle
-      const { data: roleData } = await supabase
+    try {
+      // Vérification stricte du rôle
+      const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
         .single();
 
-      if (roleData?.role !== "superadmin") {
+      if (roleError || roleData?.role !== "superadmin") {
         if (isMounted) setIsSuperAdmin(false);
         setLoading(false);
         return;
@@ -60,15 +53,18 @@ export default function TeamManagement() {
 
       if (isMounted) setIsSuperAdmin(true);
 
-      // Charger l'équipe (jointure manuelle via profiles pour récupérer l'email)
-      const { data: roles } = await supabase.from("user_roles").select("*");
+      // Charger l'équipe (jointure manuelle sécurisée via profiles)
+      const { data: roles, error: fetchRolesError } = await supabase.from("user_roles").select("*");
+      if (fetchRolesError) throw fetchRolesError;
       
       if (roles) {
         const userIds = roles.map(r => r.user_id);
-        const { data: profiles } = await supabase
+        const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
           .select("id, email, full_name")
           .in("id", userIds);
+
+        if (profilesError) throw profilesError;
 
         const fullTeam = roles.map(r => {
           const profile = profiles?.find(p => p.id === r.user_id);
@@ -81,10 +77,17 @@ export default function TeamManagement() {
         
         if (isMounted) setTeam(fullTeam);
       }
+    } catch (err) {
+      console.error("Erreur critique Team Habilitations:", err);
+      toast.error("Impossible de synchroniser le registre de sécurité.");
+    } finally {
       if (isMounted) setLoading(false);
-    };
+    }
+  };
 
-    verifyAndLoad();
+  useEffect(() => {
+    let isMounted = true;
+    verifyAndLoadTeam(isMounted);
     return () => { isMounted = false; };
   }, [user]);
 
@@ -95,15 +98,15 @@ export default function TeamManagement() {
     setAuthError("");
 
     try {
-      // On tente de reconnecter l'utilisateur pour valider son mot de passe
+      // Re-vérification du mot de passe via ré-authentification Supabase
       const { error } = await supabase.auth.signInWithPassword({
         email: user.email,
         password: adminPassword,
       });
 
-      if (error) throw new Error("Mot de passe incorrect.");
+      if (error) throw new Error("Accès refusé. Mot de passe incorrect.");
 
-      // Si le mot de passe est bon, on exécute l'action critique
+      // Exécution sécurisée de la promesse
       await pendingAction();
       
       setAuthModalOpen(false);
@@ -111,6 +114,7 @@ export default function TeamManagement() {
       setPendingAction(null);
     } catch (err: any) {
       setAuthError(err.message);
+      toast.error(err.message);
     } finally {
       setIsAuthenticating(false);
     }
@@ -125,30 +129,40 @@ export default function TeamManagement() {
   const handleAddMember = async () => {
     if (!supabase) return;
     
-    // a. Trouver le user_id à partir de l'email
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("email", newAdminEmail)
-      .single();
+    try {
+      // Résolution de l'ID par l'email
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .eq("email", newAdminEmail)
+        .single();
 
-    if (!profile) {
-      showToast("err", "Aucun compte client trouvé avec cet email. L'utilisateur doit d'abord s'inscrire.");
-      return;
-    }
+      if (profileError || !profile) {
+        toast.error("Aucun compte trouvé. Le destinataire doit d'abord s'inscrire sur l'application.");
+        return;
+      }
 
-    // b. Insérer dans user_roles
-    const { error } = await supabase
-      .from("user_roles")
-      .insert({ user_id: profile.id, role: newAdminRole });
+      // Mutation des droits
+      const { error: insertError } = await supabase
+        .from("user_roles")
+        .insert({ user_id: profile.id, role: newAdminRole });
 
-    if (error) {
-      showToast("err", "Cet utilisateur a déjà un rôle assigné ou une erreur est survenue.");
-    } else {
-      showToast("ok", "Le nouveau membre a été nommé avec succès.");
+      if (insertError) throw insertError;
+
+      toast.success("Habilitation accordée avec succès.");
       setNewAdminEmail("");
-      // Recharger la page (ou l'état) pour mettre à jour la liste
-      setTimeout(() => window.location.reload(), 1500);
+      
+      // Mise à jour de l'état local sans recharger la page brutalement
+      setTeam(prev => [...prev, { 
+        user_id: profile.id, 
+        role: newAdminRole, 
+        email: profile.email || "Email masqué", 
+        full_name: profile.full_name || "Utilisateur" 
+      }]);
+
+    } catch (error: any) {
+      console.error(error);
+      toast.error("Cet utilisateur possède déjà un niveau d'accès assigné.");
     }
   };
 
@@ -156,24 +170,26 @@ export default function TeamManagement() {
   const handleRemoveMember = async (targetUserId: string) => {
     if (!supabase) return;
     if (targetUserId === user?.id) {
-      showToast("err", "Vous ne pouvez pas révoquer votre propre accès.");
+      toast.error("Opération interdite : vous ne pouvez pas révoquer votre propre accès.");
       return;
     }
 
-    const { error } = await supabase
-      .from("user_roles")
-      .delete()
-      .eq("user_id", targetUserId);
+    try {
+      const { error } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", targetUserId);
 
-    if (error) {
-      showToast("err", "Erreur lors de la révocation.");
-    } else {
-      setTeam(team.filter(t => t.user_id !== targetUserId));
-      showToast("ok", "Accès administrateur révoqué.");
+      if (error) throw error;
+
+      setTeam(prev => prev.filter(t => t.user_id !== targetUserId));
+      toast.success("Privilèges administratifs révoqués.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Échec de la révocation de droits.");
     }
   };
 
-  // ── Rendu ──
   if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -182,7 +198,6 @@ export default function TeamManagement() {
     );
   }
 
-  // Écran de blocage si non superadmin
   if (isSuperAdmin === false) {
     return (
       <div className="p-8 max-w-4xl mx-auto">
@@ -201,18 +216,6 @@ export default function TeamManagement() {
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto relative">
-      {/* Toast Notification */}
-      {toast && (
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
-          className={`fixed top-8 right-8 z-[100] flex items-center gap-3 px-6 py-4 rounded-xl border shadow-2xl ${
-            toast.type === "ok" ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"
-          }`}
-        >
-          {toast.type === "ok" ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-          <span className="font-medium">{toast.text}</span>
-        </motion.div>
-      )}
-
       {/* Header */}
       <div className="mb-8 flex items-center gap-4">
         <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center border border-purple-200">
@@ -339,7 +342,7 @@ export default function TeamManagement() {
 
               {authError && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" /> {authError}
+                  <X className="w-4 h-4" /> {authError}
                 </div>
               )}
 
@@ -354,12 +357,14 @@ export default function TeamManagement() {
 
               <div className="flex gap-3">
                 <button 
+                  type="button"
                   onClick={() => setAuthModalOpen(false)}
                   className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
                 >
                   Annuler
                 </button>
                 <button 
+                  type="button"
                   onClick={executeSecureAction}
                   disabled={!adminPassword || isAuthenticating}
                   className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
