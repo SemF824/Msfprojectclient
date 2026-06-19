@@ -1,12 +1,4 @@
-Agis en tant qu'Ingénieur Front-End Senior. Nous devons nettoyer la dette technique visuelle sur l'interface client. Actuellement, les badges de notification sont codés en dur (affichant un point rouge même sans notification) et la barre de recherche globale est inactive.
-
-Exécute les deux tâches suivantes en remplaçant intégralement le code des fichiers ciblés. Aucune donnée factice n'est tolérée.
-
-TÂCHE 1 : Remplacement de src/app/components/Header.tsx
-
-Rends la cloche de notification intelligente (requête Supabase pour compter les is_read === false) et transforme l'icône de recherche en un champ fonctionnel qui redirige vers la page d'accueil avec un paramètre de recherche.
-
-Code complet pour Header.tsx :
+//Header.tsx :
 
 TypeScript
 import { Building2, Menu, Search, User, ChevronDown, Bell, Heart, Settings, CreditCard, LogOut, X } from "lucide-react";

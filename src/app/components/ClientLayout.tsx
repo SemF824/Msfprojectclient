@@ -68,7 +68,7 @@ export default function ClientLayout() {
 
               <div className="mb-4 pb-4 border-b border-gray-200">
                 <Link
-                  to=""
+                  to="/"
                   className="flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-[#d4af37] transition-colors rounded-xl hover:bg-gray-50"
                 >
                   <Home className="w-4 h-4" />

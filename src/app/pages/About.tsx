@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 import { Shield, Trophy, Target } from "lucide-react";
 import { About as AboutComponent } from "../components/About";
 import { Vision } from "../components/Vision";
@@ -47,24 +47,24 @@ export default function About() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="p-8 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors text-center group">
-              <div className="w-16 h-16 bg-[#d4af37]/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                <Shield className="w-8 h-8 text-[#d4af37]" />
+              <div className="w-16 h-16 bg-[#d4af37]/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform will-change-transform">
+                <Shield aria-label="Sécurité Juridique" className="w-8 h-8 text-[#d4af37]" />
               </div>
               <h3 className="text-xl font-bold mb-3">Sécurité Juridique</h3>
               <p className="text-gray-400 text-sm">Chaque propriété est garantie par des titres fonciers irréprochables avant le début de tout projet.</p>
             </div>
             
             <div className="p-8 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors text-center group">
-              <div className="w-16 h-16 bg-[#d4af37]/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                <Trophy className="w-8 h-8 text-[#d4af37]" />
+              <div className="w-16 h-16 bg-[#d4af37]/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform will-change-transform">
+                <Trophy aria-label="Excellence Primée" className="w-8 h-8 text-[#d4af37]" />
               </div>
               <h3 className="text-xl font-bold mb-3">Excellence Primée</h3>
               <p className="text-gray-400 text-sm">Reconnu comme le leader absolu du développement haut de gamme au Congo depuis 25 ans.</p>
             </div>
 
             <div className="p-8 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors text-center group">
-              <div className="w-16 h-16 bg-[#d4af37]/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                <Target className="w-8 h-8 text-[#d4af37]" />
+              <div className="w-16 h-16 bg-[#d4af37]/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform will-change-transform">
+                <Target aria-label="Vision Long Terme" className="w-8 h-8 text-[#d4af37]" />
               </div>
               <h3 className="text-xl font-bold mb-3">Vision Long Terme</h3>
               <p className="text-gray-400 text-sm">Des investissements immobiliers pensés et construits pour traverser les générations.</p>

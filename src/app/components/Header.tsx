@@ -76,7 +76,7 @@ export function Header() {
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-20">
           {/* ── Logo ────────────────────────────────────────────────────────── */}
-          <Link to="" className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-lg flex items-center justify-center shadow-sm">
               <Building2 className="w-6 h-6 text-[#0a0f1e]" />
             </div>
@@ -93,7 +93,7 @@ export function Header() {
           {/* ── Navigation Desktop ──────────────────────────────────────────── */}
           <nav className="hidden lg:flex items-center gap-8">
             <Link
-              to=""
+              to="/"
               className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
             >
               Accueil
@@ -295,7 +295,7 @@ export function Header() {
           <div className="lg:hidden py-4 border-t border-gray-100">
             <nav className="flex flex-col gap-4">
               <Link
-                to=""
+                to="/"
                 className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
