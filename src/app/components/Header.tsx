@@ -389,7 +389,7 @@ export function Header() {
                 </div>
               ) : (
                 <Link
-                  to="/connexion"
+                  to="/login"
                   className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-full w-fit font-semibold"
                   onClick={() => setIsMenuOpen(false)}
                 >
