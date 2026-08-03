@@ -36,7 +36,7 @@ export default function ClientLayout() {
 
   const handleLogout = async () => {
     await signOut();
-    navigate("/connexion");
+    navigate("/login");
   };
 
   const navItems = [
