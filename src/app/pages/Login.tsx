@@ -198,7 +198,7 @@ export default function Login() {
           <div className="text-center">
             <p className="text-gray-600">
               Vous n'avez pas de compte ?{" "}
-              <Link to="/inscription" className="text-[#d4af37] hover:underline font-medium">
+              <Link to="/signup" className="text-[#d4af37] hover:underline font-medium">
                 Créer un compte
               </Link>
             </p>
