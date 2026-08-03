@@ -20,7 +20,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   // 1. Si aucun utilisateur n'est connecté, direction la page de connexion client.
   if (!user) {
-    return <Navigate to="/connexion" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // 2. LA SÉCURITÉ ANTI-ÉCRAN NOIR : Si l'utilisateur est un Admin, il n'a rien à faire ici.
