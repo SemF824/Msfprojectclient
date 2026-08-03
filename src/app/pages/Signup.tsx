@@ -242,7 +242,7 @@ export default function Signup() {
                 </div>
                 <h3 className="text-2xl font-bold text-[#0a0f1e] mb-4">Vérifiez vos emails</h3>
                 <p className="text-gray-600 mb-8">Un lien de confirmation a été envoyé à <strong>{formData.email}</strong>. Confirmez-le pour accéder à l'intégralité de vos services.</p>
-                <Link to="/connexion" className="inline-block px-8 py-3 bg-[#0a0f1e] text-[#d4af37] rounded-xl font-bold hover:shadow-lg transition-all">Aller à la connexion</Link>
+                <Link to="/login" className="inline-block px-8 py-3 bg-[#0a0f1e] text-[#d4af37] rounded-xl font-bold hover:shadow-lg transition-all">Aller à la connexion</Link>
               </motion.div>
             )}
           </AnimatePresence>
@@ -250,7 +250,7 @@ export default function Signup() {
         <div className="mt-8 text-center">
             <p className="text-gray-500 text-sm">
               Déjà membre ?{' '}
-              <Link to="/connexion" className="font-bold text-[#0a0f1e] hover:text-[#d4af37] underline underline-offset-4">
+              <Link to="/login" className="font-bold text-[#0a0f1e] hover:text-[#d4af37] underline underline-offset-4">
                 Se connecter ici
               </Link>
             </p>
