@@ -1,9 +1,8 @@
 import { motion } from "motion/react";
 import { Link } from "react-router";
 import {
-  Building2, Key, Settings, TrendingUp, Banknote,
-  Hammer, FileSearch, ArrowRight, CheckCircle2,
-  Phone, Star, Users
+  Building2, Key, Settings, TrendingUp,
+  ArrowRight, Phone, Star, Users
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 
@@ -84,8 +83,34 @@ export default function Services() {
     }
   ];
 
+  // ==========================================
+  // VARIANTS D'ORCHESTRATION FRAMER MOTION
+  // ==========================================
+  const gridContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2, // C'est ICI que se crée la vraie cascade (200ms entre chaque carte)
+      }
+    }
+  };
+
+  const cardItemVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        duration: 0.6, 
+        ease: "easeOut" 
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50">
+      
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#0a0f1e] via-[#1e3a5f] to-[#0a0f1e] opacity-95">
@@ -98,15 +123,10 @@ export default function Services() {
 
         <div className="container mx-auto px-6 relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 30, z: 0 }}
-            animate={{ opacity: 1, y: 0, z: 0 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            style={{
-              WebkitBackfaceVisibility: "hidden",
-              backfaceVisibility: "hidden",
-              WebkitTransform: "translate3d(0,0,0)",
-              WebkitTransformStyle: "preserve-3d"
-            }}
+            style={{ WebkitTransform: "translate3d(0,0,0)" }}
             className="max-w-4xl mx-auto text-center"
           >
             <h1 className="text-5xl md:text-6xl lg:text-7xl mb-6 text-white">
@@ -120,20 +140,14 @@ export default function Services() {
         </div>
       </section>
 
-      {/* Services Grid - SAFARI FIX */}
+      {/* Services Grid orchestrée par le parent */}
       <section className="py-20">
         <div className="container mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20, z: 0 }}
-            whileInView={{ opacity: 1, y: 0, z: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
-            style={{
-              WebkitBackfaceVisibility: "hidden",
-              backfaceVisibility: "hidden",
-              WebkitTransform: "translate3d(0,0,0)",
-              WebkitTransformStyle: "preserve-3d"
-            }}
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl text-[#0a0f1e] mb-4">
@@ -144,16 +158,26 @@ export default function Services() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          {/* LE CONTENEUR PARENT QUI GÈRE LE SCROLL */}
+          <motion.div 
+            variants={gridContainerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto"
+          >
             {services.map((service, index) => {
               const Icon = service.icon;
               return (
+                /* L'ENFANT QUI OBÉIT AU PARENT */
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 20, z: 0 }}
-                  whileInView={{ opacity: 1, y: 0, z: 0 }}
-                  viewport={{ once: true, margin: "0px 0px -100px 0px", amount: 0.1 }}
-                  transition={{ delay: index * 0.08, duration: 0.4, ease: "easeOut" }}
+                  variants={cardItemVariants}
+                  style={{
+                    WebkitBackfaceVisibility: "hidden",
+                    backfaceVisibility: "hidden",
+                    WebkitTransform: "translate3d(0,0,0)",
+                  }}
                   className="group bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden hover:shadow-2xl hover:border-[#d4af37] transition-all duration-300 flex flex-col min-h-[520px] transform-gpu isolate"
                 >
                   <div className="relative h-64 overflow-hidden bg-gray-200 flex-shrink-0">
@@ -161,7 +185,7 @@ export default function Services() {
                       src={service.image}
                       alt={service.title}
                       loading="lazy"
-                      // @ts-ignore : Attributs web standards
+                      // @ts-ignore
                       decoding="async"
                       fetchPriority="low"
                       sizes="(max-width: 768px) 100vw, 50vw"
@@ -184,7 +208,7 @@ export default function Services() {
                 </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -192,16 +216,10 @@ export default function Services() {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20, z: 0 }}
-            whileInView={{ opacity: 1, y: 0, z: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
-            style={{
-              WebkitBackfaceVisibility: "hidden",
-              backfaceVisibility: "hidden",
-              WebkitTransform: "translate3d(0,0,0)",
-              WebkitTransformStyle: "preserve-3d"
-            }}
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl text-[#0a0f1e] mb-4">
@@ -212,20 +230,21 @@ export default function Services() {
             </p>
           </motion.div>
 
-          <div className="max-w-5xl mx-auto">
+          <motion.div 
+            variants={gridContainerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+            className="max-w-5xl mx-auto"
+          >
             {steps.map((step, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, x: -30, z: 0 }}
-                whileInView={{ opacity: 1, x: 0, z: 0 }}
-                viewport={{ once: true, margin: "0px 0px -60px 0px", amount: 0.2 }}
-                transition={{ duration: 0.5, delay: index * 0.08 }}
-                style={{
-                  WebkitBackfaceVisibility: "hidden",
-                  backfaceVisibility: "hidden",
-                  WebkitTransform: "translate3d(0,0,0)",
-                  WebkitTransformStyle: "preserve-3d"
+                variants={{
+                  hidden: { opacity: 0, x: -30 },
+                  visible: { opacity: 1, x: 0, transition: { duration: 0.5 } }
                 }}
+                style={{ WebkitTransform: "translate3d(0,0,0)" }}
                 className="flex items-start gap-6 mb-12 last:mb-0"
               >
                 <div className="flex-shrink-0 w-20 h-20 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-full flex items-center justify-center">
@@ -244,7 +263,7 @@ export default function Services() {
                 )}
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -252,16 +271,10 @@ export default function Services() {
       <section className="py-20">
         <div className="container mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20, z: 0 }}
-            whileInView={{ opacity: 1, y: 0, z: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
-            style={{
-              WebkitBackfaceVisibility: "hidden",
-              backfaceVisibility: "hidden",
-              WebkitTransform: "translate3d(0,0,0)",
-              WebkitTransformStyle: "preserve-3d"
-            }}
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl text-[#0a0f1e] mb-4">
@@ -272,14 +285,18 @@ export default function Services() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <motion.div 
+            variants={gridContainerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto"
+          >
             {testimonials.map((testimonial, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20, z: 0 }}
-                whileInView={{ opacity: 1, y: 0, z: 0 }}
-                viewport={{ once: true, margin: "0px 0px -80px 0px", amount: 0.1 }}
-                transition={{ duration: 0.4, delay: index * 0.08 }}
+                variants={cardItemVariants}
+                style={{ WebkitTransform: "translate3d(0,0,0)" }}
                 className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 flex flex-col min-h-[300px] transform-gpu isolate"
               >
                 <div className="flex gap-1 mb-4 flex-shrink-0">
@@ -300,7 +317,7 @@ export default function Services() {
                 </div>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -308,16 +325,11 @@ export default function Services() {
       <section className="py-20 bg-gradient-to-br from-[#0a0f1e] via-[#1e3a5f] to-[#0a0f1e]">
         <div className="container mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20, z: 0 }}
-            whileInView={{ opacity: 1, y: 0, z: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
-            style={{
-              WebkitBackfaceVisibility: "hidden",
-              backfaceVisibility: "hidden",
-              WebkitTransform: "translate3d(0,0,0)",
-              WebkitTransformStyle: "preserve-3d"
-            }}
+            style={{ WebkitTransform: "translate3d(0,0,0)" }}
             className="max-w-4xl mx-auto text-center"
           >
             <h2 className="text-4xl md:text-5xl text-white mb-6">
@@ -345,6 +357,7 @@ export default function Services() {
           </motion.div>
         </div>
       </section>
+      
     </div>
   );
 }
