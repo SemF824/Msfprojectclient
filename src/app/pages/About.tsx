@@ -1,10 +1,48 @@
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Shield, Trophy, Target } from "lucide-react";
 import { About as AboutComponent } from "../components/About";
 import { Vision } from "../components/Vision";
 import { Expertise } from "../components/Expertise";
 
 export default function About() {
+
+  // Données pour la section des engagements
+  const engagements = [
+    {
+      icon: Shield,
+      title: "Sécurité Juridique",
+      desc: "Chaque propriété est garantie par des titres fonciers irréprochables avant le début de tout projet."
+    },
+    {
+      icon: Trophy,
+      title: "Excellence Primée",
+      desc: "Reconnu comme le leader absolu du développement haut de gamme au Congo depuis 25 ans."
+    },
+    {
+      icon: Target,
+      title: "Vision Long Terme",
+      desc: "Des investissements immobiliers pensés et construits pour traverser les générations."
+    }
+  ];
+
+  // Orchestration Framer Motion
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.2 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { duration: 0.6, ease: "easeOut" } 
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <section className="relative pt-32 pb-20 bg-[#0a0f1e] overflow-hidden">
@@ -14,6 +52,7 @@ export default function About() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            style={{ WebkitTransform: "translate3d(0,0,0)" }}
             className="max-w-3xl"
           >
             <h1 className="text-4xl md:text-6xl font-black mb-6 text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">
@@ -40,36 +79,48 @@ export default function About() {
 
       <section className="py-24 bg-[#0a0f1e] text-white">
         <div className="max-w-7xl mx-auto px-6 md:px-8">
-          <div className="text-center mb-16">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+            transition={{ duration: 0.6 }}
+            style={{ WebkitTransform: "translate3d(0,0,0)" }}
+            className="text-center mb-16"
+          >
             <h2 className="text-3xl font-black mb-4">Nos Engagements</h2>
             <p className="text-gray-400 max-w-2xl mx-auto">La promesse MSF Congo repose sur trois piliers inébranlables pour sécuriser vos investissements.</p>
-          </div>
+          </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="p-8 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors text-center group">
-              <div className="w-16 h-16 bg-[#d4af37]/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform will-change-transform">
-                <Shield aria-label="Sécurité Juridique" className="w-8 h-8 text-[#d4af37]" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Sécurité Juridique</h3>
-              <p className="text-gray-400 text-sm">Chaque propriété est garantie par des titres fonciers irréprochables avant le début de tout projet.</p>
-            </div>
-            
-            <div className="p-8 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors text-center group">
-              <div className="w-16 h-16 bg-[#d4af37]/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform will-change-transform">
-                <Trophy aria-label="Excellence Primée" className="w-8 h-8 text-[#d4af37]" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Excellence Primée</h3>
-              <p className="text-gray-400 text-sm">Reconnu comme le leader absolu du développement haut de gamme au Congo depuis 25 ans.</p>
-            </div>
-
-            <div className="p-8 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors text-center group">
-              <div className="w-16 h-16 bg-[#d4af37]/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform will-change-transform">
-                <Target aria-label="Vision Long Terme" className="w-8 h-8 text-[#d4af37]" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Vision Long Terme</h3>
-              <p className="text-gray-400 text-sm">Des investissements immobiliers pensés et construits pour traverser les générations.</p>
-            </div>
-          </div>
+          {/* LA GRILLE ORCHESTRÉE */}
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+          >
+            {engagements.map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <motion.div 
+                  key={index}
+                  variants={itemVariants}
+                  style={{
+                    WebkitBackfaceVisibility: "hidden",
+                    backfaceVisibility: "hidden",
+                    WebkitTransform: "translate3d(0,0,0)"
+                  }}
+                  className="p-8 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors text-center group isolate"
+                >
+                  <div className="w-16 h-16 bg-[#d4af37]/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform will-change-transform">
+                    <Icon aria-label={item.title} className="w-8 h-8 text-[#d4af37]" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">{item.title}</h3>
+                  <p className="text-gray-400 text-sm">{item.desc}</p>
+                </motion.div>
+              );
+            })}
+          </motion.div>
         </div>
       </section>
     </div>
