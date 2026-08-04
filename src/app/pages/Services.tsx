@@ -13,25 +13,25 @@ export default function Services() {
       icon: Building2,
       title: "Trouver la Maison qui Vous Convient",
       description: "Toute notre équipe est à votre écoute et se tient à votre disposition pour vous conseiller et vous aider à trouver la maison qui correspond à votre attente et budget. En toute confidentialité vous aurez la possibilité d'obtenir un devis détaillé et un planning prévisionnel des travaux à réaliser.",
-      image: "https://images.unsplash.com/photo-1668609268461-4f6a15269ff1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhZnJpY2FuJTIwY29uc3RydWN0aW9uJTIwd29ya2VycyUyMGJ1aWxkaW5nJTIwc2l0ZXxlbnwxfHx8fDE3NzYyODQ0OTZ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+      image: "https://images.unsplash.com/photo-1668609268461-4f6a15269ff1?auto=format&fit=crop&w=1080&q=80"
     },
     {
       icon: TrendingUp,
       title: "Investir dans des Opérations Immobilières de MSF",
       description: "Nous sommes à votre écoute et intervenons en conseil dans vos choix, afin de maximiser vos investissements immobiliers au Congo et en Afrique Centrale.",
-      image: "https://images.unsplash.com/photo-1763621569464-409a050b112e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyZWFsJTIwZXN0YXRlJTIwaW52ZXN0bWVudCUyMHBsYW5uaW5nJTIwZG9jdW1lbnR8ZW58MXx8fHwxNzc2Mjg0NDk3fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+      image: "https://images.unsplash.com/photo-1763621569464-409a050b112e?auto=format&fit=crop&w=1080&q=80"
     },
     {
       icon: Key,
       title: "Vente à Terme et Sur Plan",
       description: "Nous vous proposons la vente à terme et sur plan selon votre choix, vous permettant d'acquérir votre propriété selon vos possibilités financières.",
-      image: "https://images.unsplash.com/photo-1721244654394-36a7bc2da288?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBob3VzZSUyMGNvbnN0cnVjdGlvbiUyMGJsdWVwcmludHxlbnwxfHx8fDE3NzYyODQ0OTd8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+      image: "https://images.unsplash.com/photo-1721244654394-36a7bc2da288?auto=format&fit=crop&w=1080&q=80"
     },
     {
       icon: Settings,
       title: "Ameublement et Décoration",
       description: "En collaboration avec nos partenaires, nous vous proposons l'ameublement et la décoration de votre maison pour un intérieur à votre image.",
-      image: "https://images.unsplash.com/photo-1760072513357-9d450e935a80?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBob21lJTIwaW50ZXJpb3IlMjBkZWNvcmF0aW9uJTIwZnVybml0dXJlfGVufDF8fHx8MTc3NjI4NDQ5Nnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+      image: "https://images.unsplash.com/photo-1760072513357-9d450e935a80?auto=format&fit=crop&w=1080&q=80"
     }
   ];
 
@@ -90,7 +90,7 @@ export default function Services() {
       <section className="relative pt-32 pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#0a0f1e] via-[#1e3a5f] to-[#0a0f1e] opacity-95">
           <ImageWithFallback
-            src="https://images.unsplash.com/photo-1640109341881-1cd3eaf50909?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjByZWFsJTIwZXN0YXRlJTIwb2ZmaWNlJTIwbW9kZXJufGVufDF8fHx8MTc3NjI4Mzg5OHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+            src="https://images.unsplash.com/photo-1640109341881-1cd3eaf50909?auto=format&fit=crop&w=1080&q=80"
             alt="Services MSF Congo"
             className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-30"
           />
