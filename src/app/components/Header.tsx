@@ -273,7 +273,7 @@ export function Header() {
               </>
             ) : (
               <Link
-                to="/connexion"
+                to="/login"
                 className="hidden md:flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-full font-semibold hover:shadow-lg hover:shadow-[#d4af37]/30 transition-all transform hover:-translate-y-0.5"
               >
                 <User className="w-4 h-4" />
