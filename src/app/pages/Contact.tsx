@@ -10,7 +10,6 @@ import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { supabase } from "../../hooks/useSupabaseAuth";
 
-// Typage pour bypasser l'erreur Vite sur import.meta.env
 const adminEmail = (import.meta as any).env.VITE_ADMIN_EMAIL || "promotions@msfcongo.com";
 
 const contactFormSchema = z.object({
@@ -52,7 +51,6 @@ export default function Contact() {
     e.preventDefault();
     setSubmitError("");
     
-    // Barrière de sécurité Supabase
     if (!supabase) {
       setSubmitError("Erreur système : connexion au serveur impossible.");
       return;
@@ -78,7 +76,6 @@ export default function Contact() {
       const validationResult = contactFormSchema.safeParse(formData);
 
       if (!validationResult.success) {
-        // Correction de l'erreur Zod
         const firstError = validationResult.error.issues[0];
         setSubmitError(firstError.message);
         setIsSubmitting(false);
@@ -93,7 +90,6 @@ export default function Contact() {
         return;
       }
 
-      // Supabase est vérifié non-null au début de la fonction
       const { data, error } = await supabase.functions.invoke('submit-contact', {
         body: {
           token: token,
@@ -135,6 +131,24 @@ export default function Contact() {
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  // VARIANTS ORCHESTRATION GRILLES
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.15 } // Cascade légèrement plus rapide pour 4 éléments
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { duration: 0.5, ease: "easeOut" } 
+    }
   };
 
   const contactInfo = [
@@ -195,27 +209,27 @@ export default function Contact() {
     {
       name: "Roger ROC",
       role: "Fondateur – Président Directeur Général",
-      image: "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhZnJpY2FuJTIwYnVzaW5lc3MlMjBleGVjdXRpdmUlMjBwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdHxlbnwxfHx8fDE3NzYyODQ1MTh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+      image: "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80"
     },
     {
       name: "Chems Roc",
       role: "Responsable Départemental Brazzaville",
-      image: "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhZnJpY2FuJTIwbWFuJTIwcHJvZmVzc2lvbmFsJTIwYnVzaW5lc3MlMjBwb3J0cmFpdHxlbnwxfHx8fDE3NzYyODQ1MTl8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+      image: "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80"
     },
     {
       name: "Mireille LOLA",
       role: "Responsable Administratif et Commercial",
-      image: "https://images.unsplash.com/photo-1760320483844-3d808de62def?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhZnJpY2FuJTIwd29tYW4lMjBidXNpbmVzcyUyMHByb2Zlc3Npb25hbCUyMHN1aXR8ZW58MXx8fHwxNzc2Mjg0NTE4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+      image: "https://images.unsplash.com/photo-1760320483844-3d808de62def?auto=format&fit=crop&w=1080&q=80"
     },
     {
       name: "Elie LIBALI",
       role: "Directeur des Ressources Humaines",
-      image: "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhZnJpY2FuJTIwYnVzaW5lc3MlMjBleGVjdXRpdmUlMjBwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdHxlbnwxfHx8fDE3NzYyODQ1MTh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+      image: "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80"
     },
     {
       name: "Naji KHALIL",
       role: "Directeur des Projets",
-      image: "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhZnJpY2FuJTIwbWFuJTIwcHJvZmVzc2lvbmFsJTIwYnVzaW5lc3MlMjBwb3J0cmFpdHxlbnwxfHx8fDE3NzYyODQ1MTl8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+      image: "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80"
     }
   ];
 
@@ -260,7 +274,7 @@ export default function Contact() {
       <section className="relative pt-32 pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#0a0f1e] via-[#1e3a5f] to-[#0a0f1e] opacity-95">
           <ImageWithFallback
-            src="https://images.unsplash.com/photo-1714601344981-75e003bc5d18?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBvZmZpY2UlMjBidWlsZGluZyUyMGRvd250b3dufGVufDF8fHx8MTc3NjI4Mzg5OHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+            src="https://images.unsplash.com/photo-1714601344981-75e003bc5d18?auto=format&fit=crop&w=1080&q=80"
             alt="Contact MSF Congo"
             className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-30"
           />
@@ -268,15 +282,10 @@ export default function Contact() {
 
         <div className="container mx-auto px-6 relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 30, z: 0 }}
-            animate={{ opacity: 1, y: 0, z: 0 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            style={{
-              WebkitBackfaceVisibility: "hidden",
-              backfaceVisibility: "hidden",
-              WebkitTransform: "translate3d(0,0,0)",
-              WebkitTransformStyle: "preserve-3d"
-            }}
+            style={{ WebkitTransform: "translate3d(0,0,0)" }}
             className="max-w-4xl mx-auto text-center"
           >
             <h1 className="text-5xl md:text-6xl lg:text-7xl mb-6 text-white">
@@ -289,27 +298,28 @@ export default function Contact() {
         </div>
       </section>
 
-      {/* Contact Info Cards */}
+      {/* Contact Info Cards avec Orchestration */}
       <section className="py-20">
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20"
+          >
             {contactInfo.map((info, index) => {
               const Icon = info.icon;
               return (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 20, z: 0 }}
-                  whileInView={{ opacity: 1, y: 0, z: 0 }}
-                  viewport={{ once: true, margin: "0px 0px -80px 0px", amount: 0.1 }}
-                  transition={{ duration: 0.4, delay: index * 0.08 }}
+                  variants={itemVariants}
                   style={{
                     WebkitBackfaceVisibility: "hidden",
                     backfaceVisibility: "hidden",
-                    WebkitTransform: "translate3d(0,0,0)",
-                    WebkitTransformStyle: "preserve-3d",
-                    WebkitMaskImage: "-webkit-radial-gradient(white, black)"
+                    WebkitTransform: "translate3d(0,0,0)"
                   }}
-                  className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 text-center"
+                  className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 text-center isolate"
                 >
                   <div className="w-14 h-14 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-xl flex items-center justify-center mx-auto mb-4">
                     <Icon className="w-7 h-7 text-[#0a0f1e]" />
@@ -332,22 +342,17 @@ export default function Contact() {
                 </motion.div>
               );
             })}
-          </div>
+          </motion.div>
 
           {/* Main Contact Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-7xl mx-auto">
             {/* Contact Form */}
             <motion.div
-              initial={{ opacity: 0, x: -30, z: 0 }}
-              whileInView={{ opacity: 1, x: 0, z: 0 }}
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: "0px 0px -80px 0px" }}
               transition={{ duration: 0.6 }}
-              style={{
-                WebkitBackfaceVisibility: "hidden",
-                backfaceVisibility: "hidden",
-                WebkitTransform: "translate3d(0,0,0)",
-                WebkitTransformStyle: "preserve-3d"
-              }}
+              style={{ WebkitTransform: "translate3d(0,0,0)" }}
               className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8"
             >
               <h2 className="text-3xl text-[#0a0f1e] mb-2">
@@ -539,16 +544,11 @@ export default function Contact() {
 
             {/* Map & Office Info */}
             <motion.div
-              initial={{ opacity: 0, x: 30, z: 0 }}
-              whileInView={{ opacity: 1, x: 0, z: 0 }}
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: "0px 0px -80px 0px" }}
               transition={{ duration: 0.6 }}
-              style={{
-                WebkitBackfaceVisibility: "hidden",
-                backfaceVisibility: "hidden",
-                WebkitTransform: "translate3d(0,0,0)",
-                WebkitTransformStyle: "preserve-3d"
-              }}
+              style={{ WebkitTransform: "translate3d(0,0,0)" }}
               className="space-y-6"
             >
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
@@ -558,7 +558,7 @@ export default function Contact() {
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
                 <div className="relative h-64">
                   <ImageWithFallback
-                    src="https://images.unsplash.com/photo-1521791136064-7986c2920216?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhZnJpY2FuJTIwYnVzaW5lc3MlMjBwcm9mZXNzaW9uYWwlMjBoYW5kc2hha2V8ZW58MXx8fHwxNzc2MjgzODk4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+                    src="https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1080&q=80"
                     alt="Bureau MSF Congo"
                     className="w-full h-full object-cover"
                   />
@@ -590,20 +590,15 @@ export default function Contact() {
         </div>
       </section>
 
-      {/* Team Section */}
+      {/* Team Section avec Orchestration */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20, z: 0 }}
-            whileInView={{ opacity: 1, y: 0, z: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
-            style={{
-              WebkitBackfaceVisibility: "hidden",
-              backfaceVisibility: "hidden",
-              WebkitTransform: "translate3d(0,0,0)",
-              WebkitTransformStyle: "preserve-3d"
-            }}
+            style={{ WebkitTransform: "translate3d(0,0,0)" }}
             className="text-center mb-16"
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#d4af37]/10 rounded-full mb-4">
@@ -619,16 +614,11 @@ export default function Contact() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20, z: 0 }}
-            whileInView={{ opacity: 1, y: 0, z: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
-            style={{
-              WebkitBackfaceVisibility: "hidden",
-              backfaceVisibility: "hidden",
-              WebkitTransform: "translate3d(0,0,0)",
-              WebkitTransformStyle: "preserve-3d"
-            }}
+            style={{ WebkitTransform: "translate3d(0,0,0)" }}
             className="max-w-4xl mx-auto mb-16"
           >
             <div className="group bg-white rounded-3xl border-2 border-[#d4af37] shadow-2xl overflow-hidden hover:shadow-[#d4af37]/20 transition-all duration-300">
@@ -663,21 +653,29 @@ export default function Contact() {
             <h3 className="text-2xl md:text-3xl text-[#0a0f1e] text-center mb-12">
               Nos Collaborateurs
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-8"
+            >
               {team.slice(1).map((member, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 20, z: 0 }}
-                  whileInView={{ opacity: 1, y: 0, z: 0 }}
-                  viewport={{ once: true, margin: "0px 0px -100px 0px", amount: 0.1 }}
-                  transition={{ duration: 0.4, delay: index * 0.08 }}
+                  variants={itemVariants}
+                  style={{
+                    WebkitBackfaceVisibility: "hidden",
+                    backfaceVisibility: "hidden",
+                    WebkitTransform: "translate3d(0,0,0)"
+                  }}
                   className="group bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden hover:shadow-2xl hover:border-[#d4af37] transition-all duration-300 transform-gpu isolate"
                 >
                   <div className="relative h-80 overflow-hidden">
                     <ImageWithFallback
                       src={member.image}
                       alt={member.name}
-                      // @ts-ignore : Attributs standards
+                      // @ts-ignore
                       decoding="async"
                       fetchPriority="low"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -694,7 +692,7 @@ export default function Contact() {
                   </div>
                 </motion.div>
               ))}
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
