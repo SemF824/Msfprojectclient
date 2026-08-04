@@ -28,6 +28,24 @@ const expertiseAreas = [
   }
 ];
 
+// Orchestration
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { duration: 0.5, ease: "easeOut" } 
+  }
+};
+
 export function Expertise() {
   return (
     <section className="py-24 px-6 bg-gradient-to-br from-white via-slate-50 to-blue-50 relative overflow-hidden">
@@ -44,16 +62,19 @@ export function Expertise() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            style={{ WebkitTransform: "translate3d(0,0,0)" }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1e3a5f]/40 backdrop-blur-md border border-[#d4af37]/30 mb-4"
           >
             <Building2 className="w-4 h-4 text-[#d4af37]" />
             <span className="text-xs text-[#d4af37] tracking-wider uppercase">Nos Expertises</span>
           </motion.div>
+          
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
+            style={{ WebkitTransform: "translate3d(0,0,0)" }}
             className="text-4xl md:text-5xl mb-4"
           >
             <span className="text-[#0a0f1e]">Au-delà de </span>
@@ -61,25 +82,38 @@ export function Expertise() {
               l'Immobilier
             </span>
           </motion.h2>
+          
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
+            style={{ WebkitTransform: "translate3d(0,0,0)" }}
             className="text-gray-600 max-w-3xl mx-auto text-lg"
           >
             MSF Congo ne construit pas que des maisons, nous bâtissons l'infrastructure de la nation
           </motion.p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {expertiseAreas.map((area) => (
+        {/* LA GRILLE ORCHESTRÉE */}
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+          className="grid md:grid-cols-2 gap-8"
+        >
+          {expertiseAreas.map((area, index) => (
             <motion.div
-              key={area.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-              className="group relative p-8 bg-white backdrop-blur-xl rounded-3xl border border-gray-200 hover:border-[#d4af37]/50 transition-all duration-500 shadow-sm flex flex-col min-h-[350px]"
+              key={index}
+              variants={itemVariants}
+              style={{
+                WebkitBackfaceVisibility: "hidden",
+                backfaceVisibility: "hidden",
+                WebkitTransform: "translate3d(0,0,0)"
+              }}
+              // CRITIQUE : Remplacement de transition-all par des transitions ciblées
+              className="group relative p-8 bg-white backdrop-blur-xl rounded-3xl border border-gray-200 hover:border-[#d4af37]/50 transition-colors transition-shadow duration-300 shadow-sm flex flex-col min-h-[350px]"
             >
               <div className="relative mb-6 flex-shrink-0">
                 <div className="w-20 h-20 bg-gradient-to-br from-[#d4af37]/20 to-transparent rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 flex-shrink-0">
@@ -101,15 +135,16 @@ export function Expertise() {
                   </li>
                 ))}
               </ul>
-              <div className="absolute inset-0 bg-gradient-to-br from-[#d4af37]/0 to-[#d4af37]/0 group-hover:from-[#d4af37]/5 group-hover:to-transparent rounded-3xl transition-all duration-500 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[#d4af37]/0 to-[#d4af37]/0 group-hover:from-[#d4af37]/5 group-hover:to-transparent rounded-3xl transition-colors duration-500 pointer-events-none" />
             </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          style={{ WebkitTransform: "translate3d(0,0,0)" }}
           className="mt-16 text-center"
         >
           <div className="inline-block max-w-4xl p-8 bg-white backdrop-blur-xl rounded-3xl border border-gray-200 shadow-xl">
