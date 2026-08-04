@@ -138,7 +138,7 @@ export default function Contact() {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.15 } // Cascade légèrement plus rapide pour 4 éléments
+      transition: { staggerChildren: 0.15 } 
     }
   };
 
@@ -669,7 +669,7 @@ export default function Contact() {
                     backfaceVisibility: "hidden",
                     WebkitTransform: "translate3d(0,0,0)"
                   }}
-                  className="group bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden hover:shadow-2xl hover:border-[#d4af37] transition-all duration-300 transform-gpu isolate"
+                  className="group bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden hover:shadow-2xl hover:border-[#d4af37] transition-colors transition-shadow duration-300 transform-gpu isolate"
                 >
                   <div className="relative h-80 overflow-hidden">
                     <ImageWithFallback
