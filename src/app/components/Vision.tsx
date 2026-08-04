@@ -24,6 +24,24 @@ const visionPoints = [
   }
 ];
 
+// Orchestration
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { duration: 0.5, ease: "easeOut" } 
+  }
+};
+
 export function Vision() {
   return (
     <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 bg-gradient-to-br from-[#0a0f1e] via-[#1e3a5f] to-[#0a0f1e] relative overflow-hidden">
@@ -34,10 +52,10 @@ export function Vision() {
       <div className="container mx-auto relative z-10">
         <div className="text-center mb-12 sm:mb-16">
           <motion.div
-            initial={{ opacity: 0, y: 20, z: 0 }}
-            whileInView={{ opacity: 1, y: 0, z: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
-            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden", WebkitTransform: "translate3d(0,0,0)", WebkitTransformStyle: "preserve-3d" }}
+            style={{ WebkitTransform: "translate3d(0,0,0)" }}
             className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#d4af37]/10 backdrop-blur-md border border-[#d4af37]/30 mb-4"
           >
             <div className="w-2 h-2 bg-[#d4af37] rounded-full animate-pulse" />
@@ -45,11 +63,11 @@ export function Vision() {
           </motion.div>
 
           <motion.h2
-            initial={{ opacity: 0, y: 20, z: 0 }}
-            whileInView={{ opacity: 1, y: 0, z: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ delay: 0.1 }}
-            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden", WebkitTransform: "translate3d(0,0,0)", WebkitTransformStyle: "preserve-3d" }}
+            style={{ WebkitTransform: "translate3d(0,0,0)" }}
             className="text-3xl sm:text-4xl md:text-5xl mb-3 sm:mb-4 font-bold"
           >
             <span className="text-white">Bâtir des </span>
@@ -57,33 +75,36 @@ export function Vision() {
           </motion.h2>
 
           <motion.p
-            initial={{ opacity: 0, y: 20, z: 0 }}
-            whileInView={{ opacity: 1, y: 0, z: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ delay: 0.2 }}
-            style={{ WebkitBackfaceVisibility: "hidden", backfaceVisibility: "hidden", WebkitTransform: "translate3d(0,0,0)", WebkitTransformStyle: "preserve-3d" }}
+            style={{ WebkitTransform: "translate3d(0,0,0)" }}
             className="text-gray-300 max-w-3xl mx-auto text-sm sm:text-base md:text-lg leading-relaxed"
           >
             La philosophie de Roger Roc : pallier le manque de logements en créant des villes nouvelles autonomes, alliant modernité, culture africaine et respect de l'environnement.
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+        {/* LA GRILLE ORCHESTRÉE */}
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+          className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8"
+        >
           {visionPoints.map((point, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 20, z: 0 }}
-              whileInView={{ opacity: 1, y: 0, z: 0 }}
-              viewport={{ once: true, margin: "0px 0px -80px 0px", amount: 0.1 }}
-              transition={{ delay: index * 0.08, duration: 0.5 }}
+              variants={itemVariants}
               style={{
                 WebkitBackfaceVisibility: "hidden",
                 backfaceVisibility: "hidden",
-                WebkitTransform: "translate3d(0,0,0)",
-                WebkitTransformStyle: "preserve-3d",
-                WebkitMaskImage: "-webkit-radial-gradient(white, black)"
+                WebkitTransform: "translate3d(0,0,0)"
               }}
-              className="group h-full flex flex-col relative p-6 sm:p-8 bg-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-[#d4af37]/20 hover:border-[#d4af37]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#d4af37]/20 isolate transform-gpu"
+              // CRITIQUE : Remplacement de transition-all par transition-colors transition-shadow
+              className="group h-full flex flex-col relative p-6 sm:p-8 bg-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-[#d4af37]/20 hover:border-[#d4af37]/50 transition-colors transition-shadow duration-300 hover:shadow-2xl hover:shadow-[#d4af37]/20 isolate transform-gpu"
             >
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-[#d4af37]/20 to-transparent rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-500 flex-shrink-0">
                 <point.icon className="w-6 h-6 sm:w-8 sm:h-8 text-[#d4af37]" />
@@ -93,12 +114,13 @@ export function Vision() {
               <div className="absolute bottom-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-[#d4af37]/10 to-transparent rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20, z: 0 }}
-          whileInView={{ opacity: 1, y: 0, z: 0 }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "0px 0px -80px 0px" }}
+          style={{ WebkitTransform: "translate3d(0,0,0)" }}
           className="text-center mt-12 sm:mt-16 transform-gpu"
         >
           <div className="inline-block p-5 sm:p-8 w-full sm:w-auto bg-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-[#d4af37]/20 shadow-xl">
