@@ -83,34 +83,8 @@ export default function Services() {
     }
   ];
 
-  // ==========================================
-  // VARIANTS D'ORCHESTRATION FRAMER MOTION
-  // ==========================================
-  const gridContainerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2, // C'est ICI que se crée la vraie cascade (200ms entre chaque carte)
-      }
-    }
-  };
-
-  const cardItemVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { 
-        duration: 0.6, 
-        ease: "easeOut" 
-      }
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50">
-      
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#0a0f1e] via-[#1e3a5f] to-[#0a0f1e] opacity-95">
@@ -126,7 +100,6 @@ export default function Services() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            style={{ WebkitTransform: "translate3d(0,0,0)" }}
             className="max-w-4xl mx-auto text-center"
           >
             <h1 className="text-5xl md:text-6xl lg:text-7xl mb-6 text-white">
@@ -140,7 +113,7 @@ export default function Services() {
         </div>
       </section>
 
-      {/* Services Grid orchestrée par le parent */}
+      {/* Services Grid */}
       <section className="py-20">
         <div className="container mx-auto px-6">
           <motion.div
@@ -158,38 +131,32 @@ export default function Services() {
             </p>
           </motion.div>
 
-          {/* LE CONTENEUR PARENT QUI GÈRE LE SCROLL */}
-          <motion.div 
-            variants={gridContainerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto"
-          >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
             {services.map((service, index) => {
               const Icon = service.icon;
               return (
-                /* L'ENFANT QUI OBÉIT AU PARENT */
                 <motion.div
                   key={index}
-                  variants={cardItemVariants}
-                  style={{
-                    WebkitBackfaceVisibility: "hidden",
-                    backfaceVisibility: "hidden",
-                    WebkitTransform: "translate3d(0,0,0)",
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "0px 0px -50px 0px" }}
+                  transition={{
+                    duration: 0.6,
+                    delay: index * 0.15,
+                    ease: [0.21, 0.47, 0.32, 0.98]
                   }}
-                  className="group bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden hover:shadow-2xl hover:border-[#d4af37] transition-all duration-300 flex flex-col min-h-[520px] transform-gpu isolate"
+                  className="group bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden hover:shadow-2xl hover:border-[#d4af37] transition-shadow duration-300 flex flex-col min-h-[520px]"
                 >
                   <div className="relative h-64 overflow-hidden bg-gray-200 flex-shrink-0">
                     <ImageWithFallback
                       src={service.image}
                       alt={service.title}
                       loading="lazy"
-                      // @ts-ignore
+                      // @ts-ignore : Attributs web standards
                       decoding="async"
                       fetchPriority="low"
                       sizes="(max-width: 768px) 100vw, 50vw"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e]/80 to-transparent" />
                     <div className="absolute top-6 left-6 w-16 h-16 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-xl flex items-center justify-center shadow-xl flex-shrink-0">
@@ -208,7 +175,7 @@ export default function Services() {
                 </motion.div>
               );
             })}
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -230,21 +197,14 @@ export default function Services() {
             </p>
           </motion.div>
 
-          <motion.div 
-            variants={gridContainerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-            className="max-w-5xl mx-auto"
-          >
+          <div className="max-w-5xl mx-auto">
             {steps.map((step, index) => (
               <motion.div
                 key={index}
-                variants={{
-                  hidden: { opacity: 0, x: -30 },
-                  visible: { opacity: 1, x: 0, transition: { duration: 0.5 } }
-                }}
-                style={{ WebkitTransform: "translate3d(0,0,0)" }}
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: "0px 0px -50px 0px" }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="flex items-start gap-6 mb-12 last:mb-0"
               >
                 <div className="flex-shrink-0 w-20 h-20 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-full flex items-center justify-center">
@@ -263,7 +223,7 @@ export default function Services() {
                 )}
               </motion.div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -285,19 +245,15 @@ export default function Services() {
             </p>
           </motion.div>
 
-          <motion.div 
-            variants={gridContainerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto"
-          >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {testimonials.map((testimonial, index) => (
               <motion.div
                 key={index}
-                variants={cardItemVariants}
-                style={{ WebkitTransform: "translate3d(0,0,0)" }}
-                className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 flex flex-col min-h-[300px] transform-gpu isolate"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "0px 0px -50px 0px" }}
+                transition={{ duration: 0.5, delay: index * 0.12 }}
+                className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 flex flex-col min-h-[300px] hover:shadow-xl transition-shadow duration-300"
               >
                 <div className="flex gap-1 mb-4 flex-shrink-0">
                   {[...Array(testimonial.rating)].map((_, i) => (
@@ -317,7 +273,7 @@ export default function Services() {
                 </div>
               </motion.div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -329,7 +285,6 @@ export default function Services() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
-            style={{ WebkitTransform: "translate3d(0,0,0)" }}
             className="max-w-4xl mx-auto text-center"
           >
             <h2 className="text-4xl md:text-5xl text-white mb-6">
@@ -341,14 +296,14 @@ export default function Services() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/contact"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all font-medium"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-shadow duration-300 font-medium"
               >
                 <Users className="w-5 h-5" />
                 Demander une Consultation
               </Link>
               <a
                 href="tel:+242064588618"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-xl hover:bg-white/20 transition-all font-medium"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-xl hover:bg-white/20 transition-colors duration-300 font-medium"
               >
                 <Phone className="w-5 h-5" />
                 +242 06 458 8618
@@ -357,7 +312,6 @@ export default function Services() {
           </motion.div>
         </div>
       </section>
-      
     </div>
   );
 }
