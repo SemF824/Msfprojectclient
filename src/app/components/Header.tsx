@@ -15,51 +15,54 @@ import {
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
+import { useNotifications } from "../../hooks/useNotifications"; // <--- NOUVEL IMPORT
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [unreadCount, setUnreadCount] = useState(0);
+  // const [unreadCount, setUnreadCount] = useState(0); // <--- ANCIEN ÉTAT SUPPRIMÉ
 
   const { user, isAdmin, signOut } = useSupabaseAuth();
+  const { unreadCount } = useNotifications(); // <--- UTILISATION DU NOUVEAU HOOK
   const navigate = useNavigate();
   const isLoggedIn = !!user;
 
-  // ── Notifications non lues en temps réel ──────────────────────────────────
-  useEffect(() => {
-    if (!user || !supabase) return;
+  // ── L'ANCIEN BLOC useEffect POUR LES NOTIFICATIONS EST SUPPRIMÉ CAR GÉRÉ PAR useNotifications ──
+  // useEffect(() => {
+  //   if (!user || !supabase) return;
 
-    const fetchUnreadCount = async () => {
-      const { count } = await supabase
-        .from("notifications")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("is_read", false);
-      setUnreadCount(count || 0);
-    };
+  //   const fetchUnreadCount = async () => {
+  //     const { count } = await supabase
+  //       .from("notifications")
+  //       .select("*", { count: "exact", head: true })
+  //       .eq("user_id", user.id)
+  //       .eq("is_read", false);
+  //     setUnreadCount(count || 0);
+  //   };
 
-    fetchUnreadCount();
+  //   fetchUnreadCount();
 
-    const channel = supabase
-      .channel("header-notifications")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${user.id}`,
-        },
-        fetchUnreadCount,
-      )
-      .subscribe();
+  //   const channel = supabase
+  //     .channel("header-notifications")
+  //     .on(
+  //       "postgres_changes",
+  //       {
+  //         event: "*",
+  //         schema: "public",
+  //         table: "notifications",
+  //         filter: `user_id=eq.${user.id}`,
+  //       },
+  //       fetchUnreadCount,
+  //     )
+  //     .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
+  //   return () => {
+  //     supabase.removeChannel(channel);
+  //   };
+  // }, [user]);
+  // ────────────────────────────────────────────────────────────────────────────────────────────────
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
