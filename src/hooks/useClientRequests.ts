@@ -33,7 +33,7 @@ export function useClientRequests(userId: string | null): UseClientRequestsResul
           .select("*")
           // Modification stratégique : utilisation de l'id utilisateur plutôt que l'email si présent, 
           // ou adaptation selon vos règles de sécurité RLS Supabase
-          .eq("user_id", userId) 
+          .eq("client_id", userId) 
           .order("created_at", { ascending: false });
 
         if (supabaseError) throw new Error(supabaseError.message);
