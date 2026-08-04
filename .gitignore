@@ -1,20 +1,34 @@
-# Dependencies
+# --- DÉPENDANCES ---
 node_modules
 .pnpm-store
 pnpm-lock.yaml
 package-lock.json
 yarn.lock
 
-# Build & Runtime
-dist
-build
+# --- BUILD & DIST ---
+dist/
+build/
+out/
+.turbo/
+.next/
+.nuxt/
+
+# --- SECRETS & ENV (IMPORTANT) ---
 .env
 .env.local
 .env.*.local
 .env.production.local
+.env.test
+.env.test.local
+supabase/.env.local
+supabase/.env.*.local
+!/.env.example # <--- AJOUTEZ CETTE LIGNE SI ABSENTE
 
-# IDE & OS
+# --- IDE & OS ---
 .DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
 .idea/
 .vscode/
 *.swp
@@ -25,34 +39,38 @@ build
 *.sublime-project
 *.sublime-workspace
 
-# Logs
+# --- LOGS ---
+*.log
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Firebase & Deployment (Tu utilises Firebase maintenant)
+# --- FIREBASE & DÉPLOIEMENT ---
 .firebase/
 .firebaserc
 .firebaserc.json
-netlify.toml
-vercel.json
 .vercel/
+netlify.toml # <--- Ajoutez si vous déployez avec Netlify et que vous voulez l'ignorer
 
-# Supabase
-supabase/.env.local
-supabase/.env.*.local
-
-# Cache & Temp
+# --- CACHE & TEMP ---
 .cache/
 *.tmp
-.next/
-.nuxt/
-dist/
-out/
-.turbo/
 
-# Documentation inutile en prod (À ignorer complètement)
+# --- ARCHIVES ---
+*.zip
+*.rar
+*.7z
+*.iso
+*.tar.gz
+
+# --- DIVERS ---
+.nvmrc
+.node-version
+*.pem
+*.key
+
+# --- FICHIERS IGNORÉS POUR ANALYSE / SÉCURITÉ (vérifiez qu'ils ne contiennent pas de secrets) ---
 ACCES_ADMIN.md
 GIT_COMMANDS.md
 CORRECTIONS_APPLIQUEES.md
@@ -61,29 +79,5 @@ SEPARATION_COMPLETE.md
 TEST_ROUTING.md
 VERIFICATIONS.md
 URLS_REFERENCE.md
-
-# OS
-Thumbs.db
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# Archive files
-*.zip
-*.rar
-*.7z
-*.iso
-*.tar.gz
-
-# Node version
-.nvmrc
-.node-version
-
-# Misc
-*.pem
-*.key
-.env.test
-.env.test.local
-
-# Ignore the following files for code analysis
 analyze-repo.ts
+chat-repo.ts
