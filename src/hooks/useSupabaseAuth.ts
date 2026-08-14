@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
-import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
+import { useState, useEffect } from "react";
+import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as
+  | string
+  | undefined;
 
 const isConfigured = Boolean(supabaseUrl && supabaseKey);
 
@@ -14,17 +16,20 @@ const supabase: SupabaseClient | null = isConfigured
 if (!isConfigured) {
   console.warn(
     "[useSupabaseAuth] VITE_SUPABASE_URL ou VITE_SUPABASE_ANON_KEY manquant. " +
-    "Le hook fonctionne en mode dégradé (pas d'authentification)."
+      "Le hook fonctionne en mode dégradé (pas d'authentification).",
   );
 }
 
 interface UseSupabaseAuthReturn {
   user: User | null;
   isAdmin: boolean;
-  userRole: 'admin' | 'superadmin' | 'client' | null;
+  userRole: "admin" | "superadmin" | "client" | null;
   isLoading: boolean;
   signOut: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<{ data: any; error: Error | null }>;
+  signIn: (
+    email: string,
+    password: string,
+  ) => Promise<{ data: any; error: Error | null }>;
   getSession: () => Promise<any>;
   // IMPORTANT : isAdmin est pour l'UI uniquement (basé sur user_metadata).
   // La vraie vérification de sécurité se fait dans ProtectedAdminRoute via la table user_roles.
@@ -43,10 +48,12 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
 
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         setUser(session?.user ?? null);
       } catch (error) {
-        console.error('[useSupabaseAuth] Erreur récupération session :', error);
+        console.error("[useSupabaseAuth] Erreur récupération session :", error);
       } finally {
         setIsLoading(false);
       }
@@ -54,7 +61,9 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
 
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
@@ -63,8 +72,9 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
     };
   }, []);
 
-  const userRole = (user?.user_metadata?.role as 'admin' | 'superadmin' | 'client') || null;
-  const isAdmin = userRole === 'admin' || userRole === 'superadmin';
+  const userRole =
+    (user?.user_metadata?.role as "admin" | "superadmin" | "client") || null;
+  const isAdmin = userRole === "admin" || userRole === "superadmin";
 
   const signOut = async () => {
     if (!supabase) return;
@@ -72,16 +82,19 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
       await supabase.auth.signOut();
       setUser(null);
     } catch (error) {
-      console.error('[useSupabaseAuth] Erreur déconnexion :', error);
+      console.error("[useSupabaseAuth] Erreur déconnexion :", error);
     }
   };
 
   const signIn = async (email: string, password: string) => {
     if (!supabase) {
-      return { data: null, error: new Error('Supabase non configuré.') };
+      return { data: null, error: new Error("Supabase non configuré.") };
     }
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       if (error) return { data: null, error };
       setUser(data.user);
       return { data, error: null };
@@ -90,9 +103,25 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
     }
   };
 
+  const resetPassword = async (email: string) => {
+    if (!supabase) {
+      return { error: new Error("Supabase non configuré.") };
+    }
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/update-password`,
+      });
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
   const getSession = async () => {
     if (!supabase) return null;
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     return session;
   };
 
@@ -102,15 +131,25 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
   const verifyAdminRole = async (): Promise<boolean> => {
     if (!supabase || !user) return false;
     const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
       .single();
     if (error || !data) return false;
-    return ['admin', 'superadmin'].includes(data.role);
+    return ["admin", "superadmin"].includes(data.role);
   };
 
-  return { user, isAdmin, userRole, isLoading, signOut, signIn, getSession, verifyAdminRole };
+  return {
+    user,
+    isAdmin,
+    userRole,
+    isLoading,
+    signOut,
+    signIn,
+    resetPassword,
+    getSession,
+    verifyAdminRole,
+  };
 }
 
 export { supabase };

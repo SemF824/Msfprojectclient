@@ -8,6 +8,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import UpdatePassword from "./pages/UpdatePassword";
 
 // Espace public (lazy loading pour alléger le JS initial)
 const Properties = lazy(() => import("./pages/Properties"));
@@ -63,6 +64,7 @@ export default function ClientAppRoutes() {
           <Route path="projects/:id" element={<ProjectDetail />} />
           <Route path="login" element={<Login />} />
           <Route path="signup" element={<Signup />} />
+          <Route path="update-password" element={<UpdatePassword />} />
         </Route>
 
         {/* ESPACE CLIENT PROTÉGÉ (Avec ClientLayout dédié) */}
