@@ -286,11 +286,25 @@ export default function Transactions() {
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden p-4 sm:p-6">
         <div className="space-y-3">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-2 text-gray-400">
-              <Loader2 className="w-8 h-8 animate-spin text-[#d4af37]" />
-              <p className="text-xs font-medium">
-                Interrogation des registres financiers...
-              </p>
+            <div className="space-y-4 w-full">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="bg-white border border-gray-100 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-pulse"
+                >
+                  <div className="flex items-start gap-3 w-full sm:w-auto">
+                    <div className="w-10 h-10 rounded-xl bg-gray-100 flex-shrink-0 border border-gray-50" />
+                    <div className="flex-1 space-y-2 py-1">
+                      <div className="h-4 bg-gray-200 rounded w-40 sm:w-48" />
+                      <div className="h-3 bg-gray-100 rounded w-24 sm:w-32" />
+                    </div>
+                  </div>
+                  <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center w-full sm:w-auto gap-2">
+                    <div className="h-5 bg-gray-200 rounded w-28 sm:w-32" />
+                    <div className="h-4 bg-gray-100 rounded-full w-20" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : filteredTransactions.length === 0 ? (
             <EmptyState
