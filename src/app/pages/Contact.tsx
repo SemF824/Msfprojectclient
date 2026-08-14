@@ -1,34 +1,48 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import {
-  MapPin, Phone, Mail, Clock, Send,
-  Building2, MessageSquare, User, DollarSign,
-  Home, CheckCircle2, Users, AlertCircle
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Send,
+  Building2,
+  MessageSquare,
+  User,
+  DollarSign,
+  Home,
+  CheckCircle2,
+  Users,
+  AlertCircle,
 } from "lucide-react";
 import { z } from "zod";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { supabase } from "../../hooks/useSupabaseAuth";
 
-const adminEmail = (import.meta as any).env.VITE_ADMIN_EMAIL || "promotions@msfcongo.com";
+const adminEmail =
+  (import.meta as any).env.VITE_ADMIN_EMAIL || "promotions@msfcongo.com";
 
 const contactFormSchema = z.object({
-  name: z.string()
+  name: z
+    .string()
     .min(2, "Le nom doit contenir au moins 2 caractères")
     .max(100, "Le nom ne peut pas dépasser 100 caractères"),
-  email: z.string()
+  email: z
+    .string()
     .email("Format d'email invalide")
     .max(255, "L'email ne peut pas dépasser 255 caractères"),
-  phone: z.string()
+  phone: z
+    .string()
     .min(8, "Numéro de téléphone invalide")
     .max(20, "Numéro de téléphone trop long"),
-  subject: z.string()
-    .min(1, "Veuillez sélectionner un sujet"),
+  subject: z.string().min(1, "Veuillez sélectionner un sujet"),
   propertyType: z.string().optional(),
   budget: z.string().optional(),
-  message: z.string()
+  message: z
+    .string()
     .min(10, "Le message doit contenir au moins 10 caractères")
-    .max(1000, "Le message ne peut pas dépasser 1000 caractères")
+    .max(1000, "Le message ne peut pas dépasser 1000 caractères"),
 });
 
 export default function Contact() {
@@ -40,7 +54,7 @@ export default function Contact() {
     subject: "",
     propertyType: "",
     budget: "",
-    message: ""
+    message: "",
   });
 
   const [submitted, setSubmitted] = useState(false);
@@ -50,7 +64,7 @@ export default function Contact() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError("");
-    
+
     if (!supabase) {
       setSubmitError("Erreur système : connexion au serveur impossible.");
       return;
@@ -60,15 +74,19 @@ export default function Contact() {
 
     try {
       if (!executeRecaptcha) {
-        setSubmitError("Le système de sécurité n'est pas encore initialisé. Veuillez patienter.");
+        setSubmitError(
+          "Le système de sécurité n'est pas encore initialisé. Veuillez patienter.",
+        );
         setIsSubmitting(false);
         return;
       }
 
-      const token = await executeRecaptcha('contact_form_submit');
+      const token = await executeRecaptcha("contact_form_submit");
 
       if (!token) {
-        setSubmitError("Échec de la vérification de sécurité. Veuillez rafraîchir la page.");
+        setSubmitError(
+          "Échec de la vérification de sécurité. Veuillez rafraîchir la page.",
+        );
         setIsSubmitting(false);
         return;
       }
@@ -82,20 +100,25 @@ export default function Contact() {
         return;
       }
 
-      const lastSubmit = localStorage.getItem('last_contact_submit');
+      const lastSubmit = localStorage.getItem("last_contact_submit");
       const now = Date.now();
       if (lastSubmit && now - parseInt(lastSubmit) < 60000) {
-        setSubmitError("Veuillez attendre 1 minute avant d'envoyer un nouveau message.");
+        setSubmitError(
+          "Veuillez attendre 1 minute avant d'envoyer un nouveau message.",
+        );
         setIsSubmitting(false);
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke('submit-contact', {
-        body: {
-          token: token,
-          formData: formData
-        }
-      });
+      const { data, error } = await supabase.functions.invoke(
+        "submit-contact",
+        {
+          body: {
+            token: token,
+            formData: formData,
+          },
+        },
+      );
 
       if (error) {
         throw new Error(error.message || "Erreur de connexion au serveur.");
@@ -105,7 +128,7 @@ export default function Contact() {
         throw new Error(data.error);
       }
 
-      localStorage.setItem('last_contact_submit', now.toString());
+      localStorage.setItem("last_contact_submit", now.toString());
       setSubmitted(true);
       setFormData({
         name: "",
@@ -114,22 +137,29 @@ export default function Contact() {
         subject: "",
         propertyType: "",
         budget: "",
-        message: ""
+        message: "",
       });
 
       setTimeout(() => setSubmitted(false), 5000);
     } catch (error: any) {
-      console.error('Error submitting contact form:', error);
-      setSubmitError(error.message || "Erreur lors de l'envoi du formulaire. Veuillez réessayer ou nous contacter directement.");
+      console.error("Error submitting contact form:", error);
+      setSubmitError(
+        error.message ||
+          "Erreur lors de l'envoi du formulaire. Veuillez réessayer ou nous contacter directement.",
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -138,44 +168,45 @@ export default function Contact() {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.15 } 
-    }
+      transition: { staggerChildren: 0.15 },
+    },
   };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 30 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { duration: 0.5, ease: "easeOut" } 
-    }
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
   };
 
   const contactInfo = [
     {
       icon: MapPin,
       title: "Adresse",
-      content: "Immeuble Maisons Sans Frontières\n1 place Antonetti, 7ème étage\nCentre-ville, Pointe-Noire, Congo\nB.P. : 1 320",
-      link: null
+      content:
+        "Immeuble Maisons Sans Frontières\n1 place Antonetti, 7ème étage\nCentre-ville, Pointe-Noire, Congo\nB.P. : 1 320",
+      link: null,
     },
     {
       icon: Phone,
       title: "Téléphone",
       content: "+242 06 458 86 18\n+242 05 587 73 24",
-      link: "tel:+242064588618"
+      link: "tel:+242064588618",
     },
     {
       icon: Mail,
       title: "Email",
       content: "promotions@msfcongo.com",
-      link: "mailto:promotions@msfcongo.com"
+      link: "mailto:promotions@msfcongo.com",
     },
     {
       icon: Clock,
       title: "Horaires d'ouverture",
       content: "Lundi - Samedi\n9h30 - 18h30",
-      link: null
-    }
+      link: null,
+    },
   ];
 
   const subjectOptions = [
@@ -185,7 +216,7 @@ export default function Contact() {
     "Construction sur mesure",
     "Gestion immobilière",
     "Évaluation de propriété",
-    "Autre demande"
+    "Autre demande",
   ];
 
   const propertyTypes = [
@@ -194,7 +225,7 @@ export default function Contact() {
     "Terrain constructible",
     "Immeuble commercial",
     "Résidence côtière",
-    "Autre"
+    "Autre",
   ];
 
   const budgetRanges = [
@@ -202,35 +233,40 @@ export default function Contact() {
     "100 000 000 - 200 000 000 FCFA",
     "200 000 000 - 500 000 000 FCFA",
     "500 000 000 - 1 000 000 000 FCFA",
-    "Plus de 1 000 000 000 FCFA"
+    "Plus de 1 000 000 000 FCFA",
   ];
 
   const team = [
     {
       name: "Roger ROC",
       role: "Fondateur – Président Directeur Général",
-      image: "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80"
+      image:
+        "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80",
     },
     {
       name: "Chems Roc",
       role: "Responsable Départemental Brazzaville",
-      image: "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80"
+      image:
+        "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80",
     },
     {
       name: "Mireille LOLA",
       role: "Responsable Administratif et Commercial",
-      image: "https://images.unsplash.com/photo-1760320483844-3d808de62def?auto=format&fit=crop&w=1080&q=80"
+      image:
+        "https://images.unsplash.com/photo-1760320483844-3d808de62def?auto=format&fit=crop&w=1080&q=80",
     },
     {
       name: "Elie LIBALI",
       role: "Directeur des Ressources Humaines",
-      image: "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80"
+      image:
+        "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80",
     },
     {
       name: "Naji KHALIL",
       role: "Directeur des Projets",
-      image: "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80"
-    }
+      image:
+        "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80",
+    },
   ];
 
   const GoogleMap = () => {
@@ -244,7 +280,9 @@ export default function Contact() {
             <p className="text-[#0a0f1e] mb-2 font-medium">Carte Interactive</p>
             <p className="text-sm text-gray-600">6R2W+J28, Pointe-Noire</p>
             <p className="text-sm text-gray-600">Congo-Brazzaville</p>
-            <p className="text-xs text-gray-400 mt-2">Configurez VITE_GOOGLE_MAPS_API_KEY pour activer</p>
+            <p className="text-xs text-gray-400 mt-2">
+              Configurez VITE_GOOGLE_MAPS_API_KEY pour activer
+            </p>
           </div>
         </div>
       );
@@ -289,24 +327,28 @@ export default function Contact() {
             className="max-w-4xl mx-auto text-center"
           >
             <h1 className="text-5xl md:text-6xl lg:text-7xl mb-6 text-white">
-              Contactez-<span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">Nous</span>
+              Contactez-
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">
+                Nous
+              </span>
             </h1>
             <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-              Notre équipe d'experts est à votre écoute pour concrétiser vos projets immobiliers
+              Notre équipe d'experts est à votre écoute pour concrétiser vos
+              projets immobiliers
             </p>
           </motion.div>
         </div>
       </section>
 
       {/* Contact Info Cards avec Orchestration */}
-      <section className="py-20">
-        <div className="container mx-auto px-6">
-          <motion.div 
+      <section className="py-12 sm:py-20">
+        <div className="container mx-auto px-4 sm:px-6">
+          <motion.div
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-16 sm:mb-20"
           >
             {contactInfo.map((info, index) => {
               const Icon = info.icon;
@@ -317,25 +359,25 @@ export default function Contact() {
                   style={{
                     WebkitBackfaceVisibility: "hidden",
                     backfaceVisibility: "hidden",
-                    WebkitTransform: "translate3d(0,0,0)"
+                    WebkitTransform: "translate3d(0,0,0)",
                   }}
-                  className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 text-center isolate"
+                  className="bg-white rounded-2xl border border-gray-200 shadow-sm sm:shadow-lg p-5 sm:p-6 text-center isolate"
                 >
-                  <div className="w-14 h-14 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <Icon className="w-7 h-7 text-[#0a0f1e]" />
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-[#0a0f1e]" />
                   </div>
-                  <h3 className="text-lg text-[#0a0f1e] mb-3">
+                  <h3 className="text-base sm:text-lg font-semibold text-[#0a0f1e] mb-2 sm:mb-3">
                     {info.title}
                   </h3>
                   {info.link ? (
                     <a
                       href={info.link}
-                      className="text-gray-600 hover:text-[#d4af37] transition-colors whitespace-pre-line break-words block"
+                      className="text-gray-600 hover:text-[#d4af37] transition-colors whitespace-pre-line break-words block text-sm sm:text-base"
                     >
                       {info.content}
                     </a>
                   ) : (
-                    <p className="text-gray-600 whitespace-pre-line break-words">
+                    <p className="text-gray-600 whitespace-pre-line break-words text-sm sm:text-base">
                       {info.content}
                     </p>
                   )}
@@ -345,7 +387,7 @@ export default function Contact() {
           </motion.div>
 
           {/* Main Contact Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 max-w-7xl mx-auto">
             {/* Contact Form */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
@@ -353,13 +395,14 @@ export default function Contact() {
               viewport={{ once: true, margin: "0px 0px -80px 0px" }}
               transition={{ duration: 0.6 }}
               style={{ WebkitTransform: "translate3d(0,0,0)" }}
-              className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8"
+              className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 sm:p-8"
             >
               <h2 className="text-3xl text-[#0a0f1e] mb-2">
                 Envoyez-nous un Message
               </h2>
               <p className="text-gray-600 mb-8">
-                Remplissez le formulaire ci-dessous et nous vous répondrons dans les plus brefs délais
+                Remplissez le formulaire ci-dessous et nous vous répondrons dans
+                les plus brefs délais
               </p>
 
               {submitted && (
@@ -369,7 +412,9 @@ export default function Contact() {
                   className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3"
                 >
                   <CheckCircle2 className="w-5 h-5 text-green-600" />
-                  <p className="text-green-700">Message envoyé avec succès ! Nous vous contacterons bientôt.</p>
+                  <p className="text-green-700">
+                    Message envoyé avec succès ! Nous vous contacterons bientôt.
+                  </p>
                 </motion.div>
               )}
 
@@ -455,7 +500,9 @@ export default function Contact() {
                     >
                       <option value="">Sélectionnez un sujet</option>
                       {subjectOptions.map((option, idx) => (
-                        <option key={idx} value={option}>{option}</option>
+                        <option key={idx} value={option}>
+                          {option}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -476,7 +523,9 @@ export default function Contact() {
                       >
                         <option value="">Sélectionnez un type</option>
                         {propertyTypes.map((type, idx) => (
-                          <option key={idx} value={type}>{type}</option>
+                          <option key={idx} value={type}>
+                            {type}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -495,7 +544,9 @@ export default function Contact() {
                       >
                         <option value="">Sélectionnez un budget</option>
                         {budgetRanges.map((range, idx) => (
-                          <option key={idx} value={range}>{range}</option>
+                          <option key={idx} value={range}>
+                            {range}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -520,7 +571,7 @@ export default function Contact() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] font-bold rounded-xl hover:shadow-xl hover:shadow-[#d4af37]/40 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                 >
                   {isSubmitting ? (
                     <>
@@ -536,7 +587,25 @@ export default function Contact() {
                 </button>
                 <div className="text-center mt-2">
                   <span className="text-[10px] text-gray-400">
-                    Protégé par reCAPTCHA. Les <a href="https://policies.google.com/privacy" className="text-blue-500 hover:underline" target="_blank" rel="noreferrer">Règles de confidentialité</a> et les <a href="https://policies.google.com/terms" className="text-blue-500 hover:underline" target="_blank" rel="noreferrer">Conditions d'utilisation</a> de Google s'appliquent.
+                    Protégé par reCAPTCHA. Les{" "}
+                    <a
+                      href="https://policies.google.com/privacy"
+                      className="text-blue-500 hover:underline"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Règles de confidentialité
+                    </a>{" "}
+                    et les{" "}
+                    <a
+                      href="https://policies.google.com/terms"
+                      className="text-blue-500 hover:underline"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Conditions d'utilisation
+                    </a>{" "}
+                    de Google s'appliquent.
                   </span>
                 </div>
               </form>
@@ -565,7 +634,9 @@ export default function Contact() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                     <h3 className="text-2xl mb-2">Visitez Notre Bureau</h3>
-                    <p className="text-gray-200">Découvrez nos propriétés dans un cadre professionnel</p>
+                    <p className="text-gray-200">
+                      Découvrez nos propriétés dans un cadre professionnel
+                    </p>
                   </div>
                 </div>
               </div>
@@ -574,8 +645,9 @@ export default function Contact() {
                 <Building2 className="w-12 h-12 text-[#d4af37] mb-4" />
                 <h3 className="text-2xl mb-4">Rencontrez Nos Experts</h3>
                 <p className="text-gray-300 mb-6">
-                  Notre équipe est disponible pour vous accueillir et vous conseiller sur vos projets immobiliers.
-                  Prenez rendez-vous dès aujourd'hui.
+                  Notre équipe est disponible pour vous accueillir et vous
+                  conseiller sur vos projets immobiliers. Prenez rendez-vous dès
+                  aujourd'hui.
                 </p>
                 <a
                   href="tel:+242064588618"
@@ -603,13 +675,16 @@ export default function Contact() {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#d4af37]/10 rounded-full mb-4">
               <Users className="w-5 h-5 text-[#d4af37]" />
-              <span className="text-sm text-[#d4af37]">L'Équipe Dirigeante</span>
+              <span className="text-sm text-[#d4af37]">
+                L'Équipe Dirigeante
+              </span>
             </div>
             <h2 className="text-4xl md:text-5xl text-[#0a0f1e] mb-4">
               Rencontrez Notre Équipe
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Une équipe expérimentée et dévouée à la réussite de vos projets immobiliers
+              Une équipe expérimentée et dévouée à la réussite de vos projets
+              immobiliers
             </p>
           </motion.div>
 
@@ -633,16 +708,18 @@ export default function Contact() {
                 </div>
                 <div className="p-8 md:p-12">
                   <div className="inline-block px-4 py-2 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] rounded-lg mb-4">
-                    <span className="text-xs text-[#0a0f1e] uppercase tracking-wide">Fondateur</span>
+                    <span className="text-xs text-[#0a0f1e] uppercase tracking-wide">
+                      Fondateur
+                    </span>
                   </div>
                   <h3 className="text-4xl md:text-5xl text-[#0a0f1e] mb-3">
                     {team[0].name}
                   </h3>
-                  <p className="text-[#d4af37] text-xl mb-6">
-                    {team[0].role}
-                  </p>
+                  <p className="text-[#d4af37] text-xl mb-6">{team[0].role}</p>
                   <p className="text-gray-600 leading-relaxed">
-                    Visionnaire et leader de MSF Congo depuis 2001, Roger ROC a bâti une entreprise de référence dans la construction durable et l'immobilier de luxe au Congo.
+                    Visionnaire et leader de MSF Congo depuis 2001, Roger ROC a
+                    bâti une entreprise de référence dans la construction
+                    durable et l'immobilier de luxe au Congo.
                   </p>
                 </div>
               </div>
@@ -653,7 +730,7 @@ export default function Contact() {
             <h3 className="text-2xl md:text-3xl text-[#0a0f1e] text-center mb-12">
               Nos Collaborateurs
             </h3>
-            <motion.div 
+            <motion.div
               variants={containerVariants}
               initial="hidden"
               whileInView="visible"
@@ -667,7 +744,7 @@ export default function Contact() {
                   style={{
                     WebkitBackfaceVisibility: "hidden",
                     backfaceVisibility: "hidden",
-                    WebkitTransform: "translate3d(0,0,0)"
+                    WebkitTransform: "translate3d(0,0,0)",
                   }}
                   className="group bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden hover:shadow-2xl hover:border-[#d4af37] transition-colors transition-shadow duration-300 transform-gpu isolate"
                 >
@@ -686,9 +763,7 @@ export default function Contact() {
                     <h3 className="text-2xl text-[#0a0f1e] mb-2">
                       {member.name}
                     </h3>
-                    <p className="text-[#d4af37] text-sm mb-4">
-                      {member.role}
-                    </p>
+                    <p className="text-[#d4af37] text-sm mb-4">{member.role}</p>
                   </div>
                 </motion.div>
               ))}

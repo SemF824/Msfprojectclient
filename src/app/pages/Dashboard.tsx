@@ -151,17 +151,17 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between mb-8">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mb-1 font-bold">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl text-[#0a0f1e] mb-1 sm:mb-2 font-bold break-words">
             Bonjour,{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">
               {displayName.split(" ")[0]}
             </span>
           </h1>
-          <p className="text-gray-500 text-sm">
-            Voici un aperçu de votre activité
+          <p className="text-gray-500 text-xs sm:text-sm">
+            Voici un aperçu de votre activité immobilière
           </p>
         </div>
       </div>
@@ -169,37 +169,36 @@ export default function Dashboard() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-br from-[#0a0f1e] to-[#1a2540] rounded-2xl shadow-lg p-8 relative overflow-hidden"
+        className="bg-gradient-to-br from-[#0a0f1e] to-[#1a2540] rounded-2xl shadow-lg p-6 sm:p-8 relative overflow-hidden"
       >
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#d4af37]/10 rounded-full blur-3xl -mr-10 -mt-10" />
+        <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-[#d4af37]/10 rounded-full blur-3xl -mr-10 -mt-10" />
         <div className="relative z-10">
-          <h2 className="text-2xl text-white font-semibold mb-2">
+          <h2 className="text-xl sm:text-2xl text-white font-semibold mb-2 sm:mb-3 leading-tight">
             Entamer une démarche immobilière
           </h2>
-          <p className="text-gray-300 mb-6 max-w-xl">
+          <p className="text-gray-300 mb-6 max-w-xl text-sm sm:text-base leading-relaxed">
             Prêt à trouver la maison de vos rêves ou à investir ? Explorez nos
-            biens ou contactez un conseiller MSF pour un accompagnement
-            sur-mesure.
+            biens ou estimez votre capacité d'emprunt.
           </p>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
             <Link
               to="/properties"
-              className="px-6 py-3 bg-[#d4af37] text-[#0a0f1e] font-semibold rounded-xl hover:bg-[#f4e3b2] transition-colors flex items-center gap-2"
+              className="w-full sm:w-auto px-6 py-3.5 bg-[#d4af37] text-[#0a0f1e] font-semibold rounded-xl hover:bg-[#f4e3b2] transition-colors flex items-center justify-center gap-2 text-sm sm:text-base shadow-sm"
             >
-              <Search className="w-5 h-5" /> Explorer les biens
+              <Search className="w-4 h-4 sm:w-5 sm:h-5" /> Explorer les biens
             </Link>
             <Link
               to="/client/loan"
-              className="px-6 py-3 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition-colors border border-white/20 flex items-center gap-2"
+              className="w-full sm:w-auto px-6 py-3.5 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition-colors border border-white/20 flex items-center justify-center gap-2 text-sm sm:text-base"
             >
-              <Calculator className="w-5 h-5" /> Estimer mon prêt
+              <Calculator className="w-4 h-4 sm:w-5 sm:h-5" /> Estimer mon prêt
             </Link>
           </div>
         </div>
       </motion.div>
 
       <motion.div
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -208,32 +207,36 @@ export default function Dashboard() {
           <motion.div
             key={i}
             variants={itemVariants}
-            className="bg-white rounded-2xl border border-gray-200 shadow-lg p-5"
+            className="bg-white rounded-2xl border border-gray-200 shadow-sm sm:shadow-lg p-4 sm:p-5 flex flex-col justify-center"
           >
             <div
-              className={`w-10 h-10 bg-gradient-to-br ${s.color} rounded-xl flex items-center justify-center mb-3`}
+              className={`w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br ${s.color} rounded-xl flex items-center justify-center mb-2 sm:mb-3`}
             >
-              <s.icon className="w-5 h-5 text-white" />
+              <s.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <p className="text-2xl text-[#0a0f1e] font-bold">{s.value}</p>
-            <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+            <p className="text-xl sm:text-2xl text-[#0a0f1e] font-bold tracking-tight">
+              {s.value}
+            </p>
+            <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 font-medium">
+              {s.label}
+            </p>
           </motion.div>
         ))}
       </motion.div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6"
+          className="bg-white rounded-2xl border border-gray-200 shadow-sm sm:shadow-lg p-5 sm:p-6"
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg text-[#0a0f1e] font-semibold">
+            <h2 className="text-base sm:text-lg text-[#0a0f1e] font-semibold">
               Prochains Rendez-vous
             </h2>
             <Link
               to="/client/appointments"
-              className="text-sm text-[#d4af37] hover:underline"
+              className="text-xs sm:text-sm text-[#d4af37] hover:underline font-medium"
             >
               Voir tout
             </Link>
@@ -249,16 +252,16 @@ export default function Dashboard() {
               {appointments.slice(0, 3).map((apt) => (
                 <div
                   key={apt.id}
-                  className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100"
+                  className="flex items-center gap-3 sm:gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100 transition-colors hover:bg-gray-100"
                 >
-                  <div className="w-10 h-10 bg-[#d4af37]/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Calendar className="w-5 h-5 text-[#d4af37]" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#d4af37]/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-[#d4af37]" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[#0a0f1e] font-medium text-sm truncate">
+                    <p className="text-[#0a0f1e] font-medium text-xs sm:text-sm truncate">
                       {apt.property_name || "Visite immobilière"}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">
                       {apt.appointment_date
                         ? new Date(apt.appointment_date).toLocaleDateString(
                             "fr-FR",

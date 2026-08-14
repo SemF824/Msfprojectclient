@@ -16,10 +16,7 @@ export function Hero() {
      * h-[100svh] est gardé mais on s'assure d'avoir un min-height
      * conséquent pour que le contenu ne s'écrase pas sur les très petits écrans.
      */
-    <section
-      className="relative w-full overflow-hidden md:h-screen min-h-[600px]"
-      style={{ height: "100svh" }}
-    >
+    <section className="relative w-full overflow-hidden min-h-screen lg:min-h-[100svh]">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0">
         <img
@@ -43,8 +40,8 @@ export function Hero() {
         />
       </div>
 
-      {/* Content - Ajout d'un pb-24 pour dégager de l'espace en bas */}
-      <div className="relative container mx-auto px-4 md:px-6 h-full flex items-center pt-16 md:pt-0 pb-24 md:pb-0">
+      {/* Content */}
+      <div className="relative container mx-auto px-4 md:px-6 h-full flex items-center pt-24 md:pt-0 pb-16 md:pb-0 z-10 min-h-screen">
         <div className="max-w-3xl w-full">
           {/* Label */}
           <motion.div
@@ -121,11 +118,11 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.25 }}
             style={safariFix}
-            className="flex flex-col sm:flex-row gap-3 md:gap-4"
+            className="flex flex-col sm:flex-row gap-3 md:gap-4 mt-8"
           >
             <Link
               to="/properties"
-              className="group flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-lg hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all max-w-xs sm:max-w-none"
+              className="group flex items-center justify-center gap-2 px-6 py-3.5 md:px-8 md:py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all sm:w-fit"
             >
               <span className="font-bold text-sm md:text-base">
                 Explorer les Propriétés
@@ -134,7 +131,7 @@ export function Hero() {
             </Link>
             <a
               href="#visite"
-              className="flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-white/10 text-white rounded-lg border border-[#d4af37]/30 hover:bg-white/20 transition-all font-medium text-sm md:text-base max-w-xs sm:max-w-none"
+              className="flex items-center justify-center gap-2 px-6 py-3.5 md:px-8 md:py-4 bg-white/10 text-white rounded-xl border border-[#d4af37]/30 hover:bg-white/20 transition-all font-medium text-sm md:text-base sm:w-fit"
             >
               <Play className="w-4 h-4 md:w-5 md:h-5 text-[#d4af37]" />
               <span>Visite Virtuelle</span>

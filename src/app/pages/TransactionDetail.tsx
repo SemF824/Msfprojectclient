@@ -229,26 +229,26 @@ export default function TransactionDetail() {
             </div>
 
             {/* LE CARD DU MONTANT RESPONSIVE */}
-            <div className="bg-gradient-to-br from-[#d4af37]/5 to-[#f4e3b2]/10 rounded-2xl p-5 sm:p-6 md:p-8 border border-[#d4af37]/20 relative overflow-hidden">
+            <div className="bg-gradient-to-br from-[#d4af37]/5 to-[#f4e3b2]/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 border border-[#d4af37]/20 relative overflow-hidden">
               <div className="relative z-10 w-full">
-                <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wider">
+                <p className="text-[10px] sm:text-xs md:text-sm font-semibold text-gray-600 mb-1 sm:mb-2 uppercase tracking-wider">
                   Montant Transaction
                 </p>
-                <p className="text-2xl sm:text-4xl md:text-5xl font-black text-[#d4af37] mb-2 break-words break-all sm:break-normal leading-tight w-full tracking-tight">
+                <p className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-[#d4af37] mb-2 break-words break-all sm:break-normal leading-tight w-full tracking-tight">
                   {transaction.amount.toLocaleString("fr-FR")} FCFA
                 </p>
-                <p className="text-gray-700 text-xs sm:text-sm md:text-base font-medium mt-2">
+                <p className="text-gray-700 text-[10px] sm:text-xs md:text-sm lg:text-base font-medium mt-2">
                   {transaction.transaction_type === "reservation"
                     ? "Acompte de réservation"
                     : "Paiement"}{" "}
                   pour {transaction.property_name}
                 </p>
               </div>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#d4af37]/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
+              <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-[#d4af37]/10 rounded-full blur-2xl sm:blur-3xl -mr-10 -mt-10 pointer-events-none" />
             </div>
 
-            <div className="mt-6 pt-6 border-t border-gray-100">
-              <p className="text-xs text-gray-400 font-mono break-all bg-gray-50 border border-gray-100 p-2 rounded-lg">
+            <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100">
+              <p className="text-[10px] sm:text-xs text-gray-400 font-mono break-all bg-gray-50 border border-gray-100 p-2 rounded-lg">
                 ID Transaction : {transaction.id}
               </p>
             </div>
