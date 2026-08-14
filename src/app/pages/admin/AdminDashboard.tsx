@@ -1,10 +1,15 @@
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
 import {
-  FileText, CheckCircle, Clock,
-  ArrowUpRight, ArrowDownRight,
-  Building2, DollarSign, Activity, Loader2, Download
+  FileText,
+  CheckCircle,
+  Clock,
+  ArrowUpRight,
+  Building2,
+  Activity,
+  Loader2,
+  Download,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -22,35 +27,29 @@ const containerVariants = {
 };
 const itemVariants = {
   hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.35, ease: "easeOut" },
+  },
 };
 
 // ─── Colour map statique (Tailwind purge-safe) ─────────────────────────────────
 const colorMap: Record<string, { bg: string; text: string }> = {
-  blue:   { bg: "bg-blue-50",   text: "text-blue-600"   },
-  green:  { bg: "bg-green-50",  text: "text-green-600"  },
+  blue: { bg: "bg-blue-50", text: "text-blue-600" },
+  green: { bg: "bg-green-50", text: "text-green-600" },
   purple: { bg: "bg-purple-50", text: "text-purple-600" },
-  amber:  { bg: "bg-amber-50",  text: "text-amber-600"  },
+  amber: { bg: "bg-amber-50", text: "text-amber-600" },
 };
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  
-  // ── États Globaux ──
-  const [stats, setStats] = useState({
-    totalRequests: 0,
-    pendingRequests: 0,
-    approvedRequests: 0,
-    totalProperties: 0,
-  });
-  const [recentRequests, setRecentRequests] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
 
-  // ── Fetch Global & Parallèle (React 18 Architecture) ──
-  const fetchDashboardData = async (isMounted: boolean) => {
-    if (!supabase) return;
-    try {
-      if (isMounted) setLoading(true);
+  // ── Fetch Global & Parallèle (React Query) ──
+  const { data: dashboardData, isLoading } = useQuery({
+    queryKey: ["admin_dashboard_stats"],
+    queryFn: async () => {
+      if (!supabase) throw new Error("Supabase non initialisé");
 
       const [requestsRes, propertiesRes] = await Promise.all([
         supabase
@@ -59,7 +58,7 @@ export default function AdminDashboard() {
           .order("created_at", { ascending: false }),
         supabase
           .from("properties")
-          .select("id", { count: "exact", head: true })
+          .select("id", { count: "exact", head: true }),
       ]);
 
       if (requestsRes.error) throw requestsRes.error;
@@ -68,31 +67,25 @@ export default function AdminDashboard() {
       const allRequests = requestsRes.data || [];
       const totalProps = propertiesRes.count || 0;
 
-      const pending = allRequests.filter(r => r.status === "nouveau" || r.status === "en_cours").length;
-      const approved = allRequests.filter(r => r.status === "approuve").length;
+      const pending = allRequests.filter(
+        (r) => r.status === "nouveau" || r.status === "en_cours",
+      ).length;
+      const approved = allRequests.filter(
+        (r) => r.status === "approuve",
+      ).length;
 
-      if (isMounted) {
-        setStats({
+      return {
+        stats: {
           totalRequests: allRequests.length,
           pendingRequests: pending,
           approvedRequests: approved,
           totalProperties: totalProps,
-        });
-        setRecentRequests(allRequests.slice(0, 5));
-      }
-    } catch (error: any) {
-      console.error("Erreur Dashboard:", error);
-      toast.error("Impossible de synchroniser les indicateurs de performance du tableau de bord.");
-    } finally {
-      if (isMounted) setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    let isMounted = true;
-    fetchDashboardData(isMounted);
-    return () => { isMounted = false; };
-  }, []);
+        },
+        recentRequests: allRequests.slice(0, 5),
+      };
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes cache
+  });
 
   // ── Export CSV Sécurisé ──
   const exportToCSV = async () => {
@@ -107,22 +100,28 @@ export default function AdminDashboard() {
       }
 
       const headers = Object.keys(data[0]).join(",");
-      const rows = data.map(row =>
-        Object.values(row)
-          .map(value => typeof value === "string" ? `"${value.replace(/"/g, '""')}"` : value)
-          .join(",")
-      ).join("\n");
+      const rows = data
+        .map((row) =>
+          Object.values(row)
+            .map((value) =>
+              typeof value === "string"
+                ? `"${value.replace(/"/g, '""')}"`
+                : value,
+            )
+            .join(","),
+        )
+        .join("\n");
 
       const csvContent = "\uFEFF" + headers + "\n" + rows;
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      
+
       link.href = url;
       link.download = `msf-pipeline-export-${new Date().toISOString().slice(0, 10)}.csv`;
       link.click();
       URL.revokeObjectURL(url);
-      
+
       toast.success("Registre des transactions exporté avec succès.");
     } catch (error: any) {
       console.error(error);
@@ -130,20 +129,77 @@ export default function AdminDashboard() {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3">
-        <Loader2 className="w-10 h-10 animate-spin text-[#d4af37]" />
-        <p className="text-sm text-gray-500 animate-pulse font-medium">Compilation analytique en cours...</p>
+      <div className="space-y-8 p-6 max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+          <div>
+            <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2" />
+            <div className="h-4 w-64 bg-gray-100 rounded animate-pulse" />
+          </div>
+        </div>
+
+        {/* Skeleton des KPIs */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm animate-pulse"
+            >
+              <div className="flex justify-between items-start">
+                <div className="space-y-2">
+                  <div className="h-3 w-24 bg-gray-200 rounded" />
+                  <div className="h-8 w-16 bg-gray-200 rounded" />
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-gray-100" />
+              </div>
+              <div className="mt-4 pt-3 border-t border-gray-50 h-3 w-full bg-gray-100 rounded" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
+  const { stats, recentRequests } = dashboardData || {
+    stats: {
+      totalRequests: 0,
+      pendingRequests: 0,
+      approvedRequests: 0,
+      totalProperties: 0,
+    },
+    recentRequests: [],
+  };
+
   const kpiCards = [
-    { title: "Total Demandes", value: stats.totalRequests, icon: FileText, color: "blue", desc: "Flux global des opportunités" },
-    { title: "En attente / Cours", value: stats.pendingRequests, icon: Clock, color: "amber", desc: "Dossiers en cours d'analyse" },
-    { title: "Dossiers Approuvés", value: stats.approvedRequests, icon: CheckCircle, color: "green", desc: "Projets validés MSF Congo" },
-    { title: "Biens Actifs", value: stats.totalProperties, icon: Building2, color: "purple", desc: "Annonces en ligne au catalogue" },
+    {
+      title: "Total Demandes",
+      value: stats.totalRequests,
+      icon: FileText,
+      color: "blue",
+      desc: "Flux global des opportunités",
+    },
+    {
+      title: "En attente / Cours",
+      value: stats.pendingRequests,
+      icon: Clock,
+      color: "amber",
+      desc: "Dossiers en cours d'analyse",
+    },
+    {
+      title: "Dossiers Approuvés",
+      value: stats.approvedRequests,
+      icon: CheckCircle,
+      color: "green",
+      desc: "Projets validés MSF Congo",
+    },
+    {
+      title: "Biens Actifs",
+      value: stats.totalProperties,
+      icon: Building2,
+      color: "purple",
+      desc: "Annonces en ligne au catalogue",
+    },
   ];
 
   return (
@@ -151,31 +207,53 @@ export default function AdminDashboard() {
       {/* ── Header ── */}
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black text-[#0a0f1e] tracking-tight">Vue d'ensemble</h1>
-          <p className="text-gray-500 text-sm mt-1">Supervision globale et performance opérationnelle</p>
+          <h1 className="text-3xl font-black text-[#0a0f1e] tracking-tight">
+            Vue d'ensemble
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Supervision globale et performance opérationnelle
+          </p>
         </div>
         <div className="text-xs font-semibold px-4 py-2 bg-gray-100 rounded-xl border border-gray-200 text-gray-600 flex items-center gap-2 shadow-sm">
-          <Activity className="w-3.5 h-3.5 text-green-500 animate-pulse" /> 
-          Système connecté • {format(new Date(), "dd MMMM yyyy", { locale: fr })}
+          <Activity className="w-3.5 h-3.5 text-green-500 animate-pulse" />
+          Système connecté •{" "}
+          {format(new Date(), "dd MMMM yyyy", { locale: fr })}
         </div>
       </div>
 
       {/* ── KPIs Grille ── */}
-      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+      >
         {kpiCards.map((card, i) => {
           const Theme = colorMap[card.color] || colorMap.blue;
           return (
-            <motion.div key={i} variants={itemVariants} className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all group">
+            <motion.div
+              key={i}
+              variants={itemVariants}
+              className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all group"
+            >
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-xs font-bold uppercase text-gray-400 tracking-wider mb-1">{card.title}</p>
-                  <h3 className="text-3xl font-black text-[#0a0f1e] tracking-tight group-hover:text-[#d4af37] transition-colors">{card.value}</h3>
+                  <p className="text-xs font-bold uppercase text-gray-400 tracking-wider mb-1">
+                    {card.title}
+                  </p>
+                  <h3 className="text-3xl font-black text-[#0a0f1e] tracking-tight group-hover:text-[#d4af37] transition-colors">
+                    {card.value}
+                  </h3>
                 </div>
-                <div className={`p-3 rounded-xl border border-gray-100 ${Theme.bg} ${Theme.text} shadow-sm`}>
+                <div
+                  className={`p-3 rounded-xl border border-gray-100 ${Theme.bg} ${Theme.text} shadow-sm`}
+                >
                   <card.icon className="w-5 h-5" />
                 </div>
               </div>
-              <p className="text-[11px] text-gray-400 mt-4 font-medium border-t border-gray-50 pt-3">{card.desc}</p>
+              <p className="text-[11px] text-gray-400 mt-4 font-medium border-t border-gray-50 pt-3">
+                {card.desc}
+              </p>
             </motion.div>
           );
         })}
@@ -187,10 +265,17 @@ export default function AdminDashboard() {
         <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-lg font-bold text-[#0a0f1e]">Demandes Récentes</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Dernières entrées du pipeline prospects</p>
+              <h2 className="text-lg font-bold text-[#0a0f1e]">
+                Demandes Récentes
+              </h2>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Dernières entrées du pipeline prospects
+              </p>
             </div>
-            <button onClick={() => navigate("/admin/demandes")} className="text-xs font-bold text-[#d4af37] hover:text-[#b8952e] flex items-center gap-1 bg-[#d4af37]/5 px-3 py-1.5 rounded-lg transition-all">
+            <button
+              onClick={() => navigate("/admin/demandes")}
+              className="text-xs font-bold text-[#d4af37] hover:text-[#b8952e] flex items-center gap-1 bg-[#d4af37]/5 px-3 py-1.5 rounded-lg transition-all"
+            >
               Voir tout <ArrowUpRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -210,22 +295,36 @@ export default function AdminDashboard() {
                 };
                 const status = req.status || "nouveau";
                 return (
-                  <div key={req.id} className="py-4 flex items-center justify-between gap-4 first:pt-0 last:pb-0 hover:bg-gray-50/50 px-2 rounded-xl transition-colors">
+                  <div
+                    key={req.id}
+                    className="py-4 flex items-center justify-between gap-4 first:pt-0 last:pb-0 hover:bg-gray-50/50 px-2 rounded-xl transition-colors"
+                  >
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-sm text-[#0a0f1e] truncate">{req.property_name || "Nom non renseigné"}</p>
+                      <p className="font-semibold text-sm text-[#0a0f1e] truncate">
+                        {req.property_name || "Nom non renseigné"}
+                      </p>
                       <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
-                        <span className="font-medium text-gray-600 truncate max-w-[150px]">{req.client_email}</span>
+                        <span className="font-medium text-gray-600 truncate max-w-[150px]">
+                          {req.client_email}
+                        </span>
                         <span>•</span>
-                        <span>{format(new Date(req.created_at), "dd/MM/yyyy HH:mm")}</span>
+                        <span>
+                          {format(new Date(req.created_at), "dd/MM/yyyy HH:mm")}
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
                       {req.property_price && (
                         <span className="text-xs font-bold text-[#0a0f1e] bg-gray-100 px-2.5 py-1 rounded-md">
-                          {new Intl.NumberFormat("fr-FR").format(req.property_price)} FCFA
+                          {new Intl.NumberFormat("fr-FR").format(
+                            req.property_price,
+                          )}{" "}
+                          FCFA
                         </span>
                       )}
-                      <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full border ${statusColors[status] || "bg-gray-100 text-gray-600"}`}>
+                      <span
+                        className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full border ${statusColors[status] || "bg-gray-100 text-gray-600"}`}
+                      >
                         {status.replace("_", " ")}
                       </span>
                     </div>
@@ -240,19 +339,33 @@ export default function AdminDashboard() {
         <div className="bg-[#0a0f1e] rounded-2xl p-6 text-white h-fit shadow-lg border border-white/5">
           <h2 className="text-xl font-bold mb-6 tracking-tight">Raccourcis</h2>
           <div className="space-y-3">
-            <Link to="/admin/proprietes" className="w-full py-4 bg-white/5 hover:bg-white/10 rounded-xl transition-all flex items-center gap-3 px-4 border border-white/10 text-left group block">
+            <Link
+              to="/admin/proprietes"
+              className="w-full py-4 bg-white/5 hover:bg-white/10 rounded-xl transition-all flex items-center gap-3 px-4 border border-white/10 text-left group block"
+            >
               <Building2 className="w-5 h-5 text-[#d4af37] border border-white/10 bg-white/5 p-1 rounded-md" />
               <div>
-                <p className="text-sm font-semibold group-hover:text-[#d4af37] transition-colors">Catalogue Propriétés</p>
-                <p className="text-[10px] text-gray-400">Gérer l'index des annonces</p>
+                <p className="text-sm font-semibold group-hover:text-[#d4af37] transition-colors">
+                  Catalogue Propriétés
+                </p>
+                <p className="text-[10px] text-gray-400">
+                  Gérer l'index des annonces
+                </p>
               </div>
             </Link>
-            
-            <button onClick={exportToCSV} className="w-full py-4 bg-white/5 hover:bg-white/10 rounded-xl transition-all flex items-center gap-3 px-4 border border-white/10 text-left group">
+
+            <button
+              onClick={exportToCSV}
+              className="w-full py-4 bg-white/5 hover:bg-white/10 rounded-xl transition-all flex items-center gap-3 px-4 border border-white/10 text-left group"
+            >
               <Download className="w-5 h-5 text-blue-400 border border-white/10 bg-white/5 p-1 rounded-md" />
               <div>
-                <p className="text-sm font-semibold group-hover:text-blue-400 transition-colors">Exporter Données</p>
-                <p className="text-[10px] text-gray-400">Extraire le registre complet (CSV)</p>
+                <p className="text-sm font-semibold group-hover:text-blue-400 transition-colors">
+                  Exporter Données
+                </p>
+                <p className="text-[10px] text-gray-400">
+                  Extraire le registre complet (CSV)
+                </p>
               </div>
             </button>
           </div>

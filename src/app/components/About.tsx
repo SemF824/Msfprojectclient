@@ -71,6 +71,10 @@ export function About() {
               <img
                 src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBjaXR5JTIwZGV2ZWxvcG1lbnQlMjBhZnJpY2F8ZW58MXx8fHwxNzc2MjcxMTA0fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
                 alt="Modern city development"
+                loading="lazy"
+                decoding="async"
+                width={1080}
+                height={600}
                 className="w-full h-[600px] object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e]/60 to-transparent" />
