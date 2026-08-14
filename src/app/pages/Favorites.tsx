@@ -153,7 +153,7 @@ export default function Favorites() {
           />
           <div className="mt-6 flex justify-center">
             <Link
-              to="/proprietes"
+              to="/properties"
               className="px-6 py-3 bg-[#0a0f1e] text-white text-sm font-semibold rounded-xl hover:bg-[#1a2540] transition-colors"
             >
               Découvrir les propriétés
@@ -244,7 +244,7 @@ export default function Favorites() {
 
                     <div className="grid grid-cols-2 gap-3">
                       <Link
-                        to={`/propriete/${property.id}`}
+                        to={`/properties/${property.id}`}
                         className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 text-[#0a0f1e] font-semibold rounded-xl hover:bg-gray-200 transition-colors text-sm"
                       >
                         <ExternalLink className="w-4 h-4" /> Détails

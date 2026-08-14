@@ -92,17 +92,17 @@ export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
   }, [properties, filters]);
 
   return (
-    <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 bg-gradient-to-b from-[#0a0f1e] to-[#1e3a5f]/20 min-h-screen">
+    <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 bg-transparent min-h-screen">
       <div className="container mx-auto">
         <div className="text-center mb-10 sm:mb-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#1e3a5f]/40 backdrop-blur-md border border-[#d4af37]/30 mb-4"
+            className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#d4af37]/10 border border-[#d4af37]/20 mb-4"
           >
             <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-[#d4af37]" />
-            <span className="text-[10px] sm:text-xs text-[#d4af37] tracking-wider uppercase">
+            <span className="text-[10px] sm:text-xs text-[#d4af37] tracking-wider uppercase font-semibold">
               Collection Premium
             </span>
           </motion.div>
@@ -111,10 +111,10 @@ export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-3xl sm:text-4xl md:text-5xl mb-3 sm:mb-4"
+            className="text-3xl sm:text-4xl md:text-5xl mb-3 sm:mb-4 font-black"
           >
-            <span className="text-white">Propriétés </span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">
+            <span className="text-[#0a0f1e]">Propriétés </span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#b8952e]">
               en Vedette
             </span>
           </motion.h2>
@@ -123,7 +123,7 @@ export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="text-gray-400 max-w-2xl mx-auto text-sm sm:text-base"
+            className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed"
           >
             Découvrez notre sélection triée de résidences extraordinaires dans
             les lieux les plus prestigieux du Congo
@@ -149,7 +149,7 @@ export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
                 delay={index * 100}
                 className="h-full"
               >
-                <div className="group h-full flex flex-col relative bg-white/5 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 hover:border-[#d4af37]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#d4af37]/20 will-change-transform">
+                <div className="group h-full flex flex-col relative bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-[#d4af37]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#d4af37]/10 will-change-transform">
                   <div className="relative h-56 sm:h-64 overflow-hidden flex-shrink-0">
                     <img
                       src={property.image}
@@ -157,52 +157,52 @@ export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
                       loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e] via-transparent to-transparent opacity-60" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e]/80 via-[#0a0f1e]/20 to-transparent opacity-80" />
                     {property.tag && (
-                      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 px-2.5 py-1 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] text-[10px] sm:text-xs font-bold rounded-full">
+                      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 px-2.5 py-1 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] text-[10px] sm:text-xs font-bold rounded-full shadow-sm">
                         {property.tag}
                       </div>
                     )}
-                    <div className="absolute top-3 left-3 sm:top-4 sm:left-4 px-2.5 py-1 bg-[#0a0f1e]/70 backdrop-blur-md text-white text-[10px] sm:text-xs font-medium rounded-full border border-[#d4af37]/40">
+                    <div className="absolute top-3 left-3 sm:top-4 sm:left-4 px-2.5 py-1 bg-white/90 backdrop-blur-md text-[#0a0f1e] text-[10px] sm:text-xs font-bold rounded-full shadow-sm">
                       {property.type}
                     </div>
                   </div>
                   <div className="p-5 sm:p-6 flex flex-col flex-grow">
-                    <h3 className="text-lg sm:text-xl text-white mb-2 group-hover:text-[#d4af37] transition-colors">
+                    <h3 className="text-lg sm:text-xl text-[#0a0f1e] font-bold mb-2 group-hover:text-[#d4af37] transition-colors">
                       {property.title}
                     </h3>
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-gray-400 mb-3 sm:mb-4">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-gray-500 mb-3 sm:mb-4">
                       <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#d4af37] flex-shrink-0" />
                       <span className="text-xs sm:text-sm truncate">
                         {property.location}
                       </span>
                     </div>
-                    <div className="text-xl sm:text-2xl md:text-3xl text-[#d4af37] mb-4 sm:mb-6 font-bold truncate">
+                    <div className="text-xl sm:text-2xl md:text-3xl text-[#d4af37] mb-4 sm:mb-6 font-black truncate">
                       {formatPrice(property.price)}
                     </div>
-                    <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-white/10 mt-auto">
-                      <div className="flex items-center gap-1.5 text-gray-400">
-                        <Bed className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-gray-100 mt-auto">
+                      <div className="flex items-center gap-1.5 text-gray-600 font-medium">
+                        <Bed className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 text-gray-400" />
                         <span className="text-[10px] sm:text-xs">
                           {property.beds}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-gray-400 border-x border-white/10 px-2 sm:px-4">
-                        <Bath className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                      <div className="flex items-center gap-1.5 text-gray-600 font-medium border-x border-gray-200 px-2 sm:px-4">
+                        <Bath className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 text-gray-400" />
                         <span className="text-[10px] sm:text-xs">
                           {property.baths}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-gray-400">
-                        <Maximize className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                      <div className="flex items-center gap-1.5 text-gray-600 font-medium">
+                        <Maximize className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 text-gray-400" />
                         <span className="text-[10px] sm:text-xs truncate">
                           {property.sqft} m²
                         </span>
                       </div>
                     </div>
                     <Link
-                      to={`/propriete/${property.id}`}
-                      className="block w-full mt-4 sm:mt-6 py-2.5 sm:py-3 bg-white/10 backdrop-blur-sm text-white text-xs sm:text-sm font-medium text-center rounded-lg border border-[#d4af37]/40 hover:bg-[#d4af37] hover:text-[#0a0f1e] transition-all"
+                      to={`/properties/${property.id}`}
+                      className="block w-full mt-4 sm:mt-6 py-2.5 sm:py-3 bg-gray-50 text-[#0a0f1e] text-xs sm:text-sm font-bold text-center rounded-lg border border-gray-200 hover:bg-[#d4af37] hover:border-[#d4af37] hover:text-white transition-all shadow-sm"
                     >
                       Voir les Détails
                     </Link>
@@ -221,7 +221,7 @@ export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
             className="text-center mt-10 sm:mt-12"
           >
             <Link
-              to="/proprietes"
+              to="/properties"
               className="inline-block w-full sm:w-auto px-6 py-3.5 sm:px-8 sm:py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] text-sm sm:text-base font-bold rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all"
             >
               Voir Toutes les Propriétés
