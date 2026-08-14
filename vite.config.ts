@@ -33,6 +33,20 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router'],
+          'vendor-ui': ['motion/react', 'lucide-react', 'sonner'],
+          'vendor-db': ['@supabase/supabase-js'],
+          'vendor-charts': ['recharts'],
+          'vendor-radix': ['@radix-ui/react-accordion', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select', '@radix-ui/react-tabs']
+        },
+      },
+    },
+  },
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
