@@ -15,10 +15,12 @@ import { Provider } from "@supabase/supabase-js";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { user, signIn } = useSupabaseAuth();
+  const { user, signIn, resetPassword } = useSupabaseAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
+  const [isResetMode, setIsResetMode] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -35,6 +37,24 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setResetMessage(null);
+
+    if (isResetMode) {
+      if (!resetPassword) {
+        setError("Fonctionnalité indisponible.");
+        setIsLoading(false);
+        return;
+      }
+
+      const { error: resetErr } = await resetPassword(formData.email);
+      if (resetErr) {
+        setError(resetErr.message || "Erreur lors de l'envoi de l'email.");
+      } else {
+        setResetMessage("Un email contenant un lien sécurisé a été envoyé.");
+      }
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const { error: signInError } = await signIn(
@@ -119,19 +139,25 @@ export default function Login() {
               <Lock className="w-8 h-8 text-[#d4af37]" />
             </div>
             <h1 className="text-3xl md:text-4xl mb-2">
-              <span className="text-gray-900">Bon retour sur </span>
+              {isResetMode ? (
+                <span className="text-gray-900">Mot de passe </span>
+              ) : (
+                <span className="text-gray-900">Bon retour sur </span>
+              )}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">
-                MSF Congo
+                {isResetMode ? "Oublié" : "MSF Congo"}
               </span>
             </h1>
             <p className="text-gray-600">
-              Connectez-vous pour accéder à votre espace client
+              {isResetMode
+                ? "Saisissez votre email pour recevoir un lien de réinitialisation"
+                : "Connectez-vous pour accéder à votre espace client"}
             </p>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Error Message */}
+            {/* Messages */}
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -140,6 +166,19 @@ export default function Login() {
               >
                 <AlertCircle className="w-5 h-5 flex-shrink-0" />
                 <p className="text-sm">{error}</p>
+              </motion.div>
+            )}
+
+            {resetMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700"
+              >
+                <div className="w-5 h-5 flex-shrink-0 bg-green-500 text-white rounded-full flex items-center justify-center text-xs">
+                  ✓
+                </div>
+                <p className="text-sm font-medium">{resetMessage}</p>
               </motion.div>
             )}
 
@@ -167,53 +206,79 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Password */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm text-gray-700 mb-2"
-              >
-                Mot de Passe
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d4af37]" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  className="w-full pl-12 pr-12 py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:border-[#d4af37] focus:outline-none transition-colors"
-                  placeholder="••••••••"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#d4af37] transition-colors"
+            {/* Password (Hidden in Reset Mode) */}
+            {!isResetMode && (
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm text-gray-700 mb-2"
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
-                </button>
+                  Mot de Passe
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d4af37]" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    value={formData.password}
+                    onChange={(e) =>
+                      setFormData({ ...formData, password: e.target.value })
+                    }
+                    className="w-full pl-12 pr-12 py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:border-[#d4af37] focus:outline-none transition-colors"
+                    placeholder="••••••••"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#d4af37] transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Remember & Forgot */}
             <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 text-gray-600 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 rounded border-gray-300 bg-white text-[#d4af37] focus:ring-[#d4af37] focus:ring-offset-0"
-                />
-                <span>Se souvenir de moi</span>
-              </label>
-              <a href="#" className="text-[#d4af37] hover:underline">
-                Mot de passe oublié ?
-              </a>
+              {!isResetMode ? (
+                <>
+                  <label className="flex items-center gap-2 text-gray-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded border-gray-300 bg-white text-[#d4af37] focus:ring-[#d4af37] focus:ring-offset-0"
+                    />
+                    <span>Se souvenir de moi</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsResetMode(true);
+                      setError(null);
+                      setResetMessage(null);
+                    }}
+                    className="text-[#d4af37] hover:underline"
+                  >
+                    Mot de passe oublié ?
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsResetMode(false);
+                    setError(null);
+                    setResetMessage(null);
+                  }}
+                  className="text-gray-500 hover:text-gray-900 transition-colors w-full text-center"
+                >
+                  Annuler et retourner à la connexion
+                </button>
+              )}
             </div>
 
             {/* Submit Button */}
@@ -225,12 +290,16 @@ export default function Login() {
               {isLoading ? (
                 <>
                   <div className="w-5 h-5 border-2 border-[#0a0f1e] border-t-transparent rounded-full animate-spin"></div>
-                  <span className="font-medium">Connexion en cours...</span>
+                  <span className="font-medium">Veuillez patienter...</span>
                 </>
               ) : (
                 <>
-                  <span className="font-medium">Se Connecter</span>
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <span className="font-medium">
+                    {isResetMode ? "Envoyer le lien" : "Se Connecter"}
+                  </span>
+                  {!isResetMode && (
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  )}
                 </>
               )}
             </button>
@@ -257,12 +326,26 @@ export default function Login() {
               className="flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 rounded-xl bg-white hover:bg-gray-50 transition-colors shadow-sm"
             >
               <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 48 48">
-                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.74 7.17l7.59 5.89c4.43-4.08 6.98-10.09 6.98-17.53z" />
-                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                <path
+                  fill="#EA4335"
+                  d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+                />
+                <path
+                  fill="#4285F4"
+                  d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.74 7.17l7.59 5.89c4.43-4.08 6.98-10.09 6.98-17.53z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+                />
               </svg>
-              <span className="text-xs font-semibold text-gray-700">Google</span>
+              <span className="text-xs font-semibold text-gray-700">
+                Google
+              </span>
             </button>
 
             {/* BOUTON FACEBOOK OFFICIEL (Bleu Meta officiel + Libellé conforme) */}
@@ -271,7 +354,10 @@ export default function Login() {
               onClick={() => handleSocialLogin("facebook")}
               className="flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] text-white transition-colors shadow-sm"
             >
-              <svg className="w-5 h-5 fill-current flex-shrink-0" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5 fill-current flex-shrink-0"
+                viewBox="0 0 24 24"
+              >
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
               </svg>
               <span className="text-xs font-semibold">Facebook</span>
