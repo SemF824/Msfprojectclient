@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion, type Variants } from "motion/react";
 import { Link } from "react-router";
 import {
@@ -37,62 +37,50 @@ const itemVariants: Variants = {
 
 export default function Dashboard() {
   const { user: authUser } = useSupabaseAuth();
-  const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [devisRequests, setDevisRequests] = useState<DevisRequest[]>([]);
-  const [favorites, setFavorites] = useState<Favorite[]>([]);
-  const [documents, setDocuments] = useState<Document[]>([]);
 
-  useEffect(() => {
-    if (!authUser || !supabase) return;
-    let isMounted = true;
+  const { data: dashboardData, isLoading: isDataLoading } = useQuery({
+    queryKey: ["client_dashboard_data", authUser?.id],
+    queryFn: async () => {
+      if (!authUser || !supabase) throw new Error("Non connecté");
+      const uid = authUser.id;
+      const email = authUser.email || "";
 
-    const fetchDashboardContent = async () => {
-      try {
-        if (isMounted) setIsDataLoading(true);
-        const uid = authUser.id;
-        const email = authUser.email || "";
+      // Chargement parallèle optimisé
+      const [ap, dv, fv, dc] = await Promise.all([
+        supabase
+          .from("appointments")
+          .select("*")
+          .eq("user_id", uid)
+          .order("appointment_date", { ascending: true }),
+        supabase
+          .from("devis_requests")
+          .select("*")
+          .eq("client_email", email)
+          .order("created_at", { ascending: false }),
+        supabase.from("favorites").select("*").eq("user_id", uid),
+        supabase.from("documents").select("*").eq("user_id", uid),
+      ]);
 
-        // Chargement parallèle optimisé
-        const [ap, dv, fv, dc] = await Promise.all([
-          supabase
-            .from("appointments")
-            .select("*")
-            .eq("user_id", uid)
-            .order("appointment_date", { ascending: true }),
-          supabase
-            .from("devis_requests")
-            .select("*")
-            .eq("client_email", email)
-            .order("created_at", { ascending: false }),
-          supabase.from("favorites").select("*").eq("user_id", uid),
-          supabase.from("documents").select("*").eq("user_id", uid),
-        ]);
+      if (ap.error) throw ap.error;
+      if (dv.error) throw dv.error;
+      if (fv.error) throw fv.error;
+      if (dc.error) throw dc.error;
 
-        if (ap.error) throw ap.error;
-        if (dv.error) throw dv.error;
-        if (fv.error) throw fv.error;
-        if (dc.error) throw dc.error;
+      return {
+        appointments: ap.data || [],
+        devisRequests: dv.data || [],
+        favorites: fv.data || [],
+        documents: dc.data || [],
+      };
+    },
+    enabled: !!authUser,
+    staleTime: 1000 * 60 * 5, // Cache de 5 minutes
+  });
 
-        if (isMounted) {
-          setAppointments(ap.data || []);
-          setDevisRequests(dv.data || []);
-          setFavorites(fv.data || []);
-          setDocuments(dc.data || []);
-        }
-      } catch (error) {
-        console.error("Erreur d'extraction d'activité:", error);
-        toast.error("Impossible d'actualiser vos statistiques d'activité.");
-      } finally {
-        if (isMounted) setIsDataLoading(false);
-      }
-    };
-
-    fetchDashboardContent();
-    return () => {
-      isMounted = false;
-    };
-  }, [authUser]);
+  const appointments = dashboardData?.appointments || [];
+  const devisRequests = dashboardData?.devisRequests || [];
+  const favorites = dashboardData?.favorites || [];
+  const documents = dashboardData?.documents || [];
 
   const displayName =
     authUser?.user_metadata?.full_name ||
@@ -144,8 +132,20 @@ export default function Dashboard() {
 
   if (isDataLoading) {
     return (
-      <div className="flex justify-center py-20">
-        <div className="w-10 h-10 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin" />
+      <div className="space-y-6 animate-pulse">
+        <div className="h-10 bg-gray-200 rounded w-1/3 mb-2" />
+        <div className="h-4 bg-gray-100 rounded w-1/4 mb-8" />
+
+        <div className="h-64 bg-gray-200 rounded-2xl mb-8" />
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="bg-white rounded-2xl border border-gray-100 p-5 h-32"
+            />
+          ))}
+        </div>
       </div>
     );
   }
