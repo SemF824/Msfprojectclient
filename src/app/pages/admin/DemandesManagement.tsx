@@ -1,9 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Search, Mail, Phone, Clock,
-  Trash2, ChevronDown, ChevronUp,
-  DollarSign, Building2, Send, RefreshCcw
+  Search,
+  Mail,
+  Phone,
+  Clock,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  DollarSign,
+  Building2,
+  Send,
+  RefreshCcw,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -23,13 +32,12 @@ interface ContactRequest {
   message: string;
   budget?: string;
   property_type?: string;
-  status: 'nouveau' | 'en_cours' | 'traite' | 'archive';
+  status: "nouveau" | "en_cours" | "traite" | "archive";
   created_at: string;
 }
 
 export default function DemandesManagement() {
-  const [demandes, setDemandes] = useState<ContactRequest[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("tous");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -37,87 +45,97 @@ export default function DemandesManagement() {
   // Cast de sécurité explicite
   const adminEmail = (import.meta.env.VITE_ADMIN_EMAIL as string) || "";
 
-  const fetchDemandes = async (silent = false) => {
-    if (!silent) setLoading(true);
-    try {
+  const {
+    data: demandes = [],
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["contact_requests"],
+    queryFn: async () => {
       const { data, error } = await supabase
-        .from('contact_requests')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from("contact_requests")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setDemandes(data || []);
-    } catch (error) {
-      console.error("Erreur chargement demandes:", error);
-      toast.error("Impossible de synchroniser le pipeline des prospects.");
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  };
+      return data || [];
+    },
+  });
 
-  useEffect(() => {
-    let isMounted = true;
-
-    if (isMounted) {
-      fetchDemandes();
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const updateStatus = async (id: string, newStatus: string) => {
-    try {
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({
+      id,
+      newStatus,
+    }: {
+      id: string;
+      newStatus: string;
+    }) => {
       const { error } = await supabase
-        .from('contact_requests')
+        .from("contact_requests")
         .update({ status: newStatus })
-        .eq('id', id);
-
+        .eq("id", id);
       if (error) throw error;
-      
-      setDemandes(prev => prev.map(d => d.id === id ? { ...d, status: newStatus as any } : d));
-      toast.success(`Statut mis à jour : ${newStatus.replace('_', ' ')}`);
-    } catch (error) {
-      console.error(error);
-      toast.error("Échec de la transition de statut.");
-    }
-  };
+      return { id, newStatus };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contact_requests"] });
+      toast.success("Statut mis à jour avec succès.");
+    },
+    onError: () => toast.error("Échec de la transition de statut."),
+  });
 
-  const handleDelete = async (id: string) => {
-    // Remplacement par une confirmation Sonner ou validation standard sécurisée avant suppression destructive
-    if (!window.confirm("Supprimer définitivement ce prospect du pipeline ?")) return;
-    
-    try {
-      const { error } = await supabase.from('contact_requests').delete().eq('id', id);
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("contact_requests")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
-      
-      setDemandes(prev => prev.filter(d => d.id !== id));
+      return id;
+    },
+    onSuccess: (id) => {
+      queryClient.setQueryData(
+        ["contact_requests"],
+        (old: ContactRequest[] | undefined) =>
+          old ? old.filter((d) => d.id !== id) : [],
+      );
       if (expandedId === id) setExpandedId(null);
       toast.success("Prospect éliminé avec succès.");
-    } catch (error) {
-      console.error(error);
-      toast.error("Erreur lors de la suppression du prospect.");
-    }
+    },
+    onError: () => toast.error("Erreur lors de la suppression du prospect."),
+  });
+
+  const updateStatus = (id: string, newStatus: string) =>
+    updateStatusMutation.mutate({ id, newStatus });
+
+  const handleDelete = (id: string) => {
+    if (!window.confirm("Supprimer définitivement ce prospect du pipeline ?"))
+      return;
+    deleteMutation.mutate(id);
   };
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const filteredDemandes = demandes.filter(d => {
-    const matchesSearch = d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         d.email.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredDemandes = demandes.filter((d) => {
+    const matchesSearch =
+      d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      d.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === "tous" || d.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'traite': return "bg-green-100 text-green-800 border-green-200";
-      case 'en_cours': return "bg-blue-100 text-blue-800 border-blue-200";
-      case 'archive': return "bg-gray-100 text-gray-800 border-gray-200";
-      default: return "bg-[#d4af37]/20 text-[#b8952e] border-[#d4af37]/30";
+      case "traite":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "en_cours":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "archive":
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      default:
+        return "bg-[#d4af37]/20 text-[#b8952e] border-[#d4af37]/30";
     }
   };
 
@@ -125,16 +143,24 @@ export default function DemandesManagement() {
     <div className="space-y-6 p-6 max-w-7xl mx-auto text-[#0a0f1e]">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-[#0a0f1e]">Pipeline Prospects</h1>
-          <p className="text-gray-500">Flux de conversion MSF Congo en temps réel</p>
+          <h1 className="text-3xl font-bold text-[#0a0f1e]">
+            Pipeline Prospects
+          </h1>
+          <p className="text-gray-500">
+            Flux de conversion MSF Congo en temps réel
+          </p>
         </div>
-        <Button 
-          onClick={() => fetchDemandes(false)} 
-          variant="outline" 
-          size="sm" 
+        <Button
+          onClick={() => refetch()}
+          variant="outline"
+          size="sm"
           className="gap-2 bg-white text-[#0a0f1e] border-gray-200 hover:bg-gray-50"
+          disabled={isLoading}
         >
-          <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Actualiser
+          <RefreshCcw
+            className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
+          />{" "}
+          Actualiser
         </Button>
       </div>
 
@@ -163,9 +189,10 @@ export default function DemandesManagement() {
 
       {/* Liste des demandes avec expansion */}
       <div className="space-y-4">
-        {loading && demandes.length === 0 ? (
-          <div className="p-12 text-center text-gray-500 bg-white rounded-xl border border-gray-200 shadow-sm">
-            Analyse de la base de données en cours...
+        {isLoading ? (
+          <div className="p-12 text-center text-gray-500 bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-center gap-2">
+            <RefreshCcw className="w-8 h-8 animate-spin text-[#d4af37]" />
+            <p>Analyse de la base de données en cours...</p>
           </div>
         ) : filteredDemandes.length === 0 ? (
           <div className="p-12 text-center text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
@@ -173,12 +200,12 @@ export default function DemandesManagement() {
           </div>
         ) : (
           filteredDemandes.map((demande) => (
-            <Card 
-              key={demande.id} 
+            <Card
+              key={demande.id}
               className={`overflow-hidden transition-all duration-300 bg-white border ${
-                expandedId === demande.id 
-                  ? 'border-l-4 border-l-[#d4af37] border-y-gray-200 border-r-gray-200 shadow-md' 
-                  : 'border-gray-200 shadow-sm hover:border-[#d4af37]/50'
+                expandedId === demande.id
+                  ? "border-l-4 border-l-[#d4af37] border-y-gray-200 border-r-gray-200 shadow-md"
+                  : "border-gray-200 shadow-sm hover:border-[#d4af37]/50"
               }`}
             >
               <CardContent className="p-0">
@@ -191,19 +218,33 @@ export default function DemandesManagement() {
                       {demande.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-1 flex-1">
-                      <div className="font-semibold text-[#0a0f1e]">{demande.name}</div>
-                      <div className="text-sm text-gray-600 hidden md:block">{demande.subject}</div>
+                      <div className="font-semibold text-[#0a0f1e]">
+                        {demande.name}
+                      </div>
+                      <div className="text-sm text-gray-600 hidden md:block">
+                        {demande.subject}
+                      </div>
                       <div className="text-xs text-gray-500 flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-gray-400" /> 
-                        {format(new Date(demande.created_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                        <Clock className="w-3 h-3 text-gray-400" />
+                        {format(
+                          new Date(demande.created_at),
+                          "dd/MM/yyyy HH:mm",
+                          { locale: fr },
+                        )}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <Badge className={`${getStatusColor(demande.status || 'nouveau')} font-semibold shadow-none`}>
-                      {(demande.status || 'nouveau').toUpperCase()}
+                    <Badge
+                      className={`${getStatusColor(demande.status || "nouveau")} font-semibold shadow-none`}
+                    >
+                      {(demande.status || "nouveau").toUpperCase()}
                     </Badge>
-                    {expandedId === demande.id ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                    {expandedId === demande.id ? (
+                      <ChevronUp className="w-5 h-5 text-gray-400" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-gray-400" />
+                    )}
                   </div>
                 </div>
 
@@ -217,25 +258,35 @@ export default function DemandesManagement() {
                     >
                       <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div className="space-y-4">
-                          <h4 className="text-xs font-bold uppercase text-gray-400 tracking-widest">Informations</h4>
+                          <h4 className="text-xs font-bold uppercase text-gray-400 tracking-widest">
+                            Informations
+                          </h4>
                           <div className="space-y-3">
                             <div className="flex items-center gap-3 text-sm text-[#0a0f1e]">
-                              <div className="p-2 bg-white rounded-md border border-gray-200 shadow-sm"><Mail className="w-4 h-4 text-gray-500" /></div>
+                              <div className="p-2 bg-white rounded-md border border-gray-200 shadow-sm">
+                                <Mail className="w-4 h-4 text-gray-500" />
+                              </div>
                               {demande.email}
                             </div>
                             <div className="flex items-center gap-3 text-sm text-[#0a0f1e]">
-                              <div className="p-2 bg-white rounded-md border border-gray-200 shadow-sm"><Phone className="w-4 h-4 text-gray-500" /></div>
+                              <div className="p-2 bg-white rounded-md border border-gray-200 shadow-sm">
+                                <Phone className="w-4 h-4 text-gray-500" />
+                              </div>
                               {demande.phone}
                             </div>
                             {demande.budget && (
                               <div className="flex items-center gap-3 text-sm text-[#0a0f1e]">
-                                <div className="p-2 bg-white rounded-md border border-gray-200 shadow-sm"><DollarSign className="w-4 h-4 text-gray-500" /></div>
+                                <div className="p-2 bg-white rounded-md border border-gray-200 shadow-sm">
+                                  <DollarSign className="w-4 h-4 text-gray-500" />
+                                </div>
                                 {demande.budget}
                               </div>
                             )}
                             {demande.property_type && (
                               <div className="flex items-center gap-3 text-sm text-[#0a0f1e]">
-                                <div className="p-2 bg-white rounded-md border border-gray-200 shadow-sm"><Building2 className="w-4 h-4 text-gray-500" /></div>
+                                <div className="p-2 bg-white rounded-md border border-gray-200 shadow-sm">
+                                  <Building2 className="w-4 h-4 text-gray-500" />
+                                </div>
                                 {demande.property_type}
                               </div>
                             )}
@@ -243,7 +294,9 @@ export default function DemandesManagement() {
                         </div>
 
                         <div className="lg:col-span-2 space-y-4">
-                          <h4 className="text-xs font-bold uppercase text-gray-400 tracking-widest">Message du Prospect</h4>
+                          <h4 className="text-xs font-bold uppercase text-gray-400 tracking-widest">
+                            Message du Prospect
+                          </h4>
                           <div className="bg-white p-5 rounded-xl border border-gray-200 text-[#0a0f1e] leading-relaxed text-sm whitespace-pre-wrap shadow-sm">
                             {demande.message}
                           </div>
@@ -253,9 +306,15 @@ export default function DemandesManagement() {
                               size="sm"
                               className="bg-[#d4af37] text-[#0a0f1e] hover:bg-[#b8952e] font-semibold gap-2 border border-[#d4af37]"
                               onClick={() => {
-                                const subject = encodeURIComponent(`Réponse à votre demande : ${demande.subject}`);
-                                const body = encodeURIComponent(`Bonjour ${demande.name},\n\nNous avons bien reçu votre demande concernant le projet suivant : ${demande.subject}.\n\n`);
-                                window.open(`mailto:${demande.email}?bcc=${adminEmail}&subject=${subject}&body=${body}`);
+                                const subject = encodeURIComponent(
+                                  `Réponse à votre demande : ${demande.subject}`,
+                                );
+                                const body = encodeURIComponent(
+                                  `Bonjour ${demande.name},\n\nNous avons bien reçu votre demande concernant le projet suivant : ${demande.subject}.\n\n`,
+                                );
+                                window.open(
+                                  `mailto:${demande.email}?bcc=${adminEmail}&subject=${subject}&body=${body}`,
+                                );
                               }}
                             >
                               <Send className="w-4 h-4" /> Répondre par Email
@@ -264,23 +323,28 @@ export default function DemandesManagement() {
                             <div className="h-8 w-[1px] bg-gray-300 mx-2 hidden md:block" />
 
                             <Button
-                              size="sm" variant="outline"
+                              size="sm"
+                              variant="outline"
                               className="text-blue-700 border-blue-200 bg-white hover:bg-blue-50"
-                              onClick={() => updateStatus(demande.id, 'en_cours')}
+                              onClick={() =>
+                                updateStatus(demande.id, "en_cours")
+                              }
                             >
                               Marquer "En cours"
                             </Button>
 
                             <Button
-                              size="sm" variant="outline"
+                              size="sm"
+                              variant="outline"
                               className="text-green-700 border-green-200 bg-white hover:bg-green-50"
-                              onClick={() => updateStatus(demande.id, 'traite')}
+                              onClick={() => updateStatus(demande.id, "traite")}
                             >
                               Marquer "Traité"
                             </Button>
 
                             <Button
-                              size="sm" variant="ghost"
+                              size="sm"
+                              variant="ghost"
                               className="text-red-600 hover:bg-red-50 hover:text-red-700 ml-auto"
                               onClick={() => handleDelete(demande.id)}
                             >
