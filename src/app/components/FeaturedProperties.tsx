@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useRef, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Bath, Bed, MapPin, Maximize, TrendingUp, Loader2 } from "lucide-react";
 import { motion, useInView } from "motion/react";
 import { Link } from "react-router";
@@ -45,54 +46,50 @@ const AnimatedCard = ({
 };
 
 export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: properties = [], isLoading } = useQuery({
+    queryKey: ["featured-properties"],
+    queryFn: async () => {
+      if (!supabase) return [];
+      const { data, error } = await supabase
+        .from("properties")
+        .select(
+          "id, title, location, price, image, beds, baths, sqft, type, tag",
+        )
+        .order("created_at", { ascending: false });
 
-  useEffect(() => {
-    const fetchProperties = async () => {
-      if (!supabase) return;
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from("properties")
-          .select("*")
-          .order("created_at", { ascending: false });
-        if (error) throw error;
-        if (data) setProperties(data);
-      } catch (err) {
-        console.error("Erreur properties :", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchProperties();
-  }, []);
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 1000 * 60 * 10, // 10 minutes de cache (le catalogue change peu)
+  });
 
   const formatPrice = (price: string | number) =>
     typeof price === "number"
       ? `${new Intl.NumberFormat("fr-FR").format(price)} FCFA`
       : price;
 
-  const filteredProperties = properties.filter((property) => {
-    if (!filters) return true;
-    let typeMatch = true;
-    if (filters.type !== "all") {
-      const typeMap: Record<string, string> = {
-        apartment: "Appartement",
-        villa: "Villa",
-        penthouse: "Penthouse",
-        terrain: "Terrain",
-        lotti: "Lotti",
-      };
-      typeMatch = property.type === (typeMap[filters.type] || filters.type);
-    }
-    let locMatch = true;
-    if (filters.location)
-      locMatch = property.location
-        .toLowerCase()
-        .includes(filters.location.toLowerCase());
-    return typeMatch && locMatch;
-  });
+  const filteredProperties = useMemo(() => {
+    return properties.filter((property) => {
+      if (!filters) return true;
+      let typeMatch = true;
+      if (filters.type !== "all") {
+        const typeMap: Record<string, string> = {
+          apartment: "Appartement",
+          villa: "Villa",
+          penthouse: "Penthouse",
+          terrain: "Terrain",
+          lotti: "Lotti",
+        };
+        typeMatch = property.type === (typeMap[filters.type] || filters.type);
+      }
+      let locMatch = true;
+      if (filters.location)
+        locMatch = property.location
+          .toLowerCase()
+          .includes(filters.location.toLowerCase());
+      return typeMatch && locMatch;
+    });
+  }, [properties, filters]);
 
   return (
     <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 bg-gradient-to-b from-[#0a0f1e] to-[#1e3a5f]/20 min-h-screen">
