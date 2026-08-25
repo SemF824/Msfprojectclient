@@ -83,9 +83,9 @@ export function PropertyFilter({
           viewport={{ once: true }}
           className="bg-[#0a0f1e]/90 backdrop-blur-2xl rounded-2xl border border-[#d4af37]/30 p-4 sm:p-6 md:p-8 shadow-2xl max-w-full overflow-hidden"
         >
-          {/* Property Type Filters - Scrollable always safe */}
-          <div className="w-full overflow-x-auto pb-4 mb-2 sm:mb-4 hide-scrollbar">
-            <div className="flex gap-2 min-w-max">
+          {/* Property Type Filters - Responsive flex-wrap grid */}
+          <div className="w-full mb-3 sm:mb-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
               {propertyTypes.map((type) => {
                 const Icon = type.icon;
                 return (
@@ -102,14 +102,14 @@ export function PropertyFilter({
                         });
                       }
                     }}
-                    className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl border transition-all ${
+                    className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl border transition-all w-full ${
                       activeFilter === type.value
-                        ? "bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] border-[#d4af37] font-semibold"
+                        ? "bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] border-[#d4af37] font-semibold shadow-sm"
                         : "bg-white/10 text-white border-white/20 hover:border-[#d4af37]/50 hover:bg-white/15"
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
-                    <span className="text-xs sm:text-sm font-medium whitespace-nowrap">
+                    <Icon className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm font-medium truncate">
                       {type.label}
                     </span>
                   </button>
