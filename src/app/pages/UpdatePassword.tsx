@@ -43,7 +43,7 @@ export default function UpdatePassword() {
 
     try {
       const { error } = await supabase.auth.updateUser({
-        password: password
+        password: password,
       });
 
       if (error) throw error;
@@ -61,7 +61,7 @@ export default function UpdatePassword() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center bg-slate-50 px-4">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-gray-100"
@@ -69,18 +69,26 @@ export default function UpdatePassword() {
         <div className="w-12 h-12 bg-[#d4af37]/10 rounded-full flex items-center justify-center mx-auto mb-6">
           <Key className="w-6 h-6 text-[#d4af37]" />
         </div>
-        <h2 className="text-2xl font-bold text-center text-[#0a0f1e] mb-2">Nouveau Mot de Passe</h2>
+        <h2 className="text-2xl font-bold text-center text-[#0a0f1e] mb-2">
+          Nouveau Mot de Passe
+        </h2>
         <p className="text-gray-500 text-center mb-8 text-sm">
           Saisissez votre nouveau mot de passe sécurisé.
         </p>
 
         {success ? (
-          <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="text-center space-y-4">
+          <motion.div
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            className="text-center space-y-4"
+          >
             <div className="p-4 bg-green-50 text-green-700 rounded-xl flex items-center gap-3">
               <CheckCircle2 className="w-5 h-5" />
               <span>Mot de passe mis à jour avec succès !</span>
             </div>
-            <p className="text-sm text-gray-500">Redirection vers votre espace...</p>
+            <p className="text-sm text-gray-500">
+              Redirection vers votre espace...
+            </p>
           </motion.div>
         ) : (
           <form onSubmit={handleUpdate} className="space-y-4">
@@ -89,26 +97,30 @@ export default function UpdatePassword() {
                 <AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}
               </div>
             )}
-            
+
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Nouveau mot de passe</label>
+              <label className="text-sm font-medium text-gray-700">
+                Nouveau mot de passe
+              </label>
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#d4af37] focus:bg-white transition-all"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#d4af37] focus:bg-white transition-all text-[#0a0f1e]"
                 placeholder="••••••••"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Confirmer le mot de passe</label>
+              <label className="text-sm font-medium text-gray-700">
+                Confirmer le mot de passe
+              </label>
               <input
                 type="password"
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#d4af37] focus:bg-white transition-all"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#d4af37] focus:bg-white transition-all text-[#0a0f1e]"
                 placeholder="••••••••"
               />
             </div>
@@ -118,7 +130,8 @@ export default function UpdatePassword() {
               disabled={loading}
               className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3.5 bg-[#0a0f1e] text-white font-semibold rounded-xl hover:bg-gray-900 transition-colors disabled:opacity-70"
             >
-              {loading ? "Mise à jour..." : "Enregistrer"} <ArrowRight className="w-4 h-4" />
+              {loading ? "Mise à jour..." : "Enregistrer"}{" "}
+              <ArrowRight className="w-4 h-4" />
             </button>
           </form>
         )}
