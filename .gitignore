@@ -56,6 +56,10 @@ netlify.toml # <--- Ajoutez si vous déployez avec Netlify et que vous voulez l'
 # --- CACHE & TEMP ---
 .cache/
 *.tmp
+.agents/
+.claude/
+skills-lock.json
+memories/
 
 # --- ARCHIVES ---
 *.zip
