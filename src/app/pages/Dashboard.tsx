@@ -36,7 +36,7 @@ const itemVariants: Variants = {
 };
 
 export default function Dashboard() {
-  const { user: authUser } = useSupabaseAuth();
+  const { user: authUser, isLoading: isAuthLoading } = useSupabaseAuth();
 
   const { data: dashboardData, isLoading: isDataLoading } = useQuery({
     queryKey: ["client_dashboard_data", authUser?.id],
@@ -130,7 +130,7 @@ export default function Dashboard() {
     s ??
     "Inconnu";
 
-  if (isDataLoading) {
+  if (isAuthLoading || isDataLoading) {
     return (
       <div className="space-y-6 animate-pulse">
         <div className="h-10 bg-gray-200 rounded w-1/3 mb-2" />
@@ -138,11 +138,11 @@ export default function Dashboard() {
 
         <div className="h-64 bg-gray-200 rounded-2xl mb-8" />
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="bg-white rounded-2xl border border-gray-100 p-5 h-32"
+              className="bg-white rounded-2xl border border-gray-100 p-5 h-28"
             />
           ))}
         </div>
@@ -198,7 +198,7 @@ export default function Dashboard() {
       </motion.div>
 
       <motion.div
-        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
         variants={containerVariants}
         initial="hidden"
         animate="visible"

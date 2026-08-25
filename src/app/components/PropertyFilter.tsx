@@ -15,9 +15,15 @@ interface PropertyFilterProps {
     location: string;
     price: string;
   }) => void;
+  className?: string;
+  hasHeroOverlap?: boolean;
 }
 
-export function PropertyFilter({ onSearch }: PropertyFilterProps) {
+export function PropertyFilter({
+  onSearch,
+  className = "",
+  hasHeroOverlap = false,
+}: PropertyFilterProps) {
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedPrice, setSelectedPrice] = useState("all");
@@ -67,13 +73,15 @@ export function PropertyFilter({ onSearch }: PropertyFilterProps) {
   };
 
   return (
-    <section className="relative -mt-12 sm:-mt-16 md:-mt-20 z-10 px-4 sm:px-6">
+    <section
+      className={`relative z-10 w-full max-w-full overflow-hidden ${hasHeroOverlap ? "-mt-12 sm:-mt-16 md:-mt-20" : ""} ${className}`}
+    >
       <div className="container mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="bg-[#0a0f1e]/90 backdrop-blur-2xl rounded-2xl border border-[#d4af37]/30 p-4 sm:p-6 md:p-8 shadow-2xl"
+          className="bg-[#0a0f1e]/90 backdrop-blur-2xl rounded-2xl border border-[#d4af37]/30 p-4 sm:p-6 md:p-8 shadow-2xl max-w-full overflow-hidden"
         >
           {/* Property Type Filters - Scrollable always safe */}
           <div className="w-full overflow-x-auto pb-4 mb-2 sm:mb-4 hide-scrollbar">
