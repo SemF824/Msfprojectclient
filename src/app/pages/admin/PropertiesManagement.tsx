@@ -39,6 +39,7 @@ interface Property {
   tag?: string;
   status?: string;
   created_at: string;
+  features?: string[]; // Nouvelle colonne pour les caractéristiques
 }
 
 interface PropertyImage {
@@ -48,6 +49,7 @@ interface PropertyImage {
 
 type FormData = Omit<Property, "id" | "created_at" | "images"> & {
   images: PropertyImage[];
+  features: string; // Pour le formulaire, une chaîne de texte multi-lignes
 };
 
 // Utilitaires de parsing sécurisé pour les images
@@ -94,6 +96,7 @@ const EMPTY_FORM: FormData = {
   type: "villa",
   tag: "",
   status: "disponible",
+  features: "", // Nouvelle propriété pour les caractéristiques
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -313,6 +316,7 @@ export default function PropertiesManagement() {
       type: p.type || "villa",
       tag: p.tag || "",
       status: p.status || "disponible",
+      features: p.features ? p.features.join("\n") : "", // Charge les caractéristiques
     });
     setIsModalOpen(true);
   };
@@ -378,6 +382,10 @@ export default function PropertiesManagement() {
       type: formData.type,
       tag: formData.tag ? formData.tag : undefined,
       status: formData.status,
+      features: formData.features
+        .split(/[,\n]+/) // Divise par virgule ou nouvelle ligne
+        .map((f) => f.trim())
+        .filter((f) => f.length > 0), // Supprime les éléments vides
     };
 
     upsertMutation.mutate(payload);
@@ -822,6 +830,23 @@ export default function PropertiesManagement() {
                       rows={4}
                       className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none resize-none"
                       placeholder="Décrivez les atouts de cette propriété en détail..."
+                    />
+                  </div>
+
+                  {/* Caractéristiques */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-gray-700 font-medium mb-1.5">
+                      Caractéristiques (1 par ligne ou séparées par des
+                      virgules)
+                    </label>
+                    <textarea
+                      value={formData.features || ""}
+                      onChange={(e) =>
+                        setFormData((f) => ({ ...f, features: e.target.value }))
+                      }
+                      rows={3}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none resize-none"
+                      placeholder="Ex: Piscine privée, Jardin paysager, 3 Salles de bain, Garage double"
                     />
                   </div>
 

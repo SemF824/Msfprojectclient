@@ -133,7 +133,7 @@ export default function PropertyDetails() {
               : DEFAULT_IMAGES.map((url) => ({ url, description: "" })),
         features:
           Array.isArray(dbProperty.features) && dbProperty.features.length > 0
-            ? dbProperty.features
+            ? dbProperty.features.slice(0, 10) // Limite à 10 caractéristiques
             : [
                 "Cuisine équipée haut de gamme",
                 "Piscine & terrasse spacieuse",
@@ -143,7 +143,7 @@ export default function PropertyDetails() {
                 "Système de sécurité 24/7",
                 "Climatisation centrale",
                 "Générateur de secours",
-              ],
+              ].slice(0, 10), // Limite également les caractéristiques par défaut
         amenities: [
           { icon: Waves, label: "Piscine Privée" },
           { icon: Car, label: "Garage Sécurisé" },
