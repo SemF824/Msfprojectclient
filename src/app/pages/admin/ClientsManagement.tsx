@@ -1,8 +1,16 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Users, Search, Download, X, Loader2,
-  Mail, Phone, MapPin, Calendar, ChevronRight
+  Users,
+  Search,
+  Download,
+  X,
+  Loader2,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  ChevronRight,
 } from "lucide-react";
 import { supabase } from "../../../hooks/useSupabaseAuth";
 import { toast } from "sonner";
@@ -14,8 +22,6 @@ interface Client {
   email?: string | null;
   phone?: string | null;
   city?: string | null;
-  profession?: string | null;
-  company?: string | null;
   created_at?: string;
   demandesCount: number;
   lastActivity: string | null;
@@ -33,9 +39,20 @@ interface DevisRequest {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const getVipBadge = (count: number) => {
-  if (count === 0) return { label: "Prospect", classes: "bg-gray-100 text-gray-600 border-gray-200" };
-  if (count <= 2)  return { label: "Client",   classes: "bg-blue-100 text-blue-700 border-blue-200" };
-  return              { label: "VIP",       classes: "bg-amber-100 text-amber-700 border-amber-200" };
+  if (count === 0)
+    return {
+      label: "Prospect",
+      classes: "bg-gray-100 text-gray-600 border-gray-200",
+    };
+  if (count <= 2)
+    return {
+      label: "Client",
+      classes: "bg-blue-100 text-blue-700 border-blue-200",
+    };
+  return {
+    label: "VIP",
+    classes: "bg-amber-100 text-amber-700 border-amber-200",
+  };
 };
 
 const fmtDate = (d: string | null | undefined) =>
@@ -43,18 +60,18 @@ const fmtDate = (d: string | null | undefined) =>
 
 // ─────────────────────────────────────────────────────────────────────────────
 export default function ClientsManagement() {
-  const [clients,         setClients]         = useState<Client[]>([]);
-  const [isLoading,       setIsLoading]       = useState<boolean>(true);
-  const [searchText,      setSearchText]      = useState<string>("");
-  const [selectedClient,  setSelectedClient]  = useState<Client | null>(null);
-  const [drawerOpen,      setDrawerOpen]      = useState<boolean>(false);
-  const [clientReqs,      setClientReqs]      = useState<DevisRequest[]>([]);
-  const [isDrawerLoad,    setIsDrawerLoad]    = useState<boolean>(false);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [searchText, setSearchText] = useState<string>("");
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
+  const [clientReqs, setClientReqs] = useState<DevisRequest[]>([]);
+  const [isDrawerLoad, setIsDrawerLoad] = useState<boolean>(false);
 
   // ── Fetch clients (profiles + demandes) ───────────────────────────────────
   useEffect(() => {
     let isMounted = true;
-    
+
     const loadData = async () => {
       if (!supabase) return;
       setIsLoading(true);
@@ -64,11 +81,9 @@ export default function ClientsManagement() {
         const [profilesResponse, requestsResponse] = await Promise.all([
           supabase
             .from("profiles")
-            .select("id, full_name, email, phone, city, profession, company, created_at")
+            .select("id, full_name, email, phone, city, created_at")
             .order("created_at", { ascending: false }),
-          supabase
-            .from("devis_requests")
-            .select("client_email, created_at")
+          supabase.from("devis_requests").select("client_email, created_at"),
         ]);
 
         if (profilesResponse.error) throw profilesResponse.error;
@@ -80,8 +95,11 @@ export default function ClientsManagement() {
         if (!isMounted) return;
 
         // Structuration de l'index des demandes
-        const reqsMap: Record<string, { count: number; lastDate: string | null }> = {};
-        (allReqs || []).forEach(r => {
+        const reqsMap: Record<
+          string,
+          { count: number; lastDate: string | null }
+        > = {};
+        (allReqs || []).forEach((r) => {
           if (!r.client_email) return;
           const e = r.client_email;
           if (!reqsMap[e]) reqsMap[e] = { count: 0, lastDate: null };
@@ -91,26 +109,28 @@ export default function ClientsManagement() {
           }
         });
 
-        const merged: Client[] = (profiles || []).map(p => {
+        const merged: Client[] = (profiles || []).map((p) => {
           const info = p.email ? reqsMap[p.email] : undefined;
           return {
             ...p,
             demandesCount: info?.count ?? 0,
-            lastActivity:  info?.lastDate ?? p.created_at ?? null,
+            lastActivity: info?.lastDate ?? p.created_at ?? null,
           };
         });
 
         // Fallback stratégique si aucun profil n'est synchronisé
         if (merged.length === 0 && allReqs && allReqs.length > 0) {
-          const uniqueEmails = [...new Set(allReqs.map(r => r.client_email).filter(Boolean))];
-          const fallback: Client[] = uniqueEmails.map(email => ({
-            id:            email!,
+          const uniqueEmails = [
+            ...new Set(allReqs.map((r) => r.client_email).filter(Boolean)),
+          ];
+          const fallback: Client[] = uniqueEmails.map((email) => ({
+            id: email!,
             email,
-            full_name:     null,
-            phone:         null,
-            city:          null,
+            full_name: null,
+            phone: null,
+            city: null,
             demandesCount: reqsMap[email!]?.count ?? 0,
-            lastActivity:  reqsMap[email!]?.lastDate ?? null,
+            lastActivity: reqsMap[email!]?.lastDate ?? null,
           }));
           setClients(fallback);
         } else {
@@ -127,18 +147,21 @@ export default function ClientsManagement() {
     };
 
     loadData();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // ── Filtre recherche côté client ───────────────────────────────────────────
   const filtered = useMemo(() => {
     if (!searchText.trim()) return clients;
     const q = searchText.toLowerCase();
-    return clients.filter(c =>
-      c.full_name?.toLowerCase().includes(q) ||
-      c.email?.toLowerCase().includes(q) ||
-      c.phone?.includes(q) ||
-      c.city?.toLowerCase().includes(q)
+    return clients.filter(
+      (c) =>
+        c.full_name?.toLowerCase().includes(q) ||
+        c.email?.toLowerCase().includes(q) ||
+        c.phone?.includes(q) ||
+        c.city?.toLowerCase().includes(q),
     );
   }, [clients, searchText]);
 
@@ -149,9 +172,9 @@ export default function ClientsManagement() {
     setClientReqs([]);
     setIsDrawerLoad(true);
 
-    if (!supabase || !client.email) { 
-      setIsDrawerLoad(false); 
-      return; 
+    if (!supabase || !client.email) {
+      setIsDrawerLoad(false);
+      return;
     }
 
     try {
@@ -165,7 +188,9 @@ export default function ClientsManagement() {
       setClientReqs(data || []);
     } catch (err: any) {
       console.error(err);
-      toast.error("Impossible d'extraire l'historique des requêtes de ce prospect.");
+      toast.error(
+        "Impossible d'extraire l'historique des requêtes de ce prospect.",
+      );
     } finally {
       setIsDrawerLoad(false);
     }
@@ -174,8 +199,16 @@ export default function ClientsManagement() {
   // ── Export CSV ────────────────────────────────────────────────────────────
   const exportCSV = () => {
     try {
-      const headers = ["Nom", "Email", "Téléphone", "Ville", "Demandes", "Dernière activité", "Statut"];
-      const rows = filtered.map(c => {
+      const headers = [
+        "Nom",
+        "Email",
+        "Téléphone",
+        "Ville",
+        "Demandes",
+        "Dernière activité",
+        "Statut",
+      ];
+      const rows = filtered.map((c) => {
         const badge = getVipBadge(c.demandesCount);
         return [
           `"${c.full_name ?? ""}"`,
@@ -188,10 +221,12 @@ export default function ClientsManagement() {
         ].join(",");
       });
       const csv = [headers.join(","), ...rows].join("\n");
-      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-      const url  = URL.createObjectURL(blob);
+      const blob = new Blob(["\uFEFF" + csv], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.href     = url;
+      link.href = url;
       link.download = `clients-msf-${new Date().toISOString().slice(0, 10)}.csv`;
       link.click();
       URL.revokeObjectURL(url);
@@ -202,7 +237,9 @@ export default function ClientsManagement() {
   };
 
   const displayName = (c: Client) =>
-    c.full_name?.trim() || c.email?.split("@")[0] || `Utilisateur ${c.id.slice(0, 8)}`;
+    c.full_name?.trim() ||
+    c.email?.split("@")[0] ||
+    `Utilisateur ${c.id.slice(0, 8)}`;
 
   const initials = (c: Client) => {
     const src = c.full_name?.trim() || c.email || "?";
@@ -216,7 +253,9 @@ export default function ClientsManagement() {
         <div>
           <h1 className="text-3xl text-[#0a0f1e] font-bold">Base Clients</h1>
           <p className="text-gray-500 text-sm mt-1">
-            {isLoading ? "Chargement…" : `${filtered.length} client${filtered.length !== 1 ? "s" : ""}`}
+            {isLoading
+              ? "Chargement…"
+              : `${filtered.length} client${filtered.length !== 1 ? "s" : ""}`}
           </p>
         </div>
         <div className="flex gap-3">
@@ -236,7 +275,7 @@ export default function ClientsManagement() {
           type="text"
           placeholder="Rechercher par nom, email, téléphone, ville…"
           value={searchText}
-          onChange={e => setSearchText(e.target.value)}
+          onChange={(e) => setSearchText(e.target.value)}
           className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-[#0a0f1e] placeholder:text-gray-400 focus:border-[#d4af37] focus:outline-none transition-colors shadow-sm"
         />
       </div>
@@ -258,13 +297,27 @@ export default function ClientsManagement() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  {["Nom", "Email", "Téléphone", "Ville", "Demandes", "Dernière activité", "Statut", ""].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
+                  {[
+                    "Nom",
+                    "Email",
+                    "Téléphone",
+                    "Ville",
+                    "Demandes",
+                    "Dernière activité",
+                    "Statut",
+                    "",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                    >
+                      {h}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filtered.map(c => {
+                {filtered.map((c) => {
                   const badge = getVipBadge(c.demandesCount);
                   return (
                     <tr
@@ -277,18 +330,32 @@ export default function ClientsManagement() {
                           <div className="w-9 h-9 bg-[#d4af37]/15 rounded-full flex items-center justify-center text-[#d4af37] font-bold text-sm flex-shrink-0">
                             {initials(c)}
                           </div>
-                          <span className="text-[#0a0f1e] font-medium truncate max-w-[140px]">{displayName(c)}</span>
+                          <span className="text-[#0a0f1e] font-medium truncate max-w-[140px]">
+                            {displayName(c)}
+                          </span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-gray-600 max-w-[160px] truncate">{c.email ?? "—"}</td>
-                      <td className="px-4 py-3 text-gray-600">{c.phone ?? "—"}</td>
-                      <td className="px-4 py-3 text-gray-600">{c.city  ?? "—"}</td>
-                      <td className="px-4 py-3">
-                        <span className="text-[#0a0f1e] font-bold">{c.demandesCount}</span>
+                      <td className="px-4 py-3 text-gray-600 max-w-[160px] truncate">
+                        {c.email ?? "—"}
                       </td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{fmtDate(c.lastActivity)}</td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {c.phone ?? "—"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {c.city ?? "—"}
+                      </td>
                       <td className="px-4 py-3">
-                        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${badge.classes}`}>
+                        <span className="text-[#0a0f1e] font-bold">
+                          {c.demandesCount}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-500 text-xs">
+                        {fmtDate(c.lastActivity)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${badge.classes}`}
+                        >
                           {badge.label}
                         </span>
                       </td>
@@ -309,12 +376,16 @@ export default function ClientsManagement() {
         {drawerOpen && selectedClient && (
           <>
             <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
               onClick={() => setDrawerOpen(false)}
             />
             <motion.div
-              initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md bg-white shadow-2xl flex flex-col"
             >
@@ -325,11 +396,18 @@ export default function ClientsManagement() {
                     {initials(selectedClient)}
                   </div>
                   <div>
-                    <p className="text-white font-semibold truncate max-w-[180px]">{displayName(selectedClient)}</p>
-                    <p className="text-gray-400 text-xs">{getVipBadge(selectedClient.demandesCount).label}</p>
+                    <p className="text-white font-semibold truncate max-w-[180px]">
+                      {displayName(selectedClient)}
+                    </p>
+                    <p className="text-gray-400 text-xs">
+                      {getVipBadge(selectedClient.demandesCount).label}
+                    </p>
                   </div>
                 </div>
-                <button onClick={() => setDrawerOpen(false)} className="p-1.5 text-gray-400 hover:text-white transition-colors">
+                <button
+                  onClick={() => setDrawerOpen(false)}
+                  className="p-1.5 text-gray-400 hover:text-white transition-colors"
+                >
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -337,20 +415,36 @@ export default function ClientsManagement() {
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {/* Infos client */}
                 <div className="space-y-3">
-                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Informations</h3>
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    Informations
+                  </h3>
                   {[
-                    { icon: Mail,     value: selectedClient.email,    label: "Email" },
-                    { icon: Phone,    value: selectedClient.phone,    label: "Téléphone" },
-                    { icon: MapPin,   value: selectedClient.city,     label: "Ville" },
-                    { icon: Calendar, value: fmtDate(selectedClient.created_at), label: "Inscrit le" },
-                  ].map(row => (
+                    { icon: Mail, value: selectedClient.email, label: "Email" },
+                    {
+                      icon: Phone,
+                      value: selectedClient.phone,
+                      label: "Téléphone",
+                    },
+                    {
+                      icon: MapPin,
+                      value: selectedClient.city,
+                      label: "Ville",
+                    },
+                    {
+                      icon: Calendar,
+                      value: fmtDate(selectedClient.created_at),
+                      label: "Inscrit le",
+                    },
+                  ].map((row) => (
                     <div key={row.label} className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                         <row.icon className="w-4 h-4 text-gray-500" />
                       </div>
                       <div>
                         <p className="text-[10px] text-gray-400">{row.label}</p>
-                        <p className="text-sm text-[#0a0f1e] font-medium">{row.value || "—"}</p>
+                        <p className="text-sm text-[#0a0f1e] font-medium">
+                          {row.value || "—"}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -362,29 +456,45 @@ export default function ClientsManagement() {
                     Demandes de devis ({clientReqs.length})
                   </h3>
                   {isDrawerLoad ? (
-                    <div className="py-8 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#d4af37]" /></div>
+                    <div className="py-8 flex justify-center">
+                      <Loader2 className="w-6 h-6 animate-spin text-[#d4af37]" />
+                    </div>
                   ) : clientReqs.length === 0 ? (
-                    <div className="py-6 text-center text-gray-400 text-sm">Aucune demande</div>
+                    <div className="py-6 text-center text-gray-400 text-sm">
+                      Aucune demande
+                    </div>
                   ) : (
                     <div className="space-y-2">
-                      {clientReqs.map(r => (
-                        <div key={r.id} className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                      {clientReqs.map((r) => (
+                        <div
+                          key={r.id}
+                          className="p-3 bg-gray-50 rounded-xl border border-gray-100"
+                        >
                           <div className="flex items-start justify-between">
                             <p className="text-sm text-[#0a0f1e] font-medium truncate max-w-[200px]">
                               {r.property_name || "Propriété"}
                             </p>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ml-2 flex-shrink-0 ${
-                              r.status === "approuve" ? "bg-green-100 text-green-700 border-green-200" :
-                              r.status === "rejete"   ? "bg-red-100 text-red-700 border-red-200" :
-                              "bg-blue-100 text-blue-700 border-blue-200"
-                            }`}>
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ml-2 flex-shrink-0 ${
+                                r.status === "approuve"
+                                  ? "bg-green-100 text-green-700 border-green-200"
+                                  : r.status === "rejete"
+                                    ? "bg-red-100 text-red-700 border-red-200"
+                                    : "bg-blue-100 text-blue-700 border-blue-200"
+                              }`}
+                            >
                               {r.status ?? "nouveau"}
                             </span>
                           </div>
-                          <p className="text-xs text-gray-500 mt-1">{fmtDate(r.created_at)}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {fmtDate(r.created_at)}
+                          </p>
                           {r.property_price && (
                             <p className="text-xs text-[#d4af37] font-medium mt-0.5">
-                              {new Intl.NumberFormat("fr-FR").format(r.property_price)} FCFA
+                              {new Intl.NumberFormat("fr-FR").format(
+                                r.property_price,
+                              )}{" "}
+                              FCFA
                             </p>
                           )}
                         </div>
