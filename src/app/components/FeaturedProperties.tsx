@@ -71,23 +71,52 @@ export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {
       if (!filters) return true;
+
+      // 1. Filtrage par type (robuste, insensible à la casse et au pluriel)
       let typeMatch = true;
-      if (filters.type !== "all") {
-        const typeMap: Record<string, string> = {
-          apartment: "Appartement",
-          villa: "Villa",
-          penthouse: "Penthouse",
-          terrain: "Terrain",
-          lotti: "Lotti",
+      if (filters.type && filters.type !== "all") {
+        const typeMap: Record<string, string[]> = {
+          apartment: ["appartement", "appartements"],
+          villa: ["villa", "villas"],
+          penthouse: ["penthouse", "penthouses"],
+          terrain: ["terrain", "terrains"],
+          lotti: ["lotti", "lottis", "lot", "lots"],
         };
-        typeMatch = property.type === (typeMap[filters.type] || filters.type);
+        const searchTypes = typeMap[filters.type] || [filters.type];
+        const propTypeLower = (property.type || "").toLowerCase();
+        typeMatch = searchTypes.some(
+          (t) =>
+            propTypeLower.includes(t.toLowerCase()) ||
+            t.toLowerCase().includes(propTypeLower),
+        );
       }
+
+      // 2. Filtrage par localisation (villes / quartiers)
       let locMatch = true;
-      if (filters.location)
-        locMatch = property.location
+      if (filters.location) {
+        locMatch = (property.location || "")
           .toLowerCase()
           .includes(filters.location.toLowerCase());
-      return typeMatch && locMatch;
+      }
+
+      // 3. Filtrage par prix
+      let priceMatch = true;
+      if (filters.price && filters.price !== "all") {
+        const propPrice = Number(property.price);
+        if (!isNaN(propPrice)) {
+          if (filters.price.endsWith("+")) {
+            const minPrice = Number(filters.price.replace("+", ""));
+            priceMatch = propPrice >= minPrice;
+          } else {
+            const [minStr, maxStr] = filters.price.split("-");
+            const minPrice = Number(minStr);
+            const maxPrice = Number(maxStr);
+            priceMatch = propPrice >= minPrice && propPrice <= maxPrice;
+          }
+        }
+      }
+
+      return typeMatch && locMatch && priceMatch;
     });
   }, [properties, filters]);
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Link, useParams } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 import { PopupModal } from "react-calendly";
 import {
   ArrowLeft,
@@ -30,13 +31,22 @@ import {
   Hospital,
   FileText,
   Loader2,
-  Info
+  Info,
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 
 // On récupère l'URL depuis les variables d'environnement, avec un fallback de sécurité
 const calendlyUrl = (import.meta as any).env.VITE_CALENDLY_URL;
+
+const DEFAULT_IMAGES = [
+  "https://images.unsplash.com/photo-1760129745103-91c4022ed5fb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBtb2Rlcm4lMjB2aWxsYSUyMGV4dGVyaW9uJTIwb2NlYW4lMjB2aWV3fGVufDF8fHx8MTc3NjI3NTQzOHww&ixlib=rb-4.1.0&q=80&w=1080",
+  "https://images.unsplash.com/photo-1638454795595-0a0abf68614d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBhcGFydG1lbnQlMjBpbnRlcmlvciUyMGxpdmluZyUyMHJvb218ZW58MXx8fHwxNzc2MjM0MjUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+  "https://images.unsplash.com/photo-1643034738686-d69e7bc047e1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBraXRjaGVuJTIwbWFyYmxlJTIwbHV4dXJ5fGVufDF8fHx8MTc3NjI3NTQzOHww&ixlib=rb-4.1.0&q=80&w=1080",
+  "https://images.unsplash.com/photo-1758448755969-8791367cf5c5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBiZWRyb29tJTIwbWFzdGVyJTIwc3VpdGV8ZW58MXx8fHwxNzc2MjMyMDQ3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+  "https://images.unsplash.com/photo-1762732793012-8bdab3af00b4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBiYXRocm9vbSUyMHNwYSUyMG1vZGVybnxlbnwxfHx8fDE3NzYyNzU0Mzl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+  "https://images.unsplash.com/photo-1755493872564-516424a81dd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzd2ltbWluZyUyMHBvb2wlMjBpbmZpbml0eSUyMG9jZWFuJTIwdmlld3xlbnwxfHx8fDE3NzYyNzU0Mzl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+];
 
 export default function PropertyDetails() {
   const { id } = useParams();
@@ -45,78 +55,124 @@ export default function PropertyDetails() {
   const [showGallery, setShowGallery] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
-
-  // État pour afficher le modal Calendly
   const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
 
-  // Mock property data
-  const property = {
-    id: id || "1",
-    title: "Villa Tchikobo Prestige",
-    location: "Tchikobo, Pointe-Noire",
-    price: "295 200 000",
-    priceLabel: "295 200 000 FCFA",
-    type: "Villa de Luxe",
-    status: "Disponible",
-    bedrooms: 5,
-    bathrooms: 4,
-    surface: 450,
-    landSize: 800,
-    description:
-      "Découvrez cette villa exceptionnelle située dans le prestigieux quartier de Tchikobo. Conçue avec des matériaux haut de gamme et offrant une vue imprenable sur l'océan Atlantique, cette propriété incarne le luxe à la congolaise. Architecture moderne fusionnée avec des touches caribéennes, espaces de vie généreux et finitions impeccables.",
-    images: [
-      "https://images.unsplash.com/photo-1760129745103-91c4022ed5fb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBtb2Rlcm4lMjB2aWxsYSUyMGV4dGVyaW9uJTIwb2NlYW4lMjB2aWV3fGVufDF8fHx8MTc3NjI3NTQzOHww&ixlib=rb-4.1.0&q=80&w=1080",
-      "https://images.unsplash.com/photo-1638454795595-0a0abf68614d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBhcGFydG1lbnQlMjBpbnRlcmlvciUyMGxpdmluZyUyMHJvb218ZW58MXx8fHwxNzc2MjM0MjUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "https://images.unsplash.com/photo-1643034738686-d69e7bc047e1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBraXRjaGVuJTIwbWFyYmxlJTIwbHV4dXJ5fGVufDF8fHx8MTc3NjI3NTQzOHww&ixlib=rb-4.1.0&q=80&w=1080",
-      "https://images.unsplash.com/photo-1758448755969-8791367cf5c5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBiZWRyb29tJTIwbWFzdGVyJTIwc3VpdGV8ZW58MXx8fHwxNzc2MjMyMDQ3fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "https://images.unsplash.com/photo-1762732793012-8bdab3af00b4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBiYXRocm9vbSUyMHNwYSUyMG1vZGVybnxlbnwxfHx8fDE3NzYyNzU0Mzl8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "https://images.unsplash.com/photo-1755493872564-516424a81dd6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzd2ltbWluZyUyMHBvb2wlMjBpbmZpbml0eSUyMG9jZWFuJTIwdmlld3xlbnwxfHx8fDE3NzYyNzU0Mzl8MA&ixlib=rb-4.1.0&q=80&w=1080",
-    ],
-    features: [
-      "Cuisine équipée haut de gamme",
-      "Piscine à débordement",
-      "Vue océan panoramique",
-      "Jardin tropical aménagé",
-      "Terrasse spacieuse",
-      "Garage 3 voitures",
-      "Système de sécurité 24/7",
-      "Climatisation centrale",
-      "Panneaux solaires",
-      "Générateur de secours",
-    ],
-    amenities: [
-      { icon: Waves, label: "Piscine Privée" },
-      { icon: Car, label: "Garage 3 Places" },
-      { icon: Shield, label: "Sécurité 24/7" },
-      { icon: Dumbbell, label: "Salle de Sport" },
-    ],
-    neighborhood: [
-      { icon: ShoppingCart, label: "Casino Supermarché", distance: "500m" },
-      { icon: GraduationCap, label: "École Internationale", distance: "1.2km" },
-      { icon: Hospital, label: "Clinique Privée", distance: "800m" },
-      { icon: Building2, label: "Centre-Ville", distance: "3km" },
-    ],
-  };
+  // ── Chargement dynamique de la propriété depuis Supabase ──
+  const {
+    data: dbProperty,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["property-detail", id],
+    queryFn: async () => {
+      if (!supabase || !id) return null;
+      const { data, error } = await supabase
+        .from("properties")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Construction de l'objet property dynamique
+  const property = dbProperty
+    ? {
+        id: dbProperty.id,
+        title: dbProperty.title || "Propriété de Prestige",
+        location: dbProperty.location || "Congo",
+        price: dbProperty.price,
+        priceLabel:
+          typeof dbProperty.price === "number"
+            ? `${new Intl.NumberFormat("fr-FR").format(dbProperty.price)} FCFA`
+            : dbProperty.price || "Sur demande",
+        type: dbProperty.type
+          ? dbProperty.type.charAt(0).toUpperCase() + dbProperty.type.slice(1)
+          : "Villa de Luxe",
+        status: dbProperty.status
+          ? dbProperty.status.charAt(0).toUpperCase() +
+            dbProperty.status.slice(1)
+          : "Disponible",
+        bedrooms: dbProperty.beds || dbProperty.bedrooms || 3,
+        bathrooms: dbProperty.baths || dbProperty.bathrooms || 2,
+        surface: dbProperty.sqft || dbProperty.surface || 250,
+        landSize:
+          dbProperty.landSize ||
+          dbProperty.land_size ||
+          (dbProperty.sqft ? Math.round(dbProperty.sqft * 1.5) : 500),
+        description:
+          dbProperty.description ||
+          `Découvrez cette villa exceptionnelle "${dbProperty.title}" située à ${dbProperty.location}. Conçue avec des matériaux haut de gamme, cette propriété offre un cadre de vie d'exception fusionnant élégance, sécurité et confort moderne.`,
+        images:
+          Array.isArray(dbProperty.images) && dbProperty.images.length > 0
+            ? dbProperty.images
+            : dbProperty.image
+              ? [dbProperty.image, ...DEFAULT_IMAGES.slice(1)]
+              : DEFAULT_IMAGES,
+        features:
+          Array.isArray(dbProperty.features) && dbProperty.features.length > 0
+            ? dbProperty.features
+            : [
+                "Cuisine équipée haut de gamme",
+                "Piscine & terrasse spacieuse",
+                "Vue panoramique exceptionnelle",
+                "Jardin tropical aménagé",
+                "Garage sécurisé",
+                "Système de sécurité 24/7",
+                "Climatisation centrale",
+                "Générateur de secours",
+              ],
+        amenities: [
+          { icon: Waves, label: "Piscine Privée" },
+          { icon: Car, label: "Garage Sécurisé" },
+          { icon: Shield, label: "Sécurité 24/7" },
+          { icon: Dumbbell, label: "Espace Fitness" },
+        ],
+        neighborhood: [
+          {
+            icon: ShoppingCart,
+            label: "Supermarchés & Commerces",
+            distance: "500m",
+          },
+          {
+            icon: GraduationCap,
+            label: "Écoles & Établissements",
+            distance: "1.2km",
+          },
+          { icon: Hospital, label: "Cliniques & Hôpitaux", distance: "800m" },
+          {
+            icon: Building2,
+            label: "Centre-Ville & Quartier d'Affaires",
+            distance: "3km",
+          },
+        ],
+      }
+    : null;
 
   // Vérifier si la propriété est dans les favoris au chargement
   useEffect(() => {
     const checkFavorite = async () => {
-      if (!user || !supabase) return;
+      if (!user || !supabase || !property?.id) return;
       const { data } = await supabase
         .from("favorites")
         .select("*")
         .eq("user_id", user.id)
         .eq("property_id", property.id)
-        .single();
+        .maybeSingle();
 
       if (data) setIsFavorite(true);
     };
     checkFavorite();
-  }, [user, property.id]);
+  }, [user, property?.id]);
 
   const toggleFavorite = async () => {
+    if (!property?.id) return;
     if (!user) {
-      alert("Veuillez vous connecter pour ajouter aux favoris.");
+      alert(
+        "Veuillez vous connecter pour ajouter cette propriété à vos favoris.",
+      );
       return;
     }
     if (!supabase) return;
@@ -147,7 +203,7 @@ export default function PropertyDetails() {
   };
 
   const PropertyMap = ({ location }: { location: string }) => {
-    const apiKey = ((import.meta as any) as any).env.VITE_GOOGLE_MAPS_API_KEY;
+    const apiKey = (import.meta as any as any).env.VITE_GOOGLE_MAPS_API_KEY;
 
     if (!apiKey) {
       return (
@@ -176,6 +232,41 @@ export default function PropertyDetails() {
       </div>
     );
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 pt-28 flex flex-col items-center justify-center gap-4">
+        <Loader2 className="w-12 h-12 text-[#d4af37] animate-spin" />
+        <p className="text-gray-600 font-medium">
+          Chargement des détails de la propriété...
+        </p>
+      </div>
+    );
+  }
+
+  if (!property) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 pt-28 pb-20 flex flex-col items-center justify-center px-6 text-center">
+        <div className="w-16 h-16 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-center mb-4 text-[#d4af37]">
+          <Building2 className="w-8 h-8" />
+        </div>
+        <h1 className="text-2xl font-bold text-[#0a0f1e] mb-2">
+          Propriété Introuvable
+        </h1>
+        <p className="text-gray-600 max-w-md mb-6">
+          La propriété demandée n'existe pas ou n'est plus disponible dans le
+          catalogue MSF Congo.
+        </p>
+        <Link
+          to="/properties"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-[#d4af37] text-[#0a0f1e] font-bold rounded-xl hover:shadow-lg transition-all"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Explorer toutes les propriétés</span>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 pt-20">
@@ -218,7 +309,7 @@ export default function PropertyDetails() {
 
           {/* Thumbnail Grid */}
           <div className="hidden lg:grid grid-cols-2 gap-4">
-            {property.images.slice(1, 5).map((img, idx) => (
+            {property.images.slice(1, 5).map((img: string, idx: number) => (
               <div
                 key={idx}
                 onClick={() => setSelectedImage(idx + 1)}
@@ -333,7 +424,7 @@ export default function PropertyDetails() {
             >
               <h2 className="text-2xl text-[#0a0f1e] mb-6">Caractéristiques</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {property.features.map((feature, idx) => (
+                {property.features.map((feature: string, idx: number) => (
                   <div key={idx} className="flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5 text-[#d4af37] flex-shrink-0" />
                     <span className="text-gray-700">{feature}</span>
@@ -423,30 +514,63 @@ export default function PropertyDetails() {
                 <div className="w-10 h-10 bg-[#d4af37]/10 rounded-xl flex items-center justify-center text-[#d4af37]">
                   <Info className="w-5 h-5" />
                 </div>
-                <h3 className="text-2xl text-[#0a0f1e] font-bold">Plan de Financement Sécurisé</h3>
+                <h3 className="text-2xl text-[#0a0f1e] font-bold">
+                  Plan de Financement Sécurisé
+                </h3>
               </div>
-              
+
               <p className="text-gray-600 mb-8">
-                Pour garantir la sécurité de votre investissement, nos paiements sont échelonnés et strictement liés à l'avancement réel des travaux.
+                Pour garantir la sécurité de votre investissement, nos paiements
+                sont échelonnés et strictement liés à l'avancement réel des
+                travaux.
               </p>
 
               <div className="space-y-0 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-[#d4af37] before:via-[#d4af37] before:to-transparent">
                 {[
-                  { step: "Phase 1", title: "Signature, Terrain, Titre & Fondations", desc: "Acquisition du terrain, établissement du titre foncier, signature du contrat et réalisation des fondations solides.", pct: "30%" },
-                  { step: "Phase 2", title: "Élévations", desc: "Élévation des murs et de la structure principale de votre villa.", pct: "10%" },
-                  { step: "Phase 3", title: "Mise hors d'eau (Toiture)", desc: "Installation complète de la charpente et de la toiture.", pct: "20%" },
-                  { step: "Phase 4", title: "Finalisation", desc: "Travaux de plomberie, électricité, finitions intérieures/extérieures et remise officielle des clés.", pct: "40%" },
+                  {
+                    step: "Phase 1",
+                    title: "Signature, Terrain, Titre & Fondations",
+                    desc: "Acquisition du terrain, établissement du titre foncier, signature du contrat et réalisation des fondations solides.",
+                    pct: "30%",
+                  },
+                  {
+                    step: "Phase 2",
+                    title: "Élévations",
+                    desc: "Élévation des murs et de la structure principale de votre villa.",
+                    pct: "10%",
+                  },
+                  {
+                    step: "Phase 3",
+                    title: "Mise hors d'eau (Toiture)",
+                    desc: "Installation complète de la charpente et de la toiture.",
+                    pct: "20%",
+                  },
+                  {
+                    step: "Phase 4",
+                    title: "Finalisation",
+                    desc: "Travaux de plomberie, électricité, finitions intérieures/extérieures et remise officielle des clés.",
+                    pct: "40%",
+                  },
                 ].map((item, index) => (
-                  <div key={index} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active mb-8">
+                  <div
+                    key={index}
+                    className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active mb-8"
+                  >
                     <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-[#0a0f1e] text-[#d4af37] shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
                       <CheckCircle2 className="w-5 h-5" />
                     </div>
                     <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-gray-50 p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold text-[#d4af37] uppercase tracking-wider">{item.step}</span>
-                        <span className="px-3 py-1 bg-white text-[#0a0f1e] font-black text-sm rounded-lg border border-gray-200 shadow-sm">{item.pct}</span>
+                        <span className="text-xs font-bold text-[#d4af37] uppercase tracking-wider">
+                          {item.step}
+                        </span>
+                        <span className="px-3 py-1 bg-white text-[#0a0f1e] font-black text-sm rounded-lg border border-gray-200 shadow-sm">
+                          {item.pct}
+                        </span>
                       </div>
-                      <h4 className="text-lg font-bold text-[#0a0f1e] mb-1">{item.title}</h4>
+                      <h4 className="text-lg font-bold text-[#0a0f1e] mb-1">
+                        {item.title}
+                      </h4>
                       <p className="text-sm text-gray-500">{item.desc}</p>
                     </div>
                   </div>
@@ -598,7 +722,7 @@ export default function PropertyDetails() {
               className="w-full h-auto max-h-[80vh] object-contain rounded-2xl"
             />
             <div className="flex gap-2 mt-4 overflow-x-auto">
-              {property.images.map((img, idx) => (
+              {property.images.map((img: string, idx: number) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedImage(idx)}
@@ -620,7 +744,7 @@ export default function PropertyDetails() {
 
       {/* Calendly Popup Modal */}
       <PopupModal
-        url={calendlyUrl} 
+        url={calendlyUrl}
         onModalClose={() => setIsCalendlyOpen(false)}
         open={isCalendlyOpen}
         rootElement={document.getElementById("root")!}

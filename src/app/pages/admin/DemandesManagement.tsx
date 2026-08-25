@@ -52,6 +52,7 @@ export default function DemandesManagement() {
   } = useQuery({
     queryKey: ["contact_requests"],
     queryFn: async () => {
+      if (!supabase) return [];
       const { data, error } = await supabase
         .from("contact_requests")
         .select("*")
@@ -70,6 +71,7 @@ export default function DemandesManagement() {
       id: string;
       newStatus: string;
     }) => {
+      if (!supabase) throw new Error("Supabase non disponible");
       const { error } = await supabase
         .from("contact_requests")
         .update({ status: newStatus })
@@ -86,6 +88,7 @@ export default function DemandesManagement() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      if (!supabase) throw new Error("Supabase non disponible");
       const { error } = await supabase
         .from("contact_requests")
         .delete()

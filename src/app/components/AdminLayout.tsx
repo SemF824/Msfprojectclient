@@ -137,16 +137,15 @@ export default function AdminLayout() {
     };
   }, []);
 
-  // SÉCURITÉ : Déconnexion forcée
+  // SÉCURITÉ : Déconnexion ou retour
   const handlePublicSiteReturn = async () => {
-    if (
-      window.confirm(
-        "SÉCURITÉ : Retourner sur le site public va détruire votre session Administrateur. Voulez-vous vous déconnecter et continuer ?",
-      )
-    ) {
-      await signOut();
-      navigate("");
-    }
+    navigate("/");
+  };
+
+  const handleAdminSignOut = async () => {
+    await signOut();
+    setIsUserMenuOpen(false);
+    navigate("/admin/login", { replace: true });
   };
 
   return (
@@ -272,11 +271,7 @@ export default function AdminLayout() {
                     </>
                   )}
                   <button
-                    onClick={async () => {
-                      await signOut();
-                      setIsUserMenuOpen(false);
-                      navigate("/admin", { replace: true });
-                    }}
+                    onClick={handleAdminSignOut}
                     className="flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors w-full mt-2 border-t border-gray-200"
                   >
                     <LogOut className="w-4 h-4" />
@@ -296,13 +291,13 @@ export default function AdminLayout() {
         } overflow-hidden flex flex-col`}
       >
         <div className="p-4">
-          {/* Bouton retour au site public AVEC DÉCONNEXION */}
+          {/* Bouton retour au site public */}
           <button
             onClick={handlePublicSiteReturn}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl text-red-600 bg-red-50 hover:bg-red-100 hover:text-red-700 transition-all border border-red-100 font-bold"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 mb-2 rounded-xl text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all border border-gray-200 font-medium"
           >
-            <LogOut className="w-4 h-4" />
-            <span className="text-sm">Quitter (Déconnexion)</span>
+            <Home className="w-4 h-4 text-[#d4af37]" />
+            <span className="text-sm">Voir le site public</span>
           </button>
         </div>
 

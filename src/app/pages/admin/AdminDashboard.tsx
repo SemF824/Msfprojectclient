@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import { motion } from "motion/react";
+import { motion, Variants } from "motion/react";
 import {
   FileText,
   CheckCircle,
@@ -18,14 +18,14 @@ import { Link } from "react-router";
 import { toast } from "sonner";
 
 // ─── Stagger variants (anti-clignotement) ─────────────────────────────────────
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: { staggerChildren: 0.08, delayChildren: 0.1 },
   },
 };
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 16 },
   visible: {
     opacity: 1,
@@ -341,7 +341,7 @@ export default function AdminDashboard() {
           <div className="space-y-3">
             <Link
               to="/admin/proprietes"
-              className="w-full py-4 bg-white/5 hover:bg-white/10 rounded-xl transition-all flex items-center gap-3 px-4 border border-white/10 text-left group block"
+              className="w-full py-4 bg-white/5 hover:bg-white/10 rounded-xl transition-all flex items-center gap-3 px-4 border border-white/10 text-left group"
             >
               <Building2 className="w-5 h-5 text-[#d4af37] border border-white/10 bg-white/5 p-1 rounded-md" />
               <div>

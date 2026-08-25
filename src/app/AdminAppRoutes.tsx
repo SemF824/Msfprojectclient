@@ -25,7 +25,7 @@ const TeamManagement = lazy(() => import("./pages/admin/TeamManagement"));
 
 const AdminLoader = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
-    <div className="w-8 h-8 border-4 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
+    <div className="w-8 h-8 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
   </div>
 );
 

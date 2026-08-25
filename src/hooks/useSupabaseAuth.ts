@@ -1,5 +1,10 @@
-import { useState, useEffect } from "react";
-import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
+import { useState, useEffect, useCallback } from "react";
+import {
+  createClient,
+  SupabaseClient,
+  User,
+  AuthResponse,
+} from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as
@@ -20,25 +25,75 @@ if (!isConfigured) {
   );
 }
 
+export type AppUserRole = "admin" | "superadmin" | "client" | null;
+
 interface UseSupabaseAuthReturn {
   user: User | null;
   isAdmin: boolean;
-  userRole: "admin" | "superadmin" | "client" | null;
+  userRole: AppUserRole;
   isLoading: boolean;
   signOut: () => Promise<void>;
   signIn: (
     email: string,
     password: string,
-  ) => Promise<{ data: any; error: Error | null }>;
+  ) => Promise<{ data: AuthResponse["data"] | null; error: Error | null }>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
   getSession: () => Promise<any>;
-  // IMPORTANT : isAdmin est pour l'UI uniquement (basé sur user_metadata).
-  // La vraie vérification de sécurité se fait dans ProtectedAdminRoute via la table user_roles.
   verifyAdminRole: () => Promise<boolean>;
+  getUserRole: (targetUser?: User | null) => Promise<AppUserRole>;
 }
 
 export function useSupabaseAuth(): UseSupabaseAuthReturn {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(isConfigured); // false d'emblée si pas configuré
+  const [userRole, setUserRole] = useState<AppUserRole>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Détermine le rôle de manière fiable (user_roles DB puis fallback user_metadata)
+  const resolveRole = useCallback(
+    async (currentUser: User | null): Promise<AppUserRole> => {
+      if (!currentUser) return null;
+
+      // 1. Tenter la vérification via la table sécurisée public.user_roles
+      if (supabase) {
+        try {
+          const { data, error } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", currentUser.id)
+            .maybeSingle();
+
+          if (!error && data?.role) {
+            const dbRole = data.role as AppUserRole;
+            if (
+              dbRole === "admin" ||
+              dbRole === "superadmin" ||
+              dbRole === "client"
+            ) {
+              return dbRole;
+            }
+          }
+        } catch (err) {
+          console.warn(
+            "[useSupabaseAuth] Erreur lors de la lecture de user_roles:",
+            err,
+          );
+        }
+      }
+
+      // 2. Fallback sur user_metadata
+      const metadataRole = currentUser.user_metadata?.role as AppUserRole;
+      if (
+        metadataRole === "admin" ||
+        metadataRole === "superadmin" ||
+        metadataRole === "client"
+      ) {
+        return metadataRole;
+      }
+
+      return "client";
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!supabase) {
@@ -46,16 +101,29 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
       return;
     }
 
+    let isMounted = true;
+
     const initAuth = async () => {
       try {
         const {
           data: { session },
         } = await supabase.auth.getSession();
-        setUser(session?.user ?? null);
+
+        if (!isMounted) return;
+
+        const sessionUser = session?.user ?? null;
+        setUser(sessionUser);
+
+        if (sessionUser) {
+          const role = await resolveRole(sessionUser);
+          if (isMounted) setUserRole(role);
+        } else {
+          if (isMounted) setUserRole(null);
+        }
       } catch (error) {
         console.error("[useSupabaseAuth] Erreur récupération session :", error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
@@ -63,17 +131,26 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const sessionUser = session?.user ?? null;
+      if (isMounted) {
+        setUser(sessionUser);
+        if (sessionUser) {
+          const role = await resolveRole(sessionUser);
+          if (isMounted) setUserRole(role);
+        } else {
+          setUserRole(null);
+        }
+        setIsLoading(false);
+      }
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [resolveRole]);
 
-  const userRole =
-    (user?.user_metadata?.role as "admin" | "superadmin" | "client") || null;
   const isAdmin = userRole === "admin" || userRole === "superadmin";
 
   const signOut = async () => {
@@ -81,6 +158,7 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
     try {
       await supabase.auth.signOut();
       setUser(null);
+      setUserRole(null);
     } catch (error) {
       console.error("[useSupabaseAuth] Erreur déconnexion :", error);
     }
@@ -96,7 +174,13 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
         password,
       });
       if (error) return { data: null, error };
-      setUser(data.user);
+
+      if (data.user) {
+        setUser(data.user);
+        const role = await resolveRole(data.user);
+        setUserRole(role);
+      }
+
       return { data, error: null };
     } catch (error) {
       return { data: null, error: error as Error };
@@ -125,18 +209,16 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
     return session;
   };
 
-  // ── Vérification sécurisée du rôle admin via la table public.user_roles ──────
-  // Contrairement à isAdmin (user_metadata), cette fonction interroge la DB
-  // et ne peut pas être falsifiée côté client.
   const verifyAdminRole = async (): Promise<boolean> => {
     if (!supabase || !user) return false;
-    const { data, error } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .single();
-    if (error || !data) return false;
-    return ["admin", "superadmin"].includes(data.role);
+    const role = await resolveRole(user);
+    return role === "admin" || role === "superadmin";
+  };
+
+  const getUserRole = async (
+    targetUser?: User | null,
+  ): Promise<AppUserRole> => {
+    return resolveRole(targetUser !== undefined ? targetUser : user);
   };
 
   return {
@@ -149,6 +231,7 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
     resetPassword,
     getSession,
     verifyAdminRole,
+    getUserRole,
   };
 }
 

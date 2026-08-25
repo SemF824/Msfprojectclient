@@ -1,7 +1,5 @@
-import { useState, useEffect } from "react";
-import { Navigate } from "react-router";
+import { Navigate, useLocation } from "react-router";
 import { useSupabaseAuth } from "../../hooks/useSupabaseAuth";
-import { supabase } from "../../hooks/useSupabaseAuth";
 import { Loader2 } from "lucide-react";
 
 interface ProtectedAdminRouteProps {
@@ -10,103 +8,46 @@ interface ProtectedAdminRouteProps {
 
 /**
  * Gardien admin sécurisé.
- * Vérifie le rôle via la table public.user_roles (non falsifiable côté client)
- * au lieu de se fier à user_metadata.role.
+ * Vérifie le rôle via le hook useSupabaseAuth (interrogeant user_roles et metadata).
  */
 export default function ProtectedAdminRoute({
   children,
 }: ProtectedAdminRouteProps) {
-  const { user, isLoading: authLoading } = useSupabaseAuth();
+  const { user, isAdmin, userRole, isLoading: authLoading } = useSupabaseAuth();
+  const location = useLocation();
 
-  const [isAdminVerified, setIsAdminVerified] = useState<boolean | null>(null);
-  const [isChecking, setIsChecking] = useState(false);
-
-  useEffect(() => {
-    if (authLoading) return;
-
-    // S'il n'y a pas d'utilisateur connecté du tout
-    if (!user) {
-      setIsAdminVerified(false);
-      return;
-    }
-
-    if (!supabase) {
-      // Supabase non configuré → fallback sur user_metadata (mode dégradé)
-      const role = user?.user_metadata?.role;
-      setIsAdminVerified(role === "admin" || role === "superadmin");
-      return;
-    }
-
-    let isMounted = true;
-    setIsChecking(true);
-
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .single()
-      .then(({ data, error }) => {
-        if (!isMounted) return;
-        if (error || !data) {
-          // Si la table user_roles n'existe pas encore, fallback user_metadata
-          const role = user?.user_metadata?.role;
-          setIsAdminVerified(role === "admin" || role === "superadmin");
-        } else {
-          setIsAdminVerified(["admin", "superadmin"].includes(data.role));
-        }
-        setIsChecking(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [user, authLoading]);
-
-  // Phase 1 : Chargement Auth
+  // Phase 1 : Chargement Auth & Rôle
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-lg text-gray-700 font-medium mb-2">
+          <Loader2 className="w-12 h-12 text-[#d4af37] animate-spin mx-auto mb-3" />
+          <p className="text-lg text-gray-700 font-medium mb-1">
             Vérification de l'accès...
           </p>
-          <p className="text-sm text-gray-500">Authentification en cours</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Phase 2 : Vérification user_roles en cours
-  if (isChecking || isAdminVerified === null) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-[#d4af37] animate-spin mx-auto mb-3" />
-          <p className="text-gray-600 font-medium">
-            Vérification des droits...
-          </p>
-          <p className="text-sm text-gray-400 mt-1">
-            Contrôle de sécurité en cours
+          <p className="text-sm text-gray-500">
+            Contrôle des privilèges administrateur
           </p>
         </div>
       </div>
     );
   }
 
-  // Phase 3 : Le couperet
-  if (!isAdminVerified) {
-    // Si la personne est connectée, mais que c'est un client classique
-    if (user) {
-      console.warn(
-        "Accès Admin refusé pour un client. Redirection vers l'espace client...",
-      );
-      return <Navigate to="/client/dashboard" replace />;
-    }
-    // Si personne n'est connecté
-    return <Navigate to="/admin/login" replace />;
+  // Phase 2 : Non connecté -> Redirection vers la page de login admin
+  if (!user) {
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
-  // L'utilisateur est un vrai admin, on le laisse passer
+  // Phase 3 : Utilisateur connecté mais sans privilèges admin
+  const isAuthorized =
+    isAdmin || userRole === "admin" || userRole === "superadmin";
+  if (!isAuthorized) {
+    console.warn(
+      "Accès Admin refusé pour un compte non-administrateur. Redirection vers l'espace client...",
+    );
+    return <Navigate to="/client/dashboard" replace />;
+  }
+
+  // Accès autorisé
   return <>{children}</>;
 }

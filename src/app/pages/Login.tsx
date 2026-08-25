@@ -15,7 +15,8 @@ import { Provider } from "@supabase/supabase-js";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { user, signIn, resetPassword } = useSupabaseAuth();
+  const { user, isAdmin, userRole, signIn, resetPassword, getUserRole } =
+    useSupabaseAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,12 +27,16 @@ export default function Login() {
     password: "",
   });
 
-  // Redirection automatique si l'utilisateur est déjà connecté
+  // Redirection automatique adaptée au rôle si l'utilisateur est déjà connecté
   useEffect(() => {
     if (user) {
-      navigate("/client/dashboard", { replace: true });
+      if (isAdmin || userRole === "admin" || userRole === "superadmin") {
+        navigate("/admin/dashboard", { replace: true });
+      } else {
+        navigate("/client/dashboard", { replace: true });
+      }
     }
-  }, [user, navigate]);
+  }, [user, isAdmin, userRole, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +62,7 @@ export default function Login() {
     }
 
     try {
-      const { error: signInError } = await signIn(
+      const { data, error: signInError } = await signIn(
         formData.email,
         formData.password,
       );
@@ -68,8 +73,13 @@ export default function Login() {
         return;
       }
 
-      // La redirection sera gérée par le useEffect
-      navigate("/client/dashboard");
+      // Détermination du rôle pour une redirection immédiate et sans friction
+      const role = await getUserRole(data?.user);
+      if (role === "admin" || role === "superadmin") {
+        navigate("/admin/dashboard", { replace: true });
+      } else {
+        navigate("/client/dashboard", { replace: true });
+      }
     } catch (err: any) {
       setError(err.message || "Une erreur est survenue");
       setIsLoading(false);

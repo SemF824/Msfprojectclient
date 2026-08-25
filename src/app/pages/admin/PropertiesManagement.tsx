@@ -66,7 +66,7 @@ const EMPTY_FORM: FormData = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 export default function PropertiesManagement() {
-  const { userRole } = useSupabaseAuth();
+  const { isAdmin, userRole } = useSupabaseAuth();
   const queryClient = useQueryClient();
 
   const [searchText, setSearchText] = useState<string>("");
@@ -76,6 +76,59 @@ export default function PropertiesManagement() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingProp, setEditingProp] = useState<Property | null>(null);
   const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
+  const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
+
+  // Téléversement d'image depuis l'ordinateur
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error(
+        "Veuillez sélectionner un fichier image valide (PNG, JPG, WebP...).",
+      );
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("L'image est trop volumineuse. Limite fixée à 5 Mo.");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      if (!supabase) throw new Error("Client Supabase non initialisé.");
+
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+      const filePath = `property-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("make-3c1961a2-properties")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage
+        .from("make-3c1961a2-properties")
+        .getPublicUrl(filePath);
+
+      setFormData((prev) => ({ ...prev, image: publicUrl }));
+      toast.success("Image de la propriété téléversée avec succès !");
+    } catch (err: any) {
+      console.error("[ImageUpload] Erreur :", err);
+      toast.error(
+        `Échec du téléversement : ${err.message || "Erreur inconnue"}`,
+      );
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
 
   // ── Fetch avec React Query ──────────────────────────────────────────────────
   const { data: properties = [], isLoading } = useQuery({
@@ -117,6 +170,7 @@ export default function PropertiesManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-properties"] });
       queryClient.invalidateQueries({ queryKey: ["featured-properties"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_dashboard_stats"] });
       toast.success(
         editingProp ? "Propriété mise à jour." : "Nouvelle propriété ajoutée.",
       );
@@ -130,20 +184,38 @@ export default function PropertiesManagement() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       if (!supabase) throw new Error("Non connecté");
+
+      // 1. Nettoyage préventif des dépendances de clés étrangères
+      try {
+        await supabase.from("favorites").delete().eq("property_id", id);
+      } catch (favErr) {
+        console.warn(
+          "[PropertiesManagement] Nettoyage favoris associé:",
+          favErr,
+        );
+      }
+
+      // 2. Suppression de la propriété
       const { error } = await supabase.from("properties").delete().eq("id", id);
       if (error) throw error;
+      return id;
     },
-    onSuccess: (_, deletedId) => {
+    onSuccess: (deletedId) => {
       // Optimisation cache instantanée
       queryClient.setQueryData(
         ["admin-properties"],
         (old: Property[] | undefined) =>
           old ? old.filter((p) => p.id !== deletedId) : [],
       );
-      toast.success("Propriété retirée du marché.");
+      queryClient.invalidateQueries({ queryKey: ["admin-properties"] });
+      queryClient.invalidateQueries({ queryKey: ["featured-properties"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_dashboard_stats"] });
+      toast.success("Propriété supprimée avec succès du catalogue.");
     },
     onError: (err: any) => {
-      toast.error(`Erreur de suppression : ${err.message}`);
+      toast.error(
+        `Erreur de suppression : ${err.message || "Opération impossible"}`,
+      );
     },
   });
 
@@ -198,17 +270,17 @@ export default function PropertiesManagement() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const payload = {
+    const payload: Partial<Property> & { id?: string } = {
       ...(editingProp ? { id: editingProp.id } : {}),
       title: formData.title,
       location: formData.location,
       price: Number(formData.price),
-      image: formData.image || null,
-      beds: formData.beds ? Number(formData.beds) : null,
-      baths: formData.baths ? Number(formData.baths) : null,
-      sqft: formData.sqft ? Number(formData.sqft) : null,
+      image: formData.image ? formData.image : undefined,
+      beds: formData.beds ? Number(formData.beds) : undefined,
+      baths: formData.baths ? Number(formData.baths) : undefined,
+      sqft: formData.sqft ? Number(formData.sqft) : undefined,
       type: formData.type,
-      tag: formData.tag || null,
+      tag: formData.tag ? formData.tag : undefined,
       status: formData.status,
     };
 
@@ -264,7 +336,7 @@ export default function PropertiesManagement() {
             setFilterType(e.target.value);
             resetPage();
           }}
-          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none bg-white"
+          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none"
         >
           <option value="all">Tous les types</option>
           <option value="villa">Villa</option>
@@ -277,7 +349,7 @@ export default function PropertiesManagement() {
             setFilterStatus(e.target.value);
             resetPage();
           }}
-          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none bg-white"
+          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none"
         >
           <option value="all">Tous les statuts</option>
           <option value="disponible">Disponible</option>
@@ -386,10 +458,14 @@ export default function PropertiesManagement() {
                   >
                     <Edit2 className="w-3.5 h-3.5" /> Modifier
                   </button>
-                  {userRole === "superadmin" && (
+                  {(isAdmin ||
+                    userRole === "admin" ||
+                    userRole === "superadmin") && (
                     <button
                       onClick={() => handleDelete(p)}
-                      className="flex items-center justify-center px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
+                      disabled={deleteMutation.isPending}
+                      title="Supprimer la propriété"
+                      className="flex items-center justify-center px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors disabled:opacity-50"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -489,7 +565,7 @@ export default function PropertiesManagement() {
                       onChange={(e) =>
                         setFormData((f) => ({ ...f, type: e.target.value }))
                       }
-                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none bg-white"
+                      className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none"
                     >
                       <option value="villa">Villa</option>
                       <option value="appartement">Appartement</option>
@@ -544,7 +620,7 @@ export default function PropertiesManagement() {
                       onChange={(e) =>
                         setFormData((f) => ({ ...f, status: e.target.value }))
                       }
-                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none bg-white"
+                      className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none"
                     >
                       <option value="disponible">Disponible</option>
                       <option value="reserve">Réservé</option>
@@ -633,20 +709,69 @@ export default function PropertiesManagement() {
                     />
                   </div>
 
-                  {/* URL image */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm text-gray-700 font-medium mb-1.5">
-                      URL Image (optionnel)
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.image ?? ""}
-                      onChange={(e) =>
-                        setFormData((f) => ({ ...f, image: e.target.value }))
-                      }
-                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none"
-                      placeholder="https://..."
-                    />
+                  {/* URL image & Téléversement local */}
+                  <div className="md:col-span-2 space-y-3">
+                    <div>
+                      <label className="block text-sm text-gray-700 font-medium mb-1.5">
+                        Image de la propriété
+                      </label>
+                      <div className="flex flex-col sm:flex-row items-center gap-3">
+                        <label className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-xl cursor-pointer text-sm text-gray-700 font-medium transition-colors">
+                          {isUploadingImage ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin text-[#d4af37]" />
+                              <span>Téléversement...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Building2 className="w-4 h-4 text-[#d4af37]" />
+                              <span>Choisir depuis l'ordinateur</span>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            disabled={isUploadingImage}
+                            className="hidden"
+                          />
+                        </label>
+                        <span className="text-xs text-gray-400">
+                          Ou saisir une URL ci-dessous
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <input
+                        type="url"
+                        value={formData.image ?? ""}
+                        onChange={(e) =>
+                          setFormData((f) => ({ ...f, image: e.target.value }))
+                        }
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none"
+                        placeholder="https://images.unsplash.com/... ou URL personnalisée"
+                      />
+                    </div>
+
+                    {formData.image && (
+                      <div className="relative w-full h-32 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                        <img
+                          src={formData.image}
+                          alt="Aperçu"
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData((f) => ({ ...f, image: "" }))
+                          }
+                          className="absolute top-2 right-2 p-1 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 

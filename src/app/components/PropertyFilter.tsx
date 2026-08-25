@@ -1,9 +1,20 @@
-import { Building2, Home, MapPin, Palette, SlidersHorizontal, LandPlot } from "lucide-react";
+import {
+  Building2,
+  Home,
+  MapPin,
+  Palette,
+  SlidersHorizontal,
+  LandPlot,
+} from "lucide-react";
 import { useState } from "react";
 import { motion } from "motion/react";
 
 interface PropertyFilterProps {
-  onSearch?: (filters: { type: string; location: string; price: string; }) => void;
+  onSearch?: (filters: {
+    type: string;
+    location: string;
+    price: string;
+  }) => void;
 }
 
 export function PropertyFilter({ onSearch }: PropertyFilterProps) {
@@ -72,7 +83,17 @@ export function PropertyFilter({ onSearch }: PropertyFilterProps) {
                 return (
                   <button
                     key={type.value}
-                    onClick={() => setActiveFilter(type.value)}
+                    onClick={() => {
+                      setActiveFilter(type.value);
+                      if (onSearch) {
+                        onSearch({
+                          type: type.value,
+                          location:
+                            selectedLocation === "all" ? "" : selectedLocation,
+                          price: selectedPrice,
+                        });
+                      }
+                    }}
                     className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl border transition-all ${
                       activeFilter === type.value
                         ? "bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] border-[#d4af37] font-semibold"
@@ -92,42 +113,89 @@ export function PropertyFilter({ onSearch }: PropertyFilterProps) {
           {/* Search and Filter Controls - 1 col Mobile, 2 cols Tablet, 4 cols Desktop */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="relative">
-              <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">Localisation</label>
+              <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">
+                Localisation
+              </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[#d4af37]" />
                 <select
                   value={selectedLocation}
-                  onChange={(e) => setSelectedLocation(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSelectedLocation(val);
+                    if (onSearch) {
+                      onSearch({
+                        type: activeFilter,
+                        location: val === "all" ? "" : val,
+                        price: selectedPrice,
+                      });
+                    }
+                  }}
                   className="w-full pl-10 sm:pl-11 pr-4 py-2.5 sm:py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer text-sm"
                 >
                   <option value="">Toutes les Villes</option>
                   {cities.map((city) => (
-                    <option key={city.value} value={city.value} className="bg-[#1e3a5f]">{city.label}</option>
+                    <option
+                      key={city.value}
+                      value={city.value}
+                      className="bg-[#1e3a5f]"
+                    >
+                      {city.label}
+                    </option>
                   ))}
                 </select>
               </div>
             </div>
 
             <div className="relative">
-              <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">Gamme de Prix</label>
+              <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">
+                Gamme de Prix
+              </label>
               <select
                 value={selectedPrice}
-                onChange={(e) => setSelectedPrice(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedPrice(val);
+                  if (onSearch) {
+                    onSearch({
+                      type: activeFilter,
+                      location:
+                        selectedLocation === "all" ? "" : selectedLocation,
+                      price: val,
+                    });
+                  }
+                }}
                 className="w-full px-4 py-2.5 sm:py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer text-sm"
               >
                 {priceRanges.map((range) => (
-                  <option key={range.value} value={range.value} className="bg-[#1e3a5f]">{range.label}</option>
+                  <option
+                    key={range.value}
+                    value={range.value}
+                    className="bg-[#1e3a5f]"
+                  >
+                    {range.label}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div className="relative">
-              <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">Chambres</label>
+              <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">
+                Chambres
+              </label>
               <select className="w-full px-4 py-2.5 sm:py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer text-sm">
-                <option value="" className="bg-[#1e3a5f]">Indifférent</option>
-                <option value="1" className="bg-[#1e3a5f]">1+</option>
-                <option value="2" className="bg-[#1e3a5f]">2+</option>
-                <option value="3" className="bg-[#1e3a5f]">3+</option>
+                <option value="" className="bg-[#1e3a5f]">
+                  Indifférent
+                </option>
+                <option value="1" className="bg-[#1e3a5f]">
+                  1+
+                </option>
+                <option value="2" className="bg-[#1e3a5f]">
+                  2+
+                </option>
+                <option value="3" className="bg-[#1e3a5f]">
+                  3+
+                </option>
               </select>
             </div>
 
@@ -152,29 +220,61 @@ export function PropertyFilter({ onSearch }: PropertyFilterProps) {
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">Surface (m²)</label>
-                  <input type="text" placeholder="Min - Max" className="w-full px-4 py-2.5 sm:py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium placeholder:text-gray-400 focus:border-[#d4af37] focus:outline-none text-sm" />
+                  <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">
+                    Surface (m²)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Min - Max"
+                    className="w-full px-4 py-2.5 sm:py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium placeholder:text-gray-400 focus:border-[#d4af37] focus:outline-none text-sm"
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">Mode de Paiement</label>
+                  <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">
+                    Mode de Paiement
+                  </label>
                   <select className="w-full px-4 py-2.5 sm:py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none appearance-none text-sm cursor-pointer">
-                    {paymentOptions.map((option) => (<option key={option.value} value={option.value} className="bg-[#1e3a5f]">{option.label}</option>))}
+                    {paymentOptions.map((option) => (
+                      <option
+                        key={option.value}
+                        value={option.value}
+                        className="bg-[#1e3a5f]"
+                      >
+                        {option.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">Équipements</label>
+                  <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">
+                    Équipements
+                  </label>
                   <select className="w-full px-4 py-2.5 sm:py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none appearance-none text-sm cursor-pointer">
-                    <option value="" className="bg-[#1e3a5f]">Sélectionner</option>
-                    <option value="pool" className="bg-[#1e3a5f]">Piscine</option>
-                    <option value="gym" className="bg-[#1e3a5f]">Salle de Sport</option>
+                    <option value="" className="bg-[#1e3a5f]">
+                      Sélectionner
+                    </option>
+                    <option value="pool" className="bg-[#1e3a5f]">
+                      Piscine
+                    </option>
+                    <option value="gym" className="bg-[#1e3a5f]">
+                      Salle de Sport
+                    </option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">Type de Vue</label>
+                  <label className="block text-xs sm:text-sm text-gray-300 mb-1.5 font-medium">
+                    Type de Vue
+                  </label>
                   <select className="w-full px-4 py-2.5 sm:py-3 bg-[#1e3a5f]/80 border border-white/20 rounded-xl text-white font-medium focus:border-[#d4af37] focus:outline-none appearance-none text-sm cursor-pointer">
-                    <option value="" className="bg-[#1e3a5f]">Toutes les Vues</option>
-                    <option value="ocean" className="bg-[#1e3a5f]">Vue Océan</option>
-                    <option value="city" className="bg-[#1e3a5f]">Vue Ville</option>
+                    <option value="" className="bg-[#1e3a5f]">
+                      Toutes les Vues
+                    </option>
+                    <option value="ocean" className="bg-[#1e3a5f]">
+                      Vue Océan
+                    </option>
+                    <option value="city" className="bg-[#1e3a5f]">
+                      Vue Ville
+                    </option>
                   </select>
                 </div>
               </div>
