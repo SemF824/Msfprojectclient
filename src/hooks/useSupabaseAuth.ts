@@ -27,6 +27,44 @@ if (!isConfigured) {
 
 export type AppUserRole = "admin" | "superadmin" | "client" | null;
 
+// Temps d'inactivité avant déconnexion automatique (2 heures)
+const INACTIVITY_TIMEOUT = 2 * 60 * 60 * 1000;
+let inactivityTimer: NodeJS.Timeout | null = null;
+let isActivityListenerAttached = false;
+
+const resetInactivityTimer = () => {
+  if (inactivityTimer) clearTimeout(inactivityTimer);
+  if (!supabase) return;
+
+  inactivityTimer = setTimeout(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        console.log("[Auth] Déconnexion automatique pour inactivité.");
+        supabase.auth.signOut();
+      }
+    });
+  }, INACTIVITY_TIMEOUT);
+};
+
+const setupGlobalActivityListeners = () => {
+  if (isActivityListenerAttached || typeof window === "undefined") return;
+
+  const events = ["mousemove", "keydown", "click", "scroll", "touchstart"];
+  const handleActivity = () => resetInactivityTimer();
+
+  events.forEach((event) => window.addEventListener(event, handleActivity));
+  isActivityListenerAttached = true;
+};
+
+// Écoute des déconnexions cross-tab
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (e) => {
+    if (e.key === "supabase.auth.token" && !e.newValue) {
+      if (supabase) supabase.auth.signOut();
+    }
+  });
+}
+
 interface UseSupabaseAuthReturn {
   user: User | null;
   isAdmin: boolean;
@@ -47,6 +85,18 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<AppUserRole>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // --- Gestion de l'inactivité ---
+  const handleSignOut = useCallback(async () => {
+    if (!supabase) return;
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setUserRole(null);
+    } catch (error) {
+      console.error("[useSupabaseAuth] Erreur déconnexion :", error);
+    }
+  }, []);
 
   // Détermine le rôle de manière fiable (user_roles DB puis fallback user_metadata)
   const resolveRole = useCallback(
@@ -117,8 +167,11 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
         if (sessionUser) {
           const role = await resolveRole(sessionUser);
           if (isMounted) setUserRole(role);
+          setupGlobalActivityListeners();
+          resetInactivityTimer();
         } else {
           if (isMounted) setUserRole(null);
+          if (inactivityTimer) clearTimeout(inactivityTimer);
         }
       } catch (error) {
         console.error("[useSupabaseAuth] Erreur récupération session :", error);
@@ -131,15 +184,28 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+        if (isMounted) {
+          setUser(null);
+          setUserRole(null);
+          setIsLoading(false);
+          if (inactivityTimer) clearTimeout(inactivityTimer);
+        }
+        return;
+      }
+
       const sessionUser = session?.user ?? null;
       if (isMounted) {
         setUser(sessionUser);
         if (sessionUser) {
           const role = await resolveRole(sessionUser);
           if (isMounted) setUserRole(role);
+          setupGlobalActivityListeners();
+          resetInactivityTimer();
         } else {
           setUserRole(null);
+          if (inactivityTimer) clearTimeout(inactivityTimer);
         }
         setIsLoading(false);
       }
@@ -153,16 +219,7 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
 
   const isAdmin = userRole === "admin" || userRole === "superadmin";
 
-  const signOut = async () => {
-    if (!supabase) return;
-    try {
-      await supabase.auth.signOut();
-      setUser(null);
-      setUserRole(null);
-    } catch (error) {
-      console.error("[useSupabaseAuth] Erreur déconnexion :", error);
-    }
-  };
+  const signOut = handleSignOut;
 
   const signIn = async (email: string, password: string) => {
     if (!supabase) {

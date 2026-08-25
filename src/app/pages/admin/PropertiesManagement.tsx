@@ -63,8 +63,8 @@ const parseImage = (img: string): PropertyImage => {
   return { url: img, description: "" };
 };
 
-const serializeImages = (imgs: PropertyImage[]): string[] => {
-  return imgs.map((img) => JSON.stringify(img));
+const serializeImages = (imgs: PropertyImage[]): any[] => {
+  return imgs; // Envoyer l'objet directement, Supabase gère le jsonb
 };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -142,7 +142,7 @@ export default function PropertiesManagement() {
         const filePath = `property-images/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-          .from("client-documents") // Utilisation du bucket public existant et autorisé "client-documents"
+          .from("make-3c1961a2-properties")
           .upload(filePath, file, {
             cacheControl: "3600",
             upsert: false,
@@ -155,7 +155,9 @@ export default function PropertiesManagement() {
 
         const {
           data: { publicUrl },
-        } = supabase.storage.from("client-documents").getPublicUrl(filePath);
+        } = supabase.storage
+          .from("make-3c1961a2-properties")
+          .getPublicUrl(filePath);
 
         newUrls.push(publicUrl);
         uploadedCount++;

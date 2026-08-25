@@ -107,7 +107,10 @@ export default function PropertyDetails() {
           `Découvrez cette villa exceptionnelle "${dbProperty.title}" située à ${dbProperty.location}. Conçue avec des matériaux haut de gamme, cette propriété offre un cadre de vie d'exception fusionnant élégance, sécurité et confort moderne.`,
         images:
           Array.isArray(dbProperty.images) && dbProperty.images.length > 0
-            ? dbProperty.images.map((img: string) => {
+            ? dbProperty.images.map((img: any) => {
+                if (typeof img === "object" && img !== null && img.url) {
+                  return { url: img.url, description: img.description || "" };
+                }
                 try {
                   const parsed = JSON.parse(img);
                   if (parsed && typeof parsed === "object" && parsed.url) {
