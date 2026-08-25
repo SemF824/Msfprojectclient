@@ -78,48 +78,64 @@ export default function PropertiesManagement() {
   const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
   const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
 
-  // Téléversement d'image depuis l'ordinateur
+  // Téléversement d'image depuis l'ordinateur (sélection multiple d'images supportée)
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    if (!file.type.startsWith("image/")) {
-      toast.error(
-        "Veuillez sélectionner un fichier image valide (PNG, JPG, WebP...).",
-      );
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("L'image est trop volumineuse. Limite fixée à 5 Mo.");
+    if (!supabase) {
+      toast.error("Client Supabase non initialisé.");
       return;
     }
 
     setIsUploadingImage(true);
+    let uploadedCount = 0;
+    const newUrls: string[] = [];
+
     try {
-      if (!supabase) throw new Error("Client Supabase non initialisé.");
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (!file.type.startsWith("image/")) {
+          toast.error(`Le fichier "${file.name}" n'est pas une image valide.`);
+          continue;
+        }
 
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-      const filePath = `property-images/${fileName}`;
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(`L'image "${file.name}" dépasse 5 Mo.`);
+          continue;
+        }
 
-      const { error: uploadError } = await supabase.storage
-        .from("make-3c1961a2-properties")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+        const filePath = `property-images/${fileName}`;
 
-      if (uploadError) throw uploadError;
+        const { error: uploadError } = await supabase.storage
+          .from("client-documents") // Utilisation du bucket public existant et autorisé "client-documents"
+          .upload(filePath, file, {
+            cacheControl: "3600",
+            upsert: false,
+          });
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage
-        .from("make-3c1961a2-properties")
-        .getPublicUrl(filePath);
+        if (uploadError) {
+          console.error(`Erreur d'envoi pour ${file.name}:`, uploadError);
+          continue;
+        }
 
-      setFormData((prev) => ({ ...prev, image: publicUrl }));
-      toast.success("Image de la propriété téléversée avec succès !");
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("client-documents").getPublicUrl(filePath);
+
+        newUrls.push(publicUrl);
+        uploadedCount++;
+      }
+
+      if (newUrls.length > 0) {
+        setFormData((prev) => ({
+          ...prev,
+          image: prev.image ? prev.image : newUrls[0],
+        }));
+        toast.success(`${uploadedCount} image(s) téléversée(s) avec succès !`);
+      }
     } catch (err: any) {
       console.error("[ImageUpload] Erreur :", err);
       toast.error(
