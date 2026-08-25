@@ -32,6 +32,7 @@ import {
   FileText,
   Loader2,
   Info,
+  Image as ImageIcon,
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
@@ -748,12 +749,12 @@ export default function PropertyDetails() {
           </button>
           <div className="max-w-6xl w-full">
             <ImageWithFallback
-              src={property.images[selectedImage]}
+              src={property.images[selectedImage]?.url}
               alt={property.title}
               className="w-full h-auto max-h-[80vh] object-contain rounded-2xl"
             />
             <div className="flex gap-2 mt-4 overflow-x-auto">
-              {property.images.map((img: string, idx: number) => (
+              {property.images.map((img: any, idx: number) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedImage(idx)}
@@ -762,7 +763,7 @@ export default function PropertyDetails() {
                   }`}
                 >
                   <ImageWithFallback
-                    src={img}
+                    src={img.url}
                     alt={`Thumbnail ${idx + 1}`}
                     className="w-full h-full object-cover"
                   />
