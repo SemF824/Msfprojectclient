@@ -18,6 +18,7 @@ import {
   Loader2,
 } from "lucide-react";
 import Breadcrumb from "../components/Breadcrumb";
+import { EmptyState } from "../components/EmptyState";
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 import { toast } from "sonner";
 import type { Transaction } from "../../types/database.types";
@@ -67,10 +68,10 @@ export default function Transactions() {
         [
           `"${t.id}"`,
           `"${t.description || "Transaction immobilière"}"`,
-          t.amount,
+          t.amount || 0,
           `"${t.payment_method || "Non spécifiée"}"`,
           `"${t.status}"`,
-          `"${new Date(t.created_at).toLocaleDateString("fr-FR")}"`,
+          `"${t.created_at ? new Date(t.created_at).toLocaleDateString("fr-FR") : ""}"`,
         ].join(","),
       );
 
@@ -92,16 +93,14 @@ export default function Transactions() {
 
   // Filtrage combiné côté client
   const filteredTransactions = transactions.filter((transaction) => {
+    const safeSearchTerm = searchTerm.toLowerCase();
+    const safeId = transaction.id ? transaction.id.toLowerCase() : "";
     const matchesSearch =
-      transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      safeId.includes(safeSearchTerm) ||
       (transaction.description &&
-        transaction.description
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())) ||
+        transaction.description.toLowerCase().includes(safeSearchTerm)) ||
       (transaction.property_name &&
-        transaction.property_name
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()));
+        transaction.property_name.toLowerCase().includes(safeSearchTerm));
 
     const matchesStatus =
       statusFilter === "all" || transaction.status === statusFilter;
@@ -112,11 +111,11 @@ export default function Transactions() {
   // Métriques financières calculées à la volée
   const totalInvested = transactions
     .filter((t) => t.status === "completed")
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
 
   const pendingAmount = transactions
     .filter((t) => t.status === "pending" || t.status === "in_progress")
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
 
   // Configuration d'affichage Purge-Safe Tailwind
   const getStatusConfig = (status: string) => {
@@ -333,7 +332,8 @@ export default function Transactions() {
                       <div className="flex flex-row sm:flex-col justify-between sm:justify-start items-center sm:items-end gap-2 border-t sm:border-0 pt-3 sm:pt-0 border-gray-50 flex-shrink-0">
                         <div className="text-left sm:text-right flex-shrink-0">
                           <p className="text-[#d4af37] font-black text-base sm:text-lg break-words">
-                            {transaction.amount.toLocaleString("fr-FR")} FCFA
+                            {(transaction.amount || 0).toLocaleString("fr-FR")}{" "}
+                            FCFA
                           </p>
                           <span
                             className={`inline-block px-2.5 py-0.5 text-[10px] font-bold uppercase rounded-full border mt-1 ${statusConfig.color}`}

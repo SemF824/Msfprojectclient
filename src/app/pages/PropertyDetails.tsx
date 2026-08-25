@@ -107,10 +107,26 @@ export default function PropertyDetails() {
           `Découvrez cette villa exceptionnelle "${dbProperty.title}" située à ${dbProperty.location}. Conçue avec des matériaux haut de gamme, cette propriété offre un cadre de vie d'exception fusionnant élégance, sécurité et confort moderne.`,
         images:
           Array.isArray(dbProperty.images) && dbProperty.images.length > 0
-            ? dbProperty.images
+            ? dbProperty.images.map((img: string) => {
+                try {
+                  const parsed = JSON.parse(img);
+                  if (parsed && typeof parsed === "object" && parsed.url) {
+                    return parsed;
+                  }
+                } catch {
+                  // ignore
+                }
+                return { url: img, description: "" };
+              })
             : dbProperty.image
-              ? [dbProperty.image, ...DEFAULT_IMAGES.slice(1)]
-              : DEFAULT_IMAGES,
+              ? [
+                  { url: dbProperty.image, description: "" },
+                  ...DEFAULT_IMAGES.slice(1).map((url) => ({
+                    url,
+                    description: "",
+                  })),
+                ]
+              : DEFAULT_IMAGES.map((url) => ({ url, description: "" })),
         features:
           Array.isArray(dbProperty.features) && dbProperty.features.length > 0
             ? dbProperty.features
@@ -286,45 +302,57 @@ export default function PropertyDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[600px]">
           {/* Main Image */}
           <div className="lg:col-span-2 relative rounded-2xl overflow-hidden group cursor-pointer">
-            <ImageWithFallback
-              src={property.images[selectedImage]}
-              alt={property.title}
-              className="w-full h-full object-cover"
-            />
-            <button
-              onClick={() => setShowGallery(true)}
-              className="absolute bottom-4 right-4 flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md text-white rounded-lg hover:bg-white/20 transition-colors"
-            >
-              <Camera className="w-4 h-4" />
-              <span className="text-sm">
+            <div className="relative h-full min-h-[400px]">
+              <img
+                src={property.images[selectedImage].url}
+                alt={property.title}
+                className="w-full h-full object-cover"
+              />
+              {property.images[selectedImage].description && (
+                <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-md text-white p-3 rounded-xl shadow-lg z-10">
+                  <p className="text-sm font-medium">
+                    {property.images[selectedImage].description}
+                  </p>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+              <button
+                onClick={() => setIsGalleryOpen(true)}
+                className="absolute bottom-6 right-6 px-4 py-2 bg-white/90 backdrop-blur-sm text-[#0a0f1e] font-semibold rounded-xl hover:bg-white transition-all shadow-lg flex items-center gap-2 z-20"
+              >
+                <ImageIcon className="w-4 h-4" />
                 Voir toutes les photos ({property.images.length})
-              </span>
-            </button>
-            <div className="absolute top-4 left-4">
-              <span className="px-3 py-1 bg-[#d4af37] text-[#0a0f1e] text-xs rounded-full">
-                {property.status}
-              </span>
+              </button>
             </div>
           </div>
 
-          {/* Thumbnail Grid */}
-          <div className="hidden lg:grid grid-cols-2 gap-4">
-            {property.images.slice(1, 5).map((img: string, idx: number) => (
-              <div
+          <div className="grid grid-cols-2 grid-rows-2 gap-4 h-[50vh]">
+            {property.images.slice(1, 5).map((img: any, idx: number) => (
+              <motion.div
                 key={idx}
-                onClick={() => setSelectedImage(idx + 1)}
-                className={`relative rounded-xl overflow-hidden cursor-pointer transition-all ${
-                  selectedImage === idx + 1
-                    ? "ring-2 ring-[#d4af37]"
-                    : "hover:opacity-80"
-                }`}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.1 * (idx + 1) }}
+                className="relative rounded-2xl overflow-hidden group cursor-pointer"
+                onClick={() => {
+                  setSelectedImage(idx + 1);
+                  setIsGalleryOpen(true);
+                }}
               >
-                <ImageWithFallback
-                  src={img}
-                  alt={`${property.title} ${idx + 2}`}
-                  className="w-full h-full object-cover"
+                <img
+                  src={img.url}
+                  alt={`${property.title} - ${idx + 2}`}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
-              </div>
+                {img.description && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <p className="text-white text-xs font-medium truncate">
+                      {img.description}
+                    </p>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+              </motion.div>
             ))}
           </div>
         </div>
@@ -480,7 +508,7 @@ export default function PropertyDetails() {
                     </div>
                   </div>
                   <ImageWithFallback
-                    src={property.images[0]}
+                    src={property.images[0]?.url}
                     alt="Video tour"
                     className="w-full h-full object-cover"
                   />
@@ -495,8 +523,8 @@ export default function PropertyDetails() {
                     </div>
                   </div>
                   <ImageWithFallback
-                    src={property.images[1]}
-                    alt="3D plan"
+                    src={property.images[1]?.url || property.images[0]?.url}
+                    alt="Plan 2D/3D"
                     className="w-full h-full object-cover"
                   />
                 </div>

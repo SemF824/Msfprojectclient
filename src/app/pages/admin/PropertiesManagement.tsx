@@ -15,6 +15,10 @@ import {
   Bath,
   Maximize,
   MapPin,
+  ArrowUp,
+  ArrowDown,
+  Star,
+  Image as ImageIcon,
 } from "lucide-react";
 import { supabase, useSupabaseAuth } from "../../../hooks/useSupabaseAuth";
 import { toast } from "sonner";
@@ -26,6 +30,8 @@ interface Property {
   location: string;
   price: number;
   image?: string;
+  images?: string[]; // Peut contenir des URLs simples ou des JSON sérialisés {url, description}
+  description?: string;
   beds?: number;
   baths?: number;
   sqft?: number;
@@ -35,7 +41,31 @@ interface Property {
   created_at: string;
 }
 
-type FormData = Omit<Property, "id" | "created_at">;
+interface PropertyImage {
+  url: string;
+  description: string;
+}
+
+type FormData = Omit<Property, "id" | "created_at" | "images"> & {
+  images: PropertyImage[];
+};
+
+// Utilitaires de parsing sécurisé pour les images
+const parseImage = (img: string): PropertyImage => {
+  try {
+    const parsed = JSON.parse(img);
+    if (parsed && typeof parsed === "object" && parsed.url) {
+      return { url: parsed.url, description: parsed.description || "" };
+    }
+  } catch {
+    // Ignore error, it's a plain URL
+  }
+  return { url: img, description: "" };
+};
+
+const serializeImages = (imgs: PropertyImage[]): string[] => {
+  return imgs.map((img) => JSON.stringify(img));
+};
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const PAGE_SIZE = 12;
@@ -56,6 +86,8 @@ const EMPTY_FORM: FormData = {
   location: "",
   price: 0,
   image: "",
+  images: [],
+  description: "",
   beds: undefined,
   baths: undefined,
   sqft: undefined,
@@ -133,6 +165,10 @@ export default function PropertiesManagement() {
         setFormData((prev) => ({
           ...prev,
           image: prev.image ? prev.image : newUrls[0],
+          images: [
+            ...(prev.images || []),
+            ...newUrls.map((url) => ({ url, description: "" })),
+          ],
         }));
         toast.success(`${uploadedCount} image(s) téléversée(s) avec succès !`);
       }
@@ -267,6 +303,8 @@ export default function PropertiesManagement() {
       location: p.location,
       price: p.price,
       image: p.image || "",
+      images: (p.images || []).map(parseImage),
+      description: p.description || "",
       beds: p.beds,
       baths: p.baths,
       sqft: p.sqft,
@@ -282,6 +320,44 @@ export default function PropertiesManagement() {
     setEditingProp(null);
   };
 
+  // Actions sur les images
+  const moveImage = (index: number, direction: "up" | "down") => {
+    const newImages = [...(formData.images || [])];
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newImages.length) return;
+
+    const temp = newImages[index];
+    newImages[index] = newImages[targetIndex];
+    newImages[targetIndex] = temp;
+
+    setFormData((f) => ({ ...f, images: newImages }));
+  };
+
+  const removeImage = (index: number) => {
+    const newImages = [...(formData.images || [])];
+    const removedImg = newImages.splice(index, 1)[0];
+
+    setFormData((f) => ({
+      ...f,
+      images: newImages,
+      // Si on supprime l'image principale, on en prend une autre ou on vide
+      image: f.image === removedImg.url ? newImages[0]?.url || "" : f.image,
+    }));
+  };
+
+  const updateImageDescription = (index: number, description: string) => {
+    const newImages = [...(formData.images || [])];
+    if (newImages[index]) {
+      newImages[index] = { ...newImages[index], description };
+      setFormData((f) => ({ ...f, images: newImages }));
+    }
+  };
+
+  const setAsMainImage = (url: string) => {
+    setFormData((f) => ({ ...f, image: url }));
+    toast.success("Image principale mise à jour.");
+  };
+
   // ── Submit ─────────────────────────────────────────────────────────────────
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -292,6 +368,8 @@ export default function PropertiesManagement() {
       location: formData.location,
       price: Number(formData.price),
       image: formData.image ? formData.image : undefined,
+      images: serializeImages(formData.images || []),
+      description: formData.description || "",
       beds: formData.beds ? Number(formData.beds) : undefined,
       baths: formData.baths ? Number(formData.baths) : undefined,
       sqft: formData.sqft ? Number(formData.sqft) : undefined,
@@ -725,69 +803,152 @@ export default function PropertiesManagement() {
                     />
                   </div>
 
-                  {/* URL image & Téléversement local */}
-                  <div className="md:col-span-2 space-y-3">
-                    <div>
-                      <label className="block text-sm text-gray-700 font-medium mb-1.5">
-                        Image de la propriété
+                  {/* Description */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-gray-700 font-medium mb-1.5">
+                      Description <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      required
+                      value={formData.description || ""}
+                      onChange={(e) =>
+                        setFormData((f) => ({
+                          ...f,
+                          description: e.target.value,
+                        }))
+                      }
+                      rows={4}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none resize-none"
+                      placeholder="Décrivez les atouts de cette propriété en détail..."
+                    />
+                  </div>
+
+                  {/* Gestion des Images */}
+                  <div className="md:col-span-2 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-sm text-gray-700 font-bold">
+                        Galerie Photos
                       </label>
-                      <div className="flex flex-col sm:flex-row items-center gap-3">
-                        <label className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-xl cursor-pointer text-sm text-gray-700 font-medium transition-colors">
-                          {isUploadingImage ? (
-                            <>
-                              <Loader2 className="w-4 h-4 animate-spin text-[#d4af37]" />
-                              <span>Téléversement...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Building2 className="w-4 h-4 text-[#d4af37]" />
-                              <span>Choisir depuis l'ordinateur</span>
-                            </>
-                          )}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            disabled={isUploadingImage}
-                            className="hidden"
-                          />
-                        </label>
-                        <span className="text-xs text-gray-400">
-                          Ou saisir une URL ci-dessous
-                        </span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <input
-                        type="url"
-                        value={formData.image ?? ""}
-                        onChange={(e) =>
-                          setFormData((f) => ({ ...f, image: e.target.value }))
-                        }
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none"
-                        placeholder="https://images.unsplash.com/... ou URL personnalisée"
-                      />
-                    </div>
-
-                    {formData.image && (
-                      <div className="relative w-full h-32 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-                        <img
-                          src={formData.image}
-                          alt="Aperçu"
-                          className="w-full h-full object-cover"
+                      <label className="flex items-center gap-2 px-3 py-1.5 bg-[#d4af37]/10 hover:bg-[#d4af37]/20 text-[#d4af37] rounded-lg cursor-pointer transition-colors text-xs font-bold">
+                        <Plus className="w-3.5 h-3.5" />
+                        Ajouter des photos
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleImageUpload}
+                          disabled={isUploadingImage}
+                          className="hidden"
                         />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFormData((f) => ({ ...f, image: "" }))
-                          }
-                          className="absolute top-2 right-2 p-1 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
+                      </label>
+                    </div>
+
+                    {isUploadingImage && (
+                      <div className="flex items-center gap-2 p-3 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 text-xs">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Téléversement en cours...
                       </div>
                     )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {(formData.images || []).map((img, index) => {
+                        const url = img.url;
+                        const isMain = formData.image === url;
+                        return (
+                          <div
+                            key={index}
+                            className={`group flex flex-col bg-white rounded-xl overflow-hidden border-2 transition-all ${
+                              isMain
+                                ? "border-[#d4af37] ring-2 ring-[#d4af37]/20"
+                                : "border-gray-100 hover:border-[#d4af37]/50"
+                            }`}
+                          >
+                            <div className="relative aspect-video">
+                              <img
+                                src={url}
+                                alt={`Propriété ${index}`}
+                                className="w-full h-full object-cover"
+                              />
+
+                              {/* Overlay d'actions */}
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
+                                <div className="flex justify-between items-start">
+                                  <button
+                                    type="button"
+                                    onClick={() => removeImage(index)}
+                                    className="p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors shadow-lg"
+                                    title="Supprimer"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  {!isMain && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setAsMainImage(url)}
+                                      className="p-1.5 bg-white/90 hover:bg-white text-[#0a0f1e] rounded-lg transition-colors shadow-lg"
+                                      title="Définir comme principale"
+                                    >
+                                      <Star className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </div>
+
+                                <div className="flex justify-center gap-2">
+                                  <button
+                                    type="button"
+                                    disabled={index === 0}
+                                    onClick={() => moveImage(index, "up")}
+                                    className="p-1.5 bg-white/90 hover:bg-white text-[#0a0f1e] rounded-lg transition-colors shadow-lg disabled:opacity-50"
+                                    title="Reculer"
+                                  >
+                                    <ArrowUp className="w-3.5 h-3.5 rotate-[-90deg]" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={
+                                      index ===
+                                      (formData.images?.length || 0) - 1
+                                    }
+                                    onClick={() => moveImage(index, "down")}
+                                    className="p-1.5 bg-white/90 hover:bg-white text-[#0a0f1e] rounded-lg transition-colors shadow-lg disabled:opacity-50"
+                                    title="Avancer"
+                                  >
+                                    <ArrowDown className="w-3.5 h-3.5 rotate-[-90deg]" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {isMain && (
+                                <div className="absolute top-2 left-2 px-2 py-0.5 bg-[#d4af37] text-[#0a0f1e] text-[8px] font-black uppercase rounded shadow-sm">
+                                  Principale
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Zone description */}
+                            <div className="p-2 border-t border-gray-100">
+                              <input
+                                type="text"
+                                placeholder="Description (ex: Salon lumineux)"
+                                value={img.description}
+                                onChange={(e) =>
+                                  updateImageDescription(index, e.target.value)
+                                }
+                                className="w-full px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {(!formData.images || formData.images.length === 0) && (
+                        <div className="col-span-full py-12 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50 text-gray-400">
+                          <ImageIcon className="w-8 h-8 mb-2 opacity-20" />
+                          <p className="text-xs">Aucune photo téléversée</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
