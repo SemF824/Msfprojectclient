@@ -106,10 +106,20 @@ export default function ClientAppointments() {
 
               return (
                 <motion.div 
-                  key={apt.id} 
-                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                  className={`border rounded-xl transition-all duration-300 overflow-hidden flex flex-col ${isExpanded ? 'border-[#d4af37] shadow-md bg-[#d4af37]/5' : 'border-gray-200 hover:border-[#d4af37]/50 bg-white'}`}
-                >
+                    key={apt.id} 
+                    initial={{ opacity: 0, y: 10 }} 
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{
+                      WebkitBackfaceVisibility: "hidden",
+                      backfaceVisibility: "hidden",
+                      WebkitTransform: "translate3d(0,0,0)",
+                    }}
+                    className={`border rounded-xl transition-colors transition-shadow duration-300 overflow-hidden flex flex-col transform-gpu isolate ${
+                      isExpanded 
+                        ? 'border-[#d4af37] shadow-md bg-[#d4af37]/5' 
+                        : 'border-gray-200 hover:border-[#d4af37]/50 bg-white'
+                    }`}
+                  >
                   <button 
                     onClick={() => toggleExpand(apt.id)}
                     className="w-full p-5 text-left flex items-start justify-between gap-4 focus:outline-none cursor-pointer"
