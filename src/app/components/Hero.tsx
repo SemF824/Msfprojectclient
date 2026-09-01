@@ -53,7 +53,7 @@ export function Hero() {
           >
             <div className="w-2 h-2 bg-[#d4af37] rounded-full animate-pulse" />
             <span className="text-[10px] md:text-xs text-[#d4af37] tracking-wider uppercase">
-              Projet Pointe-Noire
+              Projet Kounda
             </span>
           </motion.div>
 
