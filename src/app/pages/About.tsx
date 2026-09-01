@@ -59,7 +59,7 @@ export default function About() {
               L'Héritage MSF Congo
             </h1>
             <p className="text-xl text-gray-400 leading-relaxed border-l-4 border-[#d4af37] pl-6">
-              Depuis 1997, nous redéfinissons les standards de l'immobilier de luxe en Afrique Centrale. Plus qu'un constructeur, nous sommes les architectes de votre patrimoine.
+              Depuis 2001, nous redéfinissons les standards de l'immobilier de luxe en Afrique Centrale. Plus qu'un constructeur, nous sommes les architectes de votre patrimoine.
             </p>
           </motion.div>
         </div>

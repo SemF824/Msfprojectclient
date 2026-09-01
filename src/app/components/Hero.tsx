@@ -94,9 +94,9 @@ export function Hero() {
             className="flex flex-wrap gap-4 md:gap-8 mb-6 md:mb-10"
           >
             {[
-              { val: "4 500+", label: "Logements Prévus" },
+              { val: "6 000", label: "Lots Prévus" },
               { val: "600 ha", label: "Rés. Caraïbes" },
-              { val: "Depuis 1997", label: "Leader au Congo" },
+              { val: "Depuis 2001", label: "Leader au Congo" },
             ].map((stat, i) => (
               <div
                 key={i}
@@ -125,7 +125,7 @@ export function Hero() {
               className="group flex items-center justify-center gap-2 px-6 py-3.5 md:px-8 md:py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all sm:w-fit"
             >
               <span className="font-bold text-sm md:text-base">
-                Explorer les Propriétés
+                Découvrez les Résidences Caraïbes
               </span>
               <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
             </Link>

@@ -71,7 +71,7 @@ export function About() {
               <div className="p-4 sm:p-6 bg-white/5 backdrop-blur-xl rounded-xl sm:rounded-2xl border border-[#d4af37]/20 flex flex-col items-center sm:items-start text-center sm:text-left">
                 <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-[#d4af37] mb-2 sm:mb-3" />
                 <div className="text-2xl sm:text-3xl text-white font-bold mb-1">
-                  1997
+                  2001
                 </div>
                 <div className="text-[10px] sm:text-sm text-gray-400 font-medium">
                   Année de Fondation
