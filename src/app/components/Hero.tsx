@@ -94,7 +94,7 @@ export function Hero() {
             className="flex flex-wrap gap-4 md:gap-8 mb-6 md:mb-10"
           >
             {[
-              { val: "6 000", label: "Lots Prévus" },
+              { val: "3 000", label: "Maisons Prévues" },
               { val: "600 ha", label: "Rés. Caraïbes" },
               { val: "Depuis 2001", label: "Leader au Congo" },
             ].map((stat, i) => (
