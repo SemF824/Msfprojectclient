@@ -20,7 +20,7 @@ jobs:
       - name: Configuration de Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Installation des dépendances
         run: npm install
@@ -40,4 +40,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=msf-congo --branch=${{ github.ref_name }}
+          command: pages deploy dist --project-name=msfprojectclient --branch=${{ github.ref_name }}
