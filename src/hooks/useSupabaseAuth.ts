@@ -5,6 +5,7 @@ import {
   User,
   AuthResponse,
 } from "@supabase/supabase-js";
+import { secureCookieStorage } from "../utils/cookieStorage";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as
@@ -13,9 +14,30 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as
 
 const isConfigured = Boolean(supabaseUrl && supabaseKey);
 
-// Crée le client uniquement si les variables sont présentes
+// Nettoyage préventif des anciens tokens non sécurisés dans localStorage
+if (typeof window !== "undefined") {
+  try {
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith("sb-") && key.endsWith("-auth-token")) {
+        localStorage.removeItem(key);
+      }
+    });
+  } catch (e) {
+    // Ignore localStorage access errors
+  }
+}
+
+// Crée le client Supabase durci avec stockage sécurisé par Cookies et protocole PKCE
 const supabase: SupabaseClient | null = isConfigured
-  ? createClient(supabaseUrl!, supabaseKey!)
+  ? createClient(supabaseUrl!, supabaseKey!, {
+      auth: {
+        storage: secureCookieStorage,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        flowType: "pkce",
+      },
+    })
   : null;
 
 if (!isConfigured) {
@@ -185,7 +207,7 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+      if (event === "SIGNED_OUT") {
         if (isMounted) {
           setUser(null);
           setUserRole(null);

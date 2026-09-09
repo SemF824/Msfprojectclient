@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../../../hooks/useSupabaseAuth";
 import { toast } from "sonner";
+import { decryptDevisRequests } from "../../../utils/devisEncryption";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Client {
@@ -185,7 +186,8 @@ export default function ClientsManagement() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setClientReqs(data || []);
+      const decryptedData = data ? decryptDevisRequests(data) : [];
+      setClientReqs(decryptedData);
     } catch (err: any) {
       console.error(err);
       toast.error(

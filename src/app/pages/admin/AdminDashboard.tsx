@@ -16,6 +16,7 @@ import { fr } from "date-fns/locale";
 import { supabase } from "../../../hooks/useSupabaseAuth";
 import { Link } from "react-router";
 import { toast } from "sonner";
+import { decryptDevisRequests } from "../../../utils/devisEncryption";
 
 // ─── Stagger variants (anti-clignotement) ─────────────────────────────────────
 const containerVariants: Variants = {
@@ -64,7 +65,9 @@ export default function AdminDashboard() {
       if (requestsRes.error) throw requestsRes.error;
       if (propertiesRes.error) throw propertiesRes.error;
 
-      const allRequests = requestsRes.data || [];
+      const allRequests = requestsRes.data
+        ? decryptDevisRequests(requestsRes.data)
+        : [];
       const totalProps = propertiesRes.count || 0;
 
       const pending = allRequests.filter(
@@ -99,8 +102,10 @@ export default function AdminDashboard() {
         return;
       }
 
-      const headers = Object.keys(data[0]).join(",");
-      const rows = data
+      const decryptedData = decryptDevisRequests(data);
+
+      const headers = Object.keys(decryptedData[0]).join(",");
+      const rows = decryptedData
         .map((row) =>
           Object.values(row)
             .map((value) =>

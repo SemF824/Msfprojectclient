@@ -7,6 +7,7 @@ interface ImportMetaEnv {
   readonly VITE_CALENDLY_URL?: string;
   readonly VITE_ADMIN_EMAIL?: string;
   readonly VITE_RECAPTCHA_SITE_KEY?: string;
+  readonly VITE_ENCRYPTION_KEY?: string;
 }
 
 interface ImportMeta {

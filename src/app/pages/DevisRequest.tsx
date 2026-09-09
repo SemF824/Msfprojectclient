@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../../hooks/useSupabaseAuth";
 import { toast } from "sonner";
+import { encryptDevisRequest } from "../../utils/devisEncryption";
 
 export default function DevisRequest() {
   const { propertyId } = useParams();
@@ -73,36 +74,39 @@ export default function DevisRequest() {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from("devis_requests").insert([
-        {
-          client_first_name: formData.firstName,
-          client_last_name: formData.lastName,
-          client_email: formData.email,
-          client_phone: formData.phone,
-          client_alternate_phone: formData.alternatePhone || null,
-          client_address: formData.address,
-          client_city: formData.city,
-          client_country: formData.country,
-          client_profession: formData.profession,
-          client_company: formData.company || null,
-          property_id: property.id,
-          property_name: property.title,
-          property_price: property.price,
-          request_type: formData.requestType,
-          financing_needed: formData.financingNeeded,
-          down_payment_amount: formData.downPaymentAmount
-            ? parseInt(formData.downPaymentAmount, 10)
-            : null,
-          visit_date: formData.visitDate || null,
-          visit_time: formData.visitTime || null,
-          number_of_persons: parseInt(formData.numberOfPersons, 10),
-          message: formData.message || null,
-          status: "nouveau",
-          priority: "normale",
-          terms_accepted: formData.acceptTerms,
-          contact_accepted: formData.acceptContact,
-        },
-      ]);
+      const payload = {
+        client_first_name: formData.firstName,
+        client_last_name: formData.lastName,
+        client_email: formData.email,
+        client_phone: formData.phone,
+        client_alternate_phone: formData.alternatePhone || null,
+        client_address: formData.address,
+        client_city: formData.city,
+        client_country: formData.country,
+        client_profession: formData.profession,
+        client_company: formData.company || null,
+        property_id: property.id,
+        property_name: property.title,
+        property_price: property.price,
+        request_type: formData.requestType,
+        financing_needed: formData.financingNeeded,
+        down_payment_amount: formData.downPaymentAmount
+          ? parseInt(formData.downPaymentAmount, 10)
+          : null,
+        visit_date: formData.visitDate || null,
+        visit_time: formData.visitTime || null,
+        number_of_persons: parseInt(formData.numberOfPersons, 10),
+        message: formData.message || null,
+        status: "nouveau",
+        priority: "normale",
+        terms_accepted: formData.acceptTerms,
+        contact_accepted: formData.acceptContact,
+      };
+
+      const encryptedPayload = encryptDevisRequest(payload);
+      const { error } = await supabase
+        .from("devis_requests")
+        .insert([encryptedPayload]);
 
       if (error) throw error;
 

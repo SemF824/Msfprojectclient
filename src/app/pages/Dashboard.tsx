@@ -12,6 +12,7 @@ import {
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 import { EmptyState } from "../components/EmptyState";
 import { toast } from "sonner";
+import { decryptDevisRequests } from "../../utils/devisEncryption";
 import type {
   Appointment,
   DevisRequest,
@@ -68,7 +69,7 @@ export default function Dashboard() {
 
       return {
         appointments: ap.data || [],
-        devisRequests: dv.data || [],
+        devisRequests: dv.data ? decryptDevisRequests(dv.data) : [],
         favorites: fv.data || [],
         documents: dc.data || [],
       };
