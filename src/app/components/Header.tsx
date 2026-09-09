@@ -145,16 +145,24 @@ export function Header() {
                     type="button"
                     onClick={() => setIsSearchOpen(false)}
                     className="absolute right-2 sm:right-3 text-gray-400 hover:text-red-500"
+                    aria-label="Fermer la recherche"
                   >
-                    <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <X
+                      className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                      aria-hidden="true"
+                    />
                   </button>
                 </form>
               ) : (
                 <button
                   onClick={() => setIsSearchOpen(true)}
                   className="p-1.5 sm:p-2 text-gray-600 hover:text-[#d4af37] transition-colors rounded-full hover:bg-gray-100"
+                  aria-label="Ouvrir la recherche"
                 >
-                  <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <Search
+                    className="w-4 h-4 sm:w-5 sm:h-5"
+                    aria-hidden="true"
+                  />
                 </button>
               )}
             </div>
@@ -166,6 +174,7 @@ export function Header() {
                   <Link
                     to="/admin"
                     className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#0a0f1e] to-[#1a2540] text-[#d4af37] rounded-full border border-[#d4af37]/50 hover:border-[#d4af37] hover:shadow-lg hover:shadow-[#d4af37]/20 transition-all font-semibold text-sm"
+                    aria-label="Accès Administration"
                   >
                     <Shield className="w-4 h-4" />
                     ACCÈS ADMINISTRATION
@@ -176,8 +185,9 @@ export function Header() {
                 <Link
                   to="/client/notifications"
                   className="hidden md:block relative p-2 text-gray-600 hover:text-[#d4af37] transition-colors rounded-full hover:bg-gray-100"
+                  aria-label="Vos notifications"
                 >
-                  <Bell className="w-5 h-5" />
+                  <Bell className="w-5 h-5" aria-hidden="true" />
                   {unreadCount > 0 && (
                     <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />
                   )}
@@ -188,8 +198,14 @@ export function Header() {
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+                    aria-expanded={isUserMenuOpen}
+                    aria-haspopup="true"
+                    aria-label="Menu utilisateur"
                   >
-                    <div className="w-7 h-7 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-full flex items-center justify-center">
+                    <div
+                      className="w-7 h-7 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-full flex items-center justify-center"
+                      aria-hidden="true"
+                    >
                       <User className="w-3.5 h-3.5 text-[#0a0f1e]" />
                     </div>
                     <span className="text-sm text-[#0a0f1e] font-medium max-w-[100px] truncate">
@@ -221,6 +237,7 @@ export function Header() {
                             to="/admin"
                             onClick={() => setIsUserMenuOpen(false)}
                             className="flex items-center gap-3 px-3 py-2.5 bg-gradient-to-r from-[#d4af37]/10 to-transparent text-[#0a0f1e] hover:bg-[#d4af37]/20 transition-colors rounded-xl font-semibold"
+                            aria-label="Espace MSF Congo"
                           >
                             <Building2 className="w-4 h-4 text-[#d4af37]" />
                             <span className="text-sm">Espace MSF Congo</span>
@@ -230,6 +247,7 @@ export function Header() {
                           to="/client/dashboard"
                           onClick={() => setIsUserMenuOpen(false)}
                           className="flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#0a0f1e] transition-colors rounded-xl"
+                          aria-label="Tableau de bord"
                         >
                           <Building2 className="w-4 h-4" />
                           <span className="text-sm font-medium">
@@ -240,6 +258,7 @@ export function Header() {
                           to="/client/profile"
                           onClick={() => setIsUserMenuOpen(false)}
                           className="flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#0a0f1e] transition-colors rounded-xl"
+                          aria-label="Mon Profil"
                         >
                           <User className="w-4 h-4" />
                           <span className="text-sm font-medium">
@@ -250,6 +269,7 @@ export function Header() {
                           to="/client/favorites"
                           onClick={() => setIsUserMenuOpen(false)}
                           className="flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#0a0f1e] transition-colors rounded-xl"
+                          aria-label="Mes Favoris"
                         >
                           <Heart className="w-4 h-4" />
                           <span className="text-sm font-medium">
@@ -265,8 +285,9 @@ export function Header() {
                             await signOut();
                             setIsUserMenuOpen(false);
                           }}
+                          aria-label="Se déconnecter"
                         >
-                          <LogOut className="w-4 h-4" />
+                          <LogOut className="w-4 h-4" aria-hidden="true" />
                           <span className="text-sm">Déconnexion</span>
                         </button>
                       </div>
@@ -278,8 +299,9 @@ export function Header() {
               <Link
                 to="/login"
                 className="hidden md:flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-full font-semibold hover:shadow-lg hover:shadow-[#d4af37]/30 transition-all transform hover:-translate-y-0.5"
+                aria-label="Espace Client"
               >
-                <User className="w-4 h-4" />
+                <User className="w-4 h-4" aria-hidden="true" />
                 <span className="text-sm">Espace Client</span>
               </Link>
             )}
@@ -287,11 +309,13 @@ export function Header() {
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="lg:hidden p-1.5 sm:p-2 text-gray-600 hover:text-[#d4af37] transition-colors"
+              aria-expanded={isMenuOpen}
+              aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
             >
               {isMenuOpen ? (
-                <X className="w-5 h-5 sm:w-6 sm:h-6" />
+                <X className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
               ) : (
-                <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+                <Menu className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
               )}
             </button>
           </div>

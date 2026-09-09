@@ -102,54 +102,46 @@ export function Footer() {
                   to="/contact"
                   className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors"
                 >
-                  Carrières
+                  Contact
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* ── Services ────────────────────────────────────────────────────── */}
+          {/* ── Juridique & Politiques ───────────────────────────────────────── */}
           <div>
-            <h4 className="text-white mb-6">Services</h4>
+            <h4 className="text-white mb-6">Légal & Confidentialité</h4>
             <ul className="space-y-3">
               <li>
                 <Link
-                  to="/services"
+                  to="/legal-mentions"
                   className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors"
                 >
-                  Vente de Propriétés
+                  Mentions Légales
                 </Link>
               </li>
               <li>
                 <Link
-                  to="/services"
+                  to="/privacy-policy"
                   className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors"
                 >
-                  Locations de Luxe
+                  Politique de Confidentialité
                 </Link>
               </li>
               <li>
                 <Link
-                  to="/services"
+                  to="/cookie-policy"
                   className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors"
                 >
-                  Gestion Immobilière
+                  Politique des Cookies
                 </Link>
               </li>
               <li>
                 <Link
-                  to="/services"
+                  to="/refund-policy"
                   className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors"
                 >
-                  Conseil en Investissement
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/services"
-                  className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors"
-                >
-                  Construction sur Mesure
+                  Rétractation & Remboursement
                 </Link>
               </li>
             </ul>

@@ -145,7 +145,10 @@ export default function Login() {
         >
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#d4af37]/20 to-transparent rounded-2xl mb-4">
+            <div
+              className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#d4af37]/20 to-transparent rounded-2xl mb-4"
+              aria-hidden="true"
+            >
               <Lock className="w-8 h-8 text-[#d4af37]" />
             </div>
             <h1 className="text-3xl md:text-4xl mb-2">
@@ -201,7 +204,10 @@ export default function Login() {
                 Adresse Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d4af37]" />
+                <Mail
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d4af37]"
+                  aria-hidden="true"
+                />
                 <input
                   type="email"
                   id="email"
@@ -209,7 +215,7 @@ export default function Login() {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:border-[#d4af37] focus:outline-none transition-colors"
+                  className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:border-[#d4af37] focus:outline-none focus:ring-2 focus:ring-[#d4af37]/30 transition-colors"
                   placeholder="votre.email@exemple.com"
                   required
                 />
@@ -226,7 +232,10 @@ export default function Login() {
                   Mot de Passe
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d4af37]" />
+                  <Lock
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d4af37]"
+                    aria-hidden="true"
+                  />
                   <input
                     type={showPassword ? "text" : "password"}
                     id="password"
@@ -234,19 +243,24 @@ export default function Login() {
                     onChange={(e) =>
                       setFormData({ ...formData, password: e.target.value })
                     }
-                    className="w-full pl-12 pr-12 py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:border-[#d4af37] focus:outline-none transition-colors"
+                    className="w-full pl-12 pr-12 py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:border-[#d4af37] focus:outline-none focus:ring-2 focus:ring-[#d4af37]/30 transition-colors"
                     placeholder="••••••••"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#d4af37] transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#d4af37] transition-colors focus:outline-none focus:ring-2 focus:ring-[#d4af37]/50 rounded-md p-1"
+                    aria-label={
+                      showPassword
+                        ? "Masquer le mot de passe"
+                        : "Afficher le mot de passe"
+                    }
                   >
                     {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
+                      <EyeOff className="w-5 h-5" aria-hidden="true" />
                     ) : (
-                      <Eye className="w-5 h-5" />
+                      <Eye className="w-5 h-5" aria-hidden="true" />
                     )}
                   </button>
                 </div>

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router";
 import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "sonner";
+import CookieConsent from "./components/CookieConsent";
 
 // Fallback global de chargement
 const FullScreenLoader = () => (
@@ -35,6 +36,9 @@ export default function App() {
 
       {/* Gestionnaire de notifications global de l'application */}
       <Toaster position="top-right" richColors closeButton />
+
+      {/* Bannière de consentement pour les cookies (RGPD/CCPA) */}
+      <CookieConsent />
 
       <Suspense fallback={<FullScreenLoader />}>
         <Routes>

@@ -19,6 +19,12 @@ const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const DevisRequest = lazy(() => import("./pages/DevisRequest"));
 
+// Pages légales
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const LegalMentions = lazy(() => import("./pages/LegalMentions"));
+const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
+const RefundPolicy = lazy(() => import("./pages/RefundPolicy"));
+
 // Espace client protégé (lazy loading)
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Transactions = lazy(() => import("./pages/Transactions"));
@@ -65,6 +71,10 @@ export default function ClientAppRoutes() {
           <Route path="login" element={<Login />} />
           <Route path="signup" element={<Signup />} />
           <Route path="update-password" element={<UpdatePassword />} />
+          <Route path="privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="legal-mentions" element={<LegalMentions />} />
+          <Route path="cookie-policy" element={<CookiePolicy />} />
+          <Route path="refund-policy" element={<RefundPolicy />} />
         </Route>
 
         {/* ESPACE CLIENT PROTÉGÉ (Avec ClientLayout dédié) */}

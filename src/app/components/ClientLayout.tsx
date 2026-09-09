@@ -77,11 +77,17 @@ export default function ClientLayout() {
                 <button
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                   className="lg:hidden absolute top-4 right-4 p-2 text-gray-500 hover:text-[#d4af37] bg-gray-50 rounded-lg border border-gray-100 transition-colors"
+                  aria-expanded={isMobileMenuOpen}
+                  aria-label={
+                    isMobileMenuOpen
+                      ? "Fermer le menu de navigation"
+                      : "Ouvrir le menu de navigation"
+                  }
                 >
                   {isMobileMenuOpen ? (
-                    <ChevronUp className="w-5 h-5" />
+                    <ChevronUp className="w-5 h-5" aria-hidden="true" />
                   ) : (
-                    <ChevronDown className="w-5 h-5" />
+                    <ChevronDown className="w-5 h-5" aria-hidden="true" />
                   )}
                 </button>
               </div>

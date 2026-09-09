@@ -244,7 +244,7 @@ export default function Contact() {
         "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80",
     },
     {
-      name: "Chems Roc",
+      name: "Chems ROC",
       role: "Responsable Départemental Brazzaville",
       image:
         "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80",
@@ -274,9 +274,15 @@ export default function Contact() {
 
     if (!apiKey) {
       return (
-        <div className="h-80 bg-gray-100 relative flex items-center justify-center rounded-xl">
+        <div
+          className="h-80 bg-gray-100 relative flex items-center justify-center rounded-xl"
+          aria-label="Carte interactive non disponible"
+        >
           <div className="text-center">
-            <MapPin className="w-16 h-16 text-[#d4af37] mx-auto mb-4" />
+            <MapPin
+              className="w-16 h-16 text-[#d4af37] mx-auto mb-4"
+              aria-hidden="true"
+            />
             <p className="text-[#0a0f1e] mb-2 font-medium">Carte Interactive</p>
             <p className="text-sm text-gray-600">6R2W+J28, Pointe-Noire</p>
             <p className="text-sm text-gray-600">Congo-Brazzaville</p>
@@ -431,72 +437,104 @@ export default function Contact() {
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label className="block text-sm text-[#0a0f1e] mb-2">
+                  <label
+                    htmlFor="name"
+                    className="block text-sm text-[#0a0f1e] mb-2 font-medium"
+                  >
                     Nom Complet *
                   </label>
                   <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <User
+                      className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                      aria-hidden="true"
+                    />
                     <input
+                      id="name"
                       type="text"
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
                       required
                       placeholder="Votre nom complet"
-                      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] placeholder:text-gray-500 focus:border-[#d4af37] focus:outline-none transition-colors"
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] placeholder:text-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors"
+                      aria-required="true"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-[#0a0f1e] mb-2">
+                    <label
+                      htmlFor="email"
+                      className="block text-sm text-[#0a0f1e] mb-2 font-medium"
+                    >
                       Email *
                     </label>
                     <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <Mail
+                        className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                        aria-hidden="true"
+                      />
                       <input
+                        id="email"
                         type="email"
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
                         required
                         placeholder="votre@email.com"
-                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] placeholder:text-gray-500 focus:border-[#d4af37] focus:outline-none transition-colors"
+                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] placeholder:text-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors"
+                        aria-required="true"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm text-[#0a0f1e] mb-2">
+                    <label
+                      htmlFor="phone"
+                      className="block text-sm text-[#0a0f1e] mb-2 font-medium"
+                    >
                       Téléphone *
                     </label>
                     <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <Phone
+                        className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                        aria-hidden="true"
+                      />
                       <input
+                        id="phone"
                         type="tel"
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
                         required
                         placeholder="+242 06 xxx xxxx"
-                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] placeholder:text-gray-500 focus:border-[#d4af37] focus:outline-none transition-colors"
+                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] placeholder:text-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors"
+                        aria-required="true"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm text-[#0a0f1e] mb-2">
+                  <label
+                    htmlFor="subject"
+                    className="block text-sm text-[#0a0f1e] mb-2 font-medium"
+                  >
                     Type de Demande *
                   </label>
                   <div className="relative">
-                    <MessageSquare className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <MessageSquare
+                      className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                      aria-hidden="true"
+                    />
                     <select
+                      id="subject"
                       name="subject"
                       value={formData.subject}
                       onChange={handleChange}
                       required
-                      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer"
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors appearance-none cursor-pointer"
+                      aria-required="true"
                     >
                       <option value="">Sélectionnez un sujet</option>
                       {subjectOptions.map((option, idx) => (
@@ -510,16 +548,23 @@ export default function Contact() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-[#0a0f1e] mb-2">
+                    <label
+                      htmlFor="propertyType"
+                      className="block text-sm text-[#0a0f1e] mb-2 font-medium"
+                    >
                       Type de Propriété
                     </label>
                     <div className="relative">
-                      <Home className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <Home
+                        className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                        aria-hidden="true"
+                      />
                       <select
+                        id="propertyType"
                         name="propertyType"
                         value={formData.propertyType}
                         onChange={handleChange}
-                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer"
+                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors appearance-none cursor-pointer"
                       >
                         <option value="">Sélectionnez un type</option>
                         {propertyTypes.map((type, idx) => (
@@ -531,16 +576,23 @@ export default function Contact() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm text-[#0a0f1e] mb-2">
+                    <label
+                      htmlFor="budget"
+                      className="block text-sm text-[#0a0f1e] mb-2 font-medium"
+                    >
                       Budget Estimé
                     </label>
                     <div className="relative">
-                      <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <DollarSign
+                        className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                        aria-hidden="true"
+                      />
                       <select
+                        id="budget"
                         name="budget"
                         value={formData.budget}
                         onChange={handleChange}
-                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:outline-none transition-colors appearance-none cursor-pointer"
+                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors appearance-none cursor-pointer"
                       >
                         <option value="">Sélectionnez un budget</option>
                         {budgetRanges.map((range, idx) => (
@@ -554,33 +606,42 @@ export default function Contact() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-[#0a0f1e] mb-2">
+                  <label
+                    htmlFor="message"
+                    className="block text-sm text-[#0a0f1e] mb-2 font-medium"
+                  >
                     Votre Message *
                   </label>
                   <textarea
+                    id="message"
                     name="message"
                     value={formData.message}
                     onChange={handleChange}
                     required
                     rows={5}
                     placeholder="Décrivez votre projet ou posez vos questions..."
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] placeholder:text-gray-500 focus:border-[#d4af37] focus:outline-none transition-colors resize-none"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] placeholder:text-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors resize-none"
+                    aria-required="true"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] font-bold rounded-xl hover:shadow-xl hover:shadow-[#d4af37]/40 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                  aria-label="Envoyer le message de contact"
+                  className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] font-bold rounded-xl hover:shadow-xl hover:shadow-[#d4af37]/40 focus:ring-4 focus:ring-[#d4af37]/50 focus:outline-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                 >
                   {isSubmitting ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-[#0a0f1e] border-t-transparent rounded-full animate-spin"></div>
+                      <div
+                        className="w-5 h-5 border-2 border-[#0a0f1e] border-t-transparent rounded-full animate-spin"
+                        aria-hidden="true"
+                      ></div>
                       Vérification et envoi...
                     </>
                   ) : (
                     <>
-                      <Send className="w-5 h-5" />
+                      <Send className="w-5 h-5" aria-hidden="true" />
                       Envoyer le Message
                     </>
                   )}
