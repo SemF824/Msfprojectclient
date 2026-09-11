@@ -33,10 +33,8 @@ loadEnvFile();
 
 // 2. Récupération des clés
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const supabaseKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-const encryptionKey =
-  process.env.ENCRYPTION_KEY || process.env.VITE_ENCRYPTION_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const encryptionKey = process.env.ENCRYPTION_KEY || process.env.VITE_ENCRYPTION_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
   console.error(
