@@ -123,7 +123,7 @@ async function runMigration(): Promise<void> {
       for (const field of SENSITIVE_FIELDS) {
         const val = row[field];
         if (typeof val === "string" && val.trim().length > 0) {
-          // Vérifier si la valeur n'est pas déjà chiffrée
+          // Vérifier si la valeur n'est pas déjà chiffrée 
           if (!val.startsWith("U2FsdGVkX1")) {
             updates[field] = encryptAES(val);
             needsUpdate = true;
