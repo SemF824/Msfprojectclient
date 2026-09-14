@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
 import { Key, AlertCircle, CheckCircle2, ArrowRight } from "lucide-react";
-import { supabase } from "../../hooks/useSupabaseAuth";
+import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 
 export default function UpdatePassword() {
   const navigate = useNavigate();
+  const { signOut } = useSupabaseAuth();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -13,7 +14,7 @@ export default function UpdatePassword() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    // Vérifier si l'utilisateur est bien arrivé ici via un lien de réinitialisation
+    // Vérifier si une session temporaire valide est active
     supabase?.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         setError("Lien de réinitialisation invalide ou expiré.");
@@ -42,16 +43,28 @@ export default function UpdatePassword() {
     }
 
     try {
-      const { error } = await supabase.auth.updateUser({
+      // 1. Mise à jour du mot de passe
+      const { error: updateError } = await supabase.auth.updateUser({
         password: password,
       });
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      // 2. Déconnexion globale de toutes les sessions actives (tous appareils confondus)
+      await signOut({ scope: "global" });
 
       setSuccess(true);
+
+      // 3. Redirection vers la page de connexion
       setTimeout(() => {
-        navigate("/client/dashboard");
-      }, 3000);
+        navigate("/login", {
+          replace: true,
+          state: {
+            message:
+              "Votre mot de passe a été mis à jour. Veuillez vous connecter avec votre nouveau mot de passe.",
+          },
+        });
+      }, 2500);
     } catch (err: any) {
       setError(err.message || "Impossible de mettre à jour le mot de passe.");
     } finally {
@@ -87,7 +100,7 @@ export default function UpdatePassword() {
               <span>Mot de passe mis à jour avec succès !</span>
             </div>
             <p className="text-sm text-gray-500">
-              Redirection vers votre espace...
+              Déconnexion des sessions et redirection vers la connexion...
             </p>
           </motion.div>
         ) : (
@@ -128,10 +141,16 @@ export default function UpdatePassword() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3.5 bg-[#0a0f1e] text-white font-semibold rounded-xl hover:bg-gray-900 transition-colors disabled:opacity-70"
+              className="w-full mt-4 py-3 bg-[#0a0f1e] hover:bg-[#d4af37] text-white hover:text-[#0a0f1e] rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              {loading ? "Mise à jour..." : "Enregistrer"}{" "}
-              <ArrowRight className="w-4 h-4" />
+              {loading ? (
+                "Mise à jour en cours..."
+              ) : (
+                <>
+                  <span>Valider le nouveau mot de passe</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </form>
         )}

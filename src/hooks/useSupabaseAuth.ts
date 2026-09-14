@@ -72,7 +72,7 @@ const resetInactivityTimer = () => {
 };
 
 const setupGlobalActivityListeners = () => {
-  if (isActivityListenerAttached || typeof window === "undefined") return;
+  if (isActivityListenerAttached || typeof window !== "undefined") return;
 
   const events = ["mousemove", "keydown", "click", "scroll", "touchstart"];
   const handleActivity = () => resetInactivityTimer();
@@ -95,7 +95,8 @@ interface UseSupabaseAuthReturn {
   isAdmin: boolean;
   userRole: AppUserRole;
   isLoading: boolean;
-  signOut: () => Promise<void>;
+  isPasswordRecovery: boolean;
+  signOut: (options?: { scope?: "global" | "local" | "others" }) => Promise<void>;
   signIn: (
     email: string,
     password: string,
@@ -110,22 +111,27 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<AppUserRole>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState<boolean>(false);
 
   // --- Gestion de la déconnexion ---
-  const handleSignOut = useCallback(async () => {
-    if (!supabase) return;
-    try {
-      await supabase.auth.signOut();
-      setUser(null);
-      setUserRole(null);
-      Sentry.setUser(null);
-    } catch (error) {
-      console.error("[useSupabaseAuth] Erreur déconnexion :", error);
-      Sentry.captureException(error, {
-        tags: { context: "supabase_auth_sign_out" },
-      });
-    }
-  }, []);
+  const handleSignOut = useCallback(
+    async (options?: { scope?: "global" | "local" | "others" }) => {
+      if (!supabase) return;
+      try {
+        await supabase.auth.signOut(options);
+        setUser(null);
+        setUserRole(null);
+        setIsPasswordRecovery(false);
+        Sentry.setUser(null);
+      } catch (error) {
+        console.error("[useSupabaseAuth] Erreur déconnexion :", error);
+        Sentry.captureException(error, {
+          tags: { context: "supabase_auth_sign_out" },
+        });
+      }
+    },
+    [],
+  );
 
   // Détermine le rôle de manière fiable (table user_roles DB puis fallback user_metadata)
   const resolveRole = useCallback(
@@ -219,10 +225,20 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        if (isMounted) {
+          setIsPasswordRecovery(true);
+          setUser(session?.user ?? null);
+          setIsLoading(false);
+        }
+        return;
+      }
+
       if (event === "SIGNED_OUT") {
         if (isMounted) {
           setUser(null);
           setUserRole(null);
+          setIsPasswordRecovery(false);
           Sentry.setUser(null);
           setIsLoading(false);
           if (inactivityTimer) clearTimeout(inactivityTimer);
@@ -271,7 +287,6 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
       });
 
       if (error) {
-        // Enregistre l'échec dans Sentry si ce n'est pas une simple erreur de mot de passe erroné
         if (error.status !== 400) {
           Sentry.captureException(error, {
             tags: { context: "supabase_auth_sign_in_failure", http_status: String(error.status) },
@@ -283,6 +298,7 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
 
       if (data.user) {
         setUser(data.user);
+        setIsPasswordRecovery(false);
         const role = await resolveRole(data.user);
         setUserRole(role);
         Sentry.setUser({ id: data.user.id, email: data.user.email });
@@ -309,7 +325,6 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
       });
 
       if (error) {
-        // Capture systématique des erreurs de réinitialisation (ex: code 500 serveur SMTP ou 429 rate limit)
         Sentry.captureException(error, {
           tags: {
             context: "supabase_auth_reset_password_server_error",
@@ -366,6 +381,7 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
     isAdmin,
     userRole,
     isLoading,
+    isPasswordRecovery,
     signOut,
     signIn,
     resetPassword,

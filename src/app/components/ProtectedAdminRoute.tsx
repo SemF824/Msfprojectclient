@@ -13,7 +13,13 @@ interface ProtectedAdminRouteProps {
 export default function ProtectedAdminRoute({
   children,
 }: ProtectedAdminRouteProps) {
-  const { user, isAdmin, userRole, isLoading: authLoading } = useSupabaseAuth();
+  const {
+    user,
+    isAdmin,
+    userRole,
+    isLoading: authLoading,
+    isPasswordRecovery,
+  } = useSupabaseAuth();
   const location = useLocation();
 
   // Phase 1 : Chargement Auth & Rôle
@@ -33,12 +39,17 @@ export default function ProtectedAdminRoute({
     );
   }
 
-  // Phase 2 : Non connecté -> Redirection vers la page de login admin
+  // Phase 2 : En cours de réinitialisation de mot de passe -> Bloqué sur /update-password
+  if (isPasswordRecovery) {
+    return <Navigate to="/update-password" replace />;
+  }
+
+  // Phase 3 : Non connecté -> Redirection vers la page de login admin
   if (!user) {
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
-  // Phase 3 : Utilisateur connecté mais sans privilèges admin
+  // Phase 4 : Utilisateur connecté mais sans privilèges admin
   const isAuthorized =
     isAdmin || userRole === "admin" || userRole === "superadmin";
   if (!isAuthorized) {
