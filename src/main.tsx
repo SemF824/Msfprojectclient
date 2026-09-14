@@ -9,7 +9,16 @@ import "./styles/index.css";
 Sentry.init({
   dsn: "https://e72c1c74f5b185795af92c9330c41da5@o4512084926595072.ingest.de.sentry.io/4512084941144144",
   integrations: [
-    Sentry.replayIntegration(),
+    Sentry.replayIntegration({
+      maskAllText: false,
+      blockAllMedia: true,
+    }),
+  ],
+  // Ignore les erreurs d'accès DOM inter-iframe tierces inévitables (ex. Google reCAPTCHA)
+  ignoreErrors: [
+    "Blocked a frame with origin",
+    "SecurityError: Blocked a frame",
+    "Permission denied to access property",
   ],
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
