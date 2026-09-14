@@ -1,11 +1,14 @@
 /*
+  # Empêche l'inclusion du site dans des iframes (Anti-Clickjacking)
   X-Frame-Options: DENY
+  # Bloque le reniflage de type MIME
   X-Content-Type-Options: nosniff
-  X-XSS-Protection: 1; mode=block
+  # Protection contre les fuites de referrer
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
-  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.calendly.com https://*.cloudflare.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://www.google.com https://calendly.com;
+  # Bloque l'accès aux fonctionnalités sensibles non requises
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  # Content Security Policy stricte adaptée au projet MSF Congo
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com https://assets.calendly.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://assets.calendly.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https: https://api.89.167.127.146.sslip.io; connect-src 'self' https://api.89.167.127.146.sslip.io wss://api.89.167.127.146.sslip.io https://*.supabase.co wss://*.supabase.co https://www.google.com https://api.calendly.com https://challenges.cloudflare.com; frame-src 'self' https://www.google.com https://calendly.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self';
 
 /admin*
   X-Robots-Tag: noindex, nofollow

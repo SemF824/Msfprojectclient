@@ -1,0 +1,11 @@
+/*
+  # Empêche l'inclusion du site dans des iframes (Anti-Clickjacking)
+  X-Frame-Options: DENY
+  # Bloque le sniffing de type MIME
+  X-Content-Type-Options: nosniff
+  # Protection contre les fuites de referrer
+  Referrer-Policy: strict-origin-when-cross-origin
+  # Bloque l'accès aux fonctionnalités sensibles de l'appareil non requises
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  # Content Security Policy avec autorisation explicite d'ingestion Sentry
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://api.89.167.127.146.sslip.io https://*.ovh.net; connect-src 'self' https://api.89.167.127.146.sslip.io wss://api.89.167.127.146.sslip.io https://*.ingest.sentry.io https://www.google.com; frame-src https://www.google.com; object-src 'none'; base-uri 'self';
