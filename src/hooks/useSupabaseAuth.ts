@@ -4,7 +4,10 @@ import {
   SupabaseClient,
   User,
   AuthResponse,
+  AuthError,
+  Session,
 } from "@supabase/supabase-js";
+import * as Sentry from "@sentry/react";
 import { secureCookieStorage } from "../utils/cookieStorage";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
@@ -22,12 +25,12 @@ if (typeof window !== "undefined") {
         localStorage.removeItem(key);
       }
     });
-  } catch (e) {
-    // Ignore localStorage access errors
+  } catch {
+    // Ignore les erreurs d'accès à localStorage
   }
 }
 
-// Crée le client Supabase durci avec stockage sécurisé par Cookies et protocole PKCE
+// Client Supabase durci avec stockage sécurisé par Cookies et protocole PKCE
 const supabase: SupabaseClient | null = isConfigured
   ? createClient(supabaseUrl!, supabaseKey!, {
       auth: {
@@ -51,7 +54,7 @@ export type AppUserRole = "admin" | "superadmin" | "client" | null;
 
 // Temps d'inactivité avant déconnexion automatique (2 heures)
 const INACTIVITY_TIMEOUT = 2 * 60 * 60 * 1000;
-let inactivityTimer: NodeJS.Timeout | null = null;
+let inactivityTimer: ReturnType<typeof setTimeout> | null = null;
 let isActivityListenerAttached = false;
 
 const resetInactivityTimer = () => {
@@ -96,9 +99,9 @@ interface UseSupabaseAuthReturn {
   signIn: (
     email: string,
     password: string,
-  ) => Promise<{ data: AuthResponse["data"] | null; error: Error | null }>;
-  resetPassword: (email: string) => Promise<{ error: Error | null }>;
-  getSession: () => Promise<any>;
+  ) => Promise<{ data: AuthResponse["data"] | null; error: Error | AuthError | null }>;
+  resetPassword: (email: string) => Promise<{ error: Error | AuthError | null }>;
+  getSession: () => Promise<Session | null>;
   verifyAdminRole: () => Promise<boolean>;
   getUserRole: (targetUser?: User | null) => Promise<AppUserRole>;
 }
@@ -108,19 +111,23 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
   const [userRole, setUserRole] = useState<AppUserRole>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // --- Gestion de l'inactivité ---
+  // --- Gestion de la déconnexion ---
   const handleSignOut = useCallback(async () => {
     if (!supabase) return;
     try {
       await supabase.auth.signOut();
       setUser(null);
       setUserRole(null);
+      Sentry.setUser(null);
     } catch (error) {
       console.error("[useSupabaseAuth] Erreur déconnexion :", error);
+      Sentry.captureException(error, {
+        tags: { context: "supabase_auth_sign_out" },
+      });
     }
   }, []);
 
-  // Détermine le rôle de manière fiable (user_roles DB puis fallback user_metadata)
+  // Détermine le rôle de manière fiable (table user_roles DB puis fallback user_metadata)
   const resolveRole = useCallback(
     async (currentUser: User | null): Promise<AppUserRole> => {
       if (!currentUser) return null;
@@ -189,14 +196,19 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
         if (sessionUser) {
           const role = await resolveRole(sessionUser);
           if (isMounted) setUserRole(role);
+          Sentry.setUser({ id: sessionUser.id, email: sessionUser.email });
           setupGlobalActivityListeners();
           resetInactivityTimer();
         } else {
           if (isMounted) setUserRole(null);
+          Sentry.setUser(null);
           if (inactivityTimer) clearTimeout(inactivityTimer);
         }
       } catch (error) {
         console.error("[useSupabaseAuth] Erreur récupération session :", error);
+        Sentry.captureException(error, {
+          tags: { context: "supabase_auth_init_session" },
+        });
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -211,6 +223,7 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
         if (isMounted) {
           setUser(null);
           setUserRole(null);
+          Sentry.setUser(null);
           setIsLoading(false);
           if (inactivityTimer) clearTimeout(inactivityTimer);
         }
@@ -223,10 +236,12 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
         if (sessionUser) {
           const role = await resolveRole(sessionUser);
           if (isMounted) setUserRole(role);
+          Sentry.setUser({ id: sessionUser.id, email: sessionUser.email });
           setupGlobalActivityListeners();
           resetInactivityTimer();
         } else {
           setUserRole(null);
+          Sentry.setUser(null);
           if (inactivityTimer) clearTimeout(inactivityTimer);
         }
         setIsLoading(false);
@@ -245,47 +260,93 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
 
   const signIn = async (email: string, password: string) => {
     if (!supabase) {
-      return { data: null, error: new Error("Supabase non configuré.") };
+      const err = new Error("Supabase non configuré.");
+      Sentry.captureException(err, { tags: { context: "supabase_auth_sign_in" } });
+      return { data: null, error: err };
     }
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      if (error) return { data: null, error };
+
+      if (error) {
+        // Enregistre l'échec dans Sentry si ce n'est pas une simple erreur de mot de passe erroné
+        if (error.status !== 400) {
+          Sentry.captureException(error, {
+            tags: { context: "supabase_auth_sign_in_failure", http_status: String(error.status) },
+            extra: { email },
+          });
+        }
+        return { data: null, error };
+      }
 
       if (data.user) {
         setUser(data.user);
         const role = await resolveRole(data.user);
         setUserRole(role);
+        Sentry.setUser({ id: data.user.id, email: data.user.email });
       }
 
       return { data, error: null };
     } catch (error) {
+      Sentry.captureException(error as Error, {
+        tags: { context: "supabase_auth_sign_in_exception" },
+      });
       return { data: null, error: error as Error };
     }
   };
 
   const resetPassword = async (email: string) => {
     if (!supabase) {
-      return { error: new Error("Supabase non configuré.") };
+      const err = new Error("Supabase non configuré.");
+      Sentry.captureException(err, { tags: { context: "supabase_auth_reset_password" } });
+      return { error: err };
     }
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/update-password`,
       });
-      return { error };
+
+      if (error) {
+        // Capture systématique des erreurs de réinitialisation (ex: code 500 serveur SMTP ou 429 rate limit)
+        Sentry.captureException(error, {
+          tags: {
+            context: "supabase_auth_reset_password_server_error",
+            http_status: String(error.status ?? "unknown"),
+          },
+          extra: {
+            email,
+            origin: window.location.origin,
+            errorMessage: error.message,
+          },
+        });
+        return { error };
+      }
+
+      return { error: null };
     } catch (error) {
+      Sentry.captureException(error as Error, {
+        tags: { context: "supabase_auth_reset_password_exception" },
+        extra: { email },
+      });
       return { error: error as Error };
     }
   };
 
-  const getSession = async () => {
+  const getSession = async (): Promise<Session | null> => {
     if (!supabase) return null;
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    return session;
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      return session;
+    } catch (error) {
+      Sentry.captureException(error as Error, {
+        tags: { context: "supabase_auth_get_session" },
+      });
+      return null;
+    }
   };
 
   const verifyAdminRole = async (): Promise<boolean> => {
