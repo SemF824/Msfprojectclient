@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, memo } from "react";
 import { motion } from "motion/react";
 import {
   MapPin,
@@ -18,6 +18,7 @@ import {
 import { z } from "zod";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { PhoneInput } from "../components/ui/PhoneInput";
 import { supabase } from "../../hooks/useSupabaseAuth";
 import { useCurrency } from "../../context/CurrencyContext";
 import { isValidPhone } from "../../utils/phone";
@@ -26,9 +27,6 @@ export const phoneSchema = z.string().refine(
   (val) => isValidPhone(val, "CG") || isValidPhone(val),
   { message: "Numéro de téléphone invalide." }
 );
-
-const adminEmail =
-  (import.meta as any).env.VITE_ADMIN_EMAIL || "promotions@msfcongo.com";
 
 const contactFormSchema = z.object({
   name: z
@@ -41,8 +39,10 @@ const contactFormSchema = z.object({
     .max(255, "L'email ne peut pas dépasser 255 caractères"),
   phone: z
     .string()
-    .min(8, "Numéro de téléphone invalide")
-    .max(20, "Numéro de téléphone trop long"),
+    .min(6, "Numéro de téléphone invalide")
+    .refine((val) => isValidPhone(val, "CG") || isValidPhone(val), {
+      message: "Numéro de téléphone international invalide.",
+    }),
   subject: z.string().min(1, "Veuillez sélectionner un sujet"),
   propertyType: z.string().optional(),
   budget: z.string().optional(),
@@ -50,6 +50,50 @@ const contactFormSchema = z.object({
     .string()
     .min(10, "Le message doit contenir au moins 10 caractères")
     .max(1000, "Le message ne peut pas dépasser 1000 caractères"),
+});
+
+// Déclaré à l'extérieur et mémoïsé pour éviter les rechargements d'iframe lors des frappes au clavier
+const GoogleMap = memo(function GoogleMap() {
+  const apiKey = (import.meta as any).env.VITE_GOOGLE_MAPS_API_KEY;
+
+  if (!apiKey) {
+    return (
+      <div
+        className="h-80 bg-gray-100 relative flex items-center justify-center rounded-xl"
+        aria-label="Carte interactive non disponible"
+      >
+        <div className="text-center">
+          <MapPin
+            className="w-16 h-16 text-[#d4af37] mx-auto mb-4"
+            aria-hidden="true"
+          />
+          <p className="text-[#0a0f1e] mb-2 font-medium">Carte Interactive</p>
+          <p className="text-sm text-gray-600">6R2W+J28, Pointe-Noire</p>
+          <p className="text-sm text-gray-600">Congo-Brazzaville</p>
+          <p className="text-xs text-gray-400 mt-2">
+            Configurez VITE_GOOGLE_MAPS_API_KEY pour activer
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const mapUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=Maisons+Sans+Frontieres+Pointe-Noire+Congo&language=fr`;
+
+  return (
+    <div className="h-80 rounded-xl overflow-hidden border border-gray-200">
+      <iframe
+        width="100%"
+        height="100%"
+        style={{ border: 0 }}
+        loading="lazy"
+        allowFullScreen
+        referrerPolicy="no-referrer-when-downgrade"
+        src={mapUrl}
+        title="Localisation MSF Congo"
+      />
+    </div>
+  );
 });
 
 export default function Contact() {
@@ -166,10 +210,17 @@ export default function Contact() {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
   ) => {
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value,
-    });
+    }));
+  };
+
+  const handlePhoneChange = (_formatted: string, _isValid: boolean, e164: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      phone: e164 || _formatted,
+    }));
   };
 
   // VARIANTS ORCHESTRATION GRILLES
@@ -292,49 +343,6 @@ export default function Contact() {
         "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80",
     },
   ];
-
-  const GoogleMap = () => {
-    const apiKey = (import.meta as any).env.VITE_GOOGLE_MAPS_API_KEY;
-
-    if (!apiKey) {
-      return (
-        <div
-          className="h-80 bg-gray-100 relative flex items-center justify-center rounded-xl"
-          aria-label="Carte interactive non disponible"
-        >
-          <div className="text-center">
-            <MapPin
-              className="w-16 h-16 text-[#d4af37] mx-auto mb-4"
-              aria-hidden="true"
-            />
-            <p className="text-[#0a0f1e] mb-2 font-medium">Carte Interactive</p>
-            <p className="text-sm text-gray-600">6R2W+J28, Pointe-Noire</p>
-            <p className="text-sm text-gray-600">Congo-Brazzaville</p>
-            <p className="text-xs text-gray-400 mt-2">
-              Configurez VITE_GOOGLE_MAPS_API_KEY pour activer
-            </p>
-          </div>
-        </div>
-      );
-    }
-
-    const mapUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=Maisons+Sans+Frontieres+Pointe-Noire+Congo&language=fr`;
-
-    return (
-      <div className="h-80 rounded-xl overflow-hidden border border-gray-200">
-        <iframe
-          width="100%"
-          height="100%"
-          style={{ border: 0 }}
-          loading="lazy"
-          allowFullScreen
-          referrerPolicy="no-referrer-when-downgrade"
-          src={mapUrl}
-          title="Localisation MSF Congo"
-        />
-      </div>
-    );
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50">
@@ -513,29 +521,15 @@ export default function Contact() {
                     </div>
                   </div>
                   <div>
-                    <label
-                      htmlFor="phone"
-                      className="block text-sm text-[#0a0f1e] mb-2 font-medium"
-                    >
-                      Téléphone *
-                    </label>
-                    <div className="relative">
-                      <Phone
-                        className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-                        aria-hidden="true"
-                      />
-                      <input
-                        id="phone"
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        required
-                        placeholder="+242 06 xxx xxxx"
-                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] placeholder:text-gray-500 focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors"
-                        aria-required="true"
-                      />
-                    </div>
+                    <PhoneInput
+                      id="phone"
+                      name="phone"
+                      label="Téléphone"
+                      required
+                      value={formData.phone}
+                      onChange={handlePhoneChange}
+                      defaultCountry="CG"
+                    />
                   </div>
                 </div>
 
@@ -778,82 +772,32 @@ export default function Contact() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "0px 0px -80px 0px" }}
             transition={{ duration: 0.6 }}
-            style={{ WebkitTransform: "translate3d(0,0,0)" }}
-            className="max-w-4xl mx-auto mb-16"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
           >
-            <div className="group bg-white rounded-3xl border-2 border-[#d4af37] shadow-2xl overflow-hidden hover:shadow-[#d4af37]/20 transition-all duration-300">
-              <div className="grid md:grid-cols-2 gap-8 items-center">
-                <div className="relative h-96 md:h-full overflow-hidden">
+            {team.map((member, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="bg-gray-50 rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300"
+              >
+                <div className="relative h-72">
                   <ImageWithFallback
-                    src={team[0].image}
-                    alt={team[0].name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    src={member.image}
+                    alt={member.name}
+                    className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#0a0f1e]/60 to-transparent" />
-                </div>
-                <div className="p-8 md:p-12">
-                  <div className="inline-block px-4 py-2 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] rounded-lg mb-4">
-                    <span className="text-xs text-[#0a0f1e] uppercase tracking-wide">
-                      Fondateur
-                    </span>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                    <h3 className="text-xl font-bold mb-1">{member.name}</h3>
+                    <p className="text-sm text-[#d4af37]">{member.role}</p>
                   </div>
-                  <h3 className="text-4xl md:text-5xl text-[#0a0f1e] mb-3">
-                    {team[0].name}
-                  </h3>
-                  <p className="text-[#d4af37] text-xl mb-6">{team[0].role}</p>
-                  <p className="text-gray-600 leading-relaxed">
-                    Visionnaire et leader de MSF Congo depuis 2001, Roger ROC a
-                    bâti une entreprise de référence dans la construction
-                    durable et l'immobilier de luxe au Congo.
-                  </p>
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            ))}
           </motion.div>
-
-          <div className="max-w-5xl mx-auto">
-            <h3 className="text-2xl md:text-3xl text-[#0a0f1e] text-center mb-12">
-              Nos Collaborateurs
-            </h3>
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-8"
-            >
-              {team.slice(1).map((member, index) => (
-                <motion.div
-                  key={index}
-                  variants={itemVariants}
-                  style={{
-                    WebkitBackfaceVisibility: "hidden",
-                    backfaceVisibility: "hidden",
-                    WebkitTransform: "translate3d(0,0,0)",
-                  }}
-                  className="group bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden hover:shadow-2xl hover:border-[#d4af37] transition-colors transition-shadow duration-300 transform-gpu isolate"
-                >
-                  <div className="relative h-80 overflow-hidden">
-                    <ImageWithFallback
-                      src={member.image}
-                      alt={member.name}
-                      // @ts-ignore
-                      decoding="async"
-                      fetchPriority="low"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e]/80 via-[#0a0f1e]/40 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-                  </div>
-                  <div className="p-6 text-center">
-                    <h3 className="text-2xl text-[#0a0f1e] mb-2">
-                      {member.name}
-                    </h3>
-                    <p className="text-[#d4af37] text-sm mb-4">{member.role}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
         </div>
       </section>
     </div>

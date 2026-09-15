@@ -20,19 +20,20 @@ import { supabase } from "../../hooks/useSupabaseAuth";
 import { toast } from "sonner";
 import { encryptDevisRequest } from "../../utils/devisEncryption";
 import { z } from "zod";
+import { PhoneInput } from "../components/ui/PhoneInput";
 import { isValidPhone } from "../../utils/phone";
 
 export const phoneSchema = z.string().refine(
   (val) => isValidPhone(val, "CG") || isValidPhone(val),
   { message: "Numéro de téléphone invalide." }
 );
+
 export default function DevisRequest() {
   const { propertyId } = useParams();
   const navigate = useNavigate();
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // Données de propriété (Simulées ou reçues via contexte externe)
   const property = {
     id: propertyId || "tchikobo-villa-5",
     title: "Villa Tchikobo Prestige",
@@ -46,7 +47,6 @@ export default function DevisRequest() {
     image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800",
   };
 
-  // État local du formulaire
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -59,7 +59,7 @@ export default function DevisRequest() {
     profession: "",
     company: "",
     monthlyIncome: "",
-    requestType: "achat", // achat, location, information
+    requestType: "achat",
     financingNeeded: "oui",
     downPaymentAmount: "",
     visitDate: "",
@@ -74,9 +74,26 @@ export default function DevisRequest() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handlePhoneChange = (field: "phone" | "alternatePhone") => (
+    _formatted: string,
+    _isValid: boolean,
+    e164: string
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: e164 || _formatted,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase) return;
+
+    if (!formData.phone || (!isValidPhone(formData.phone, "CG") && !isValidPhone(formData.phone))) {
+      toast.error("Veuillez saisir un numéro de téléphone principal valide.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -119,7 +136,6 @@ export default function DevisRequest() {
       toast.success("Demande de devis enregistrée avec succès.");
       setIsSubmitted(true);
 
-      // Redirection directe vers l'espace client protégé
       setTimeout(() => {
         navigate("/client/dashboard");
       }, 3000);
@@ -175,7 +191,6 @@ export default function DevisRequest() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 pt-20">
       <div className="container mx-auto px-6 py-8 max-w-6xl">
-        {/* Header */}
         <div className="mb-8">
           <Link
             to={`/properties/${property.id}`}
@@ -196,10 +211,8 @@ export default function DevisRequest() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Form */}
           <div className="lg:col-span-2">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Informations Personnelles */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -220,7 +233,6 @@ export default function DevisRequest() {
                       htmlFor="firstName"
                       className="block text-sm text-gray-700 mb-2 font-medium"
                     >
-                      {" "}
                       Prénom <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -241,7 +253,6 @@ export default function DevisRequest() {
                       htmlFor="lastName"
                       className="block text-sm text-gray-700 mb-2 font-medium"
                     >
-                      {" "}
                       Nom <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -257,12 +268,11 @@ export default function DevisRequest() {
                       aria-required="true"
                     />
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
                     <label
                       htmlFor="email"
                       className="block text-sm text-gray-700 mb-2 font-medium"
                     >
-                      {" "}
                       Email <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -279,49 +289,30 @@ export default function DevisRequest() {
                     />
                   </div>
                   <div>
-                    <label
-                      htmlFor="phone"
-                      className="block text-sm text-gray-700 mb-2 font-medium"
-                    >
-                      {" "}
-                      Téléphone Principal{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <input
+                    <PhoneInput
                       id="phone"
-                      type="tel"
+                      name="phone"
+                      label="Téléphone Principal"
                       required
                       value={formData.phone}
-                      onChange={(e) =>
-                        handleInputChange("phone", e.target.value)
-                      }
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors"
-                      placeholder="+242 06 XXX XXXX"
-                      aria-required="true"
+                      onChange={handlePhoneChange("phone")}
+                      defaultCountry="CG"
                     />
                   </div>
-                  <div className="md:col-span-2">
-                    <label
-                      htmlFor="alternatePhone"
-                      className="block text-sm text-gray-700 mb-2 font-medium"
-                    >
-                      Téléphone Alternatif
-                    </label>
-                    <input
+                  <div>
+                    <PhoneInput
                       id="alternatePhone"
-                      type="tel"
+                      name="alternatePhone"
+                      label="Téléphone Alternatif"
+                      required={false}
                       value={formData.alternatePhone}
-                      onChange={(e) =>
-                        handleInputChange("alternatePhone", e.target.value)
-                      }
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors"
-                      placeholder="+242 05 XXX XXXX"
+                      onChange={handlePhoneChange("alternatePhone")}
+                      defaultCountry="CG"
                     />
                   </div>
                 </div>
               </motion.div>
 
-              {/* Adresse */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -345,7 +336,6 @@ export default function DevisRequest() {
                       htmlFor="address"
                       className="block text-sm text-gray-700 mb-2 font-medium"
                     >
-                      {" "}
                       Adresse Complète <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -366,7 +356,6 @@ export default function DevisRequest() {
                       htmlFor="city"
                       className="block text-sm text-gray-700 mb-2 font-medium"
                     >
-                      {" "}
                       Ville <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -402,7 +391,6 @@ export default function DevisRequest() {
                 </div>
               </motion.div>
 
-              {/* Informations Professionnelles */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -426,7 +414,6 @@ export default function DevisRequest() {
                       htmlFor="profession"
                       className="block text-sm text-gray-700 mb-2 font-medium"
                     >
-                      {" "}
                       Profession <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -473,7 +460,7 @@ export default function DevisRequest() {
                       onChange={(e) =>
                         handleInputChange("monthlyIncome", e.target.value)
                       }
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors bg-white cursor-pointer"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors cursor-pointer"
                     >
                       <option value="">Préférer ne pas répondre</option>
                       <option value="0-500k">Moins de 500 000 FCFA</option>
@@ -486,7 +473,6 @@ export default function DevisRequest() {
                 </div>
               </motion.div>
 
-              {/* Type de Demande */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -507,7 +493,6 @@ export default function DevisRequest() {
                       htmlFor="requestType"
                       className="block text-sm text-gray-700 mb-2 font-medium"
                     >
-                      {" "}
                       Type de Projet <span className="text-red-500">*</span>
                     </label>
                     <select
@@ -517,7 +502,7 @@ export default function DevisRequest() {
                       onChange={(e) =>
                         handleInputChange("requestType", e.target.value)
                       }
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors bg-white"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors"
                     >
                       <option value="achat">Achat</option>
                       <option value="location">Location</option>
@@ -537,7 +522,7 @@ export default function DevisRequest() {
                       onChange={(e) =>
                         handleInputChange("financingNeeded", e.target.value)
                       }
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors bg-white"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors"
                     >
                       <option value="oui">Oui</option>
                       <option value="non">Non</option>
@@ -567,7 +552,6 @@ export default function DevisRequest() {
                 </div>
               </motion.div>
 
-              {/* Visite */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -613,7 +597,7 @@ export default function DevisRequest() {
                       onChange={(e) =>
                         handleInputChange("visitTime", e.target.value)
                       }
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors bg-white"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors"
                     >
                       <option value="">Sélectionner</option>
                       <option value="10h00">10h00</option>
@@ -636,7 +620,7 @@ export default function DevisRequest() {
                       onChange={(e) =>
                         handleInputChange("numberOfPersons", e.target.value)
                       }
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors bg-white"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/30 focus:outline-none transition-colors"
                     >
                       <option value="1">1 personne</option>
                       <option value="2">2 personnes</option>
@@ -647,7 +631,6 @@ export default function DevisRequest() {
                 </div>
               </motion.div>
 
-              {/* Message */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -671,7 +654,6 @@ export default function DevisRequest() {
                 />
               </motion.div>
 
-              {/* Terms */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -718,7 +700,6 @@ export default function DevisRequest() {
                 </div>
               </motion.div>
 
-              {/* Submit Button */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -745,7 +726,6 @@ export default function DevisRequest() {
             </form>
           </div>
 
-          {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             <motion.div
               initial={{ opacity: 0, x: 20 }}

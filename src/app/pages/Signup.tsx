@@ -2,12 +2,13 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Link, useNavigate } from "react-router";
 import {
-  Mail, Lock, User, Phone, MapPin, ArrowRight,
+  Mail, Lock, User, MapPin, ArrowRight,
   Home as HomeIcon, Eye, EyeOff, Calendar,
   ChevronLeft, Loader2, AlertCircle
 } from "lucide-react";
 import { supabase } from "../../hooks/useSupabaseAuth";
 import { z } from "zod";
+import { PhoneInput } from "../components/ui/PhoneInput";
 import { isValidPhone } from "../../utils/phone";
 
 export const phoneSchema = z.string().refine(
@@ -48,9 +49,22 @@ export default function Signup() {
     setStep(2);
   };
 
+  const handlePhoneChange = (_formatted: string, _isValid: boolean, e164: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      phone: e164 || _formatted,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase) return setError("Erreur de connexion au serveur.");
+    
+    if (!formData.phone || (!isValidPhone(formData.phone, "CG") && !isValidPhone(formData.phone))) {
+      setError("Veuillez saisir un numéro de téléphone international valide.");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
@@ -73,38 +87,30 @@ export default function Signup() {
       });
 
       if (signUpError) {
-        // Gère spécifiquement l'erreur si l'utilisateur existe déjà
         if (signUpError.status === 400 || signUpError.status === 401 || signUpError.message.includes('already registered')) {
             throw new Error("Cette adresse email est déjà utilisée ou invalide.");
         }
         throw signUpError;
       }
 
-      // STRATÉGIE IMPITOYABLE : On détruit toute session fantôme générée par Supabase
-      // Cela empêche le routeur de croire que l'utilisateur est connecté.
       if (data.session) {
         await supabase.auth.signOut();
       }
       
-      // On force SYSTEMATIQUEMENT l'affichage de l'écran de vérification
       setStep(3);
-      
     } catch (err: any) {
       console.error("Signup Error:", err);
       setError(err.message || "Erreur lors de l'inscription.");
-      // On s'assure de rester sur l'étape 2 en cas d'erreur
       setStep(2);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Classe commune pour les inputs afin de garantir la visibilité
   const inputClasses = "w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl text-[#0a0f1e] placeholder:text-gray-500 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 relative overflow-hidden flex items-center justify-center px-6 py-12">
-      {/* Motifs de fond */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
           backgroundImage: 'radial-gradient(circle at 2px 2px, #d4af37 1px, transparent 0)',
@@ -125,7 +131,6 @@ export default function Signup() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white/90 backdrop-blur-2xl rounded-3xl border border-gray-200 p-8 md:p-10 shadow-2xl"
         >
-          {/* Header avec indicateur d'étape */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#d4af37]/20 to-transparent rounded-2xl mb-4">
               <User className="w-8 h-8 text-[#d4af37]" />
@@ -202,10 +207,17 @@ export default function Signup() {
                   <label className="absolute -top-2.5 left-4 bg-white px-2 text-[10px] text-gray-500 font-bold uppercase tracking-wider">Date de naissance</label>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d4af37]" />
-                    <input type="tel" placeholder="+242 06 XXX XXXX" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className={inputClasses} />
+                <div className="grid md:grid-cols-2 gap-4 items-end">
+                  <div className="w-full">
+                    <PhoneInput
+                      id="phone"
+                      name="phone"
+                      label="Téléphone"
+                      required
+                      value={formData.phone}
+                      onChange={handlePhoneChange}
+                      defaultCountry="CG"
+                    />
                   </div>
                   <div className="relative">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d4af37]" />
