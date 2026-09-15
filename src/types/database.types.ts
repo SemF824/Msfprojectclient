@@ -22,7 +22,7 @@ export interface Favorite {
 export interface Notification {
   id: string;
   user_id: string;
-  type: 'info' | 'success' | 'payment' | 'document' | 'appointment' | 'warning';
+  type: "info" | "success" | "payment" | "document" | "appointment" | "warning";
   title: string;
   message: string;
   read: boolean;
@@ -35,16 +35,16 @@ export interface Transaction {
   user_id: string;
   property_id: string;
   property_name: string;
-  transaction_type: 'purchase' | 'sale' | 'rental' | 'reservation';
+  transaction_type: "purchase" | "sale" | "rental" | "reservation";
   amount: number;
-  status: 'pending' | 'completed' | 'cancelled' | 'in_progress';
+  status: "pending" | "completed" | "cancelled" | "in_progress";
   date: string;
   created_at: string;
   updated_at: string;
 }
 
 // ─── Catégories de documents sécurisés ───────────────────────────────────────
-export type DocCategory = 'identity' | 'finance' | 'land_title' | 'other';
+export type DocCategory = "identity" | "finance" | "land_title" | "other";
 
 // Table: documents
 export interface Document {
@@ -52,12 +52,12 @@ export interface Document {
   user_id: string;
   transaction_id?: string;
   name: string;
-  type: string;           // mime-type du fichier
-  url: string;            // conservé pour rétrocompat (vide pour bucket privé)
-  storage_path: string;   // chemin réel dans le bucket msf-private-docs
-  category: DocCategory;  // catégorie sécurisée pour filtrage admin
-  size: number;           // en bytes
-  status?: 'en_attente' | 'approuve' | 'rejete';
+  type: string; // mime-type du fichier
+  url: string; // conservé pour rétrocompat (vide pour bucket privé)
+  storage_path: string; // chemin réel dans le bucket msf-private-docs
+  category: DocCategory; // catégorie sécurisée pour filtrage admin
+  size: number; // en bytes
+  status?: "en_attente" | "approuve" | "rejete";
   admin_comment?: string | null;
   uploaded_at: string;
   created_at: string;
@@ -69,14 +69,14 @@ export interface Appointment {
   user_id: string;
   property_id: string;
   property_name: string;
-  title?: string;             
-  type: 'visit' | 'consultation' | 'signature' | 'visite'; 
-  date: string;               
-  time: string;               
-  appointment_date: string;   
-  appointment_time: string;   
-  location?: string;          
-  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'planifie'; 
+  title?: string;
+  type: "visit" | "consultation" | "signature" | "visite";
+  date: string;
+  time: string;
+  appointment_date: string;
+  appointment_time: string;
+  location?: string;
+  status: "scheduled" | "confirmed" | "completed" | "cancelled" | "planifie";
   agent_name?: string;
   notes?: string;
   created_at: string;
@@ -96,8 +96,8 @@ export interface DevisRequest {
   property_id: string;
   property_name: string;
   property_price: number;
-  request_type: 'achat' | 'location' | 'information';
-  status: 'nouveau' | 'en_cours' | 'documents' | 'approuve' | 'rejete';
+  request_type: "achat" | "location" | "information";
+  status: "nouveau" | "en_cours" | "documents" | "approuve" | "rejete";
   message?: string;
   created_at: string;
   updated_at: string;
@@ -112,6 +112,50 @@ export interface DashboardStats {
 }
 
 // Types d'aide pour l'UI
-export type NotificationIcon = 'info' | 'success' | 'payment' | 'document' | 'appointment' | 'warning';
-export type TransactionStatus = 'pending' | 'completed' | 'cancelled' | 'in_progress';
-export type AppointmentStatus = 'scheduled' | 'confirmed' | 'completed' | 'cancelled';
+export type NotificationIcon =
+  | "info"
+  | "success"
+  | "payment"
+  | "document"
+  | "appointment"
+  | "warning";
+export type TransactionStatus =
+  | "pending"
+  | "completed"
+  | "cancelled"
+  | "in_progress";
+export type AppointmentStatus =
+  | "scheduled"
+  | "confirmed"
+  | "completed"
+  | "cancelled";
+
+// ─── Module de Messagerie Sécurisée Chiffrée AES-256 ────────────────────────
+export interface Conversation {
+  id: string;
+  client_id: string;
+  agent_id?: string | null;
+  subject: string;
+  status: "open" | "closed" | "archived";
+  created_at: string;
+  updated_at: string;
+  // Métadonnées d'affichage optionnelles
+  client_name?: string;
+  client_email?: string;
+  agent_name?: string;
+  unread_count?: number;
+  last_message?: string;
+  last_message_at?: string;
+}
+
+export interface EncryptedMessage {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  sender_role: "client" | "agent" | "admin" | "superadmin";
+  content_encrypted: string;
+  is_read: boolean;
+  created_at: string;
+  // Attribut calculé en mémoire après déchiffrement
+  decrypted_content?: string;
+}

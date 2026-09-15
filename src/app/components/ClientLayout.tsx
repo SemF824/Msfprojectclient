@@ -16,6 +16,7 @@ import {
   Lock,
   ChevronDown,
   ChevronUp,
+  MessageSquare,
 } from "lucide-react";
 import FloatingWhatsApp from "./FloatingWhatsApp";
 
@@ -46,6 +47,11 @@ export default function ClientLayout() {
 
   const navItems = [
     { id: "/client/dashboard", icon: Home, label: "Vue d'ensemble" },
+    {
+      id: "/client/messages",
+      icon: MessageSquare,
+      label: "Messagerie Sécurisée",
+    },
     { id: "/client/requests", icon: FileText, label: "Mes Demandes" },
     { id: "/client/favorites", icon: Heart, label: "Favoris" },
     { id: "/client/appointments", icon: Calendar, label: "Rendez-vous" },

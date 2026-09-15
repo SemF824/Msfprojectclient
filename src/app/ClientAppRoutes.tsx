@@ -40,6 +40,7 @@ const ClientRequests = lazy(() => import("./pages/ClientRequests"));
 const ClientAppointments = lazy(() => import("./pages/ClientAppointments"));
 const ClientDocuments = lazy(() => import("./pages/ClientDocuments"));
 const ClientLoan = lazy(() => import("./pages/ClientLoan"));
+const ClientMessages = lazy(() => import("./pages/ClientMessages"));
 
 const ClientLoader = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
@@ -90,6 +91,7 @@ export default function ClientAppRoutes() {
           <Route index element={<Navigate to="dashboard" replace />} />
 
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="messages" element={<ClientMessages />} />
           <Route path="transactions" element={<Transactions />} />
 
           {/* Uniformisation de l'accès aux détails d'une transaction */}

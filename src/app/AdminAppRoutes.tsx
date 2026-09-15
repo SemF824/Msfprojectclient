@@ -19,6 +19,7 @@ const PropertiesManagement = lazy(
   () => import("./pages/admin/PropertiesManagement"),
 );
 const ClientsManagement = lazy(() => import("./pages/admin/ClientsManagement"));
+const AdminMessages = lazy(() => import("./pages/admin/AdminMessages"));
 const StatistiquesPage = lazy(() => import("./pages/admin/StatistiquesPage"));
 const ParametresPage = lazy(() => import("./pages/admin/ParametresPage"));
 const TeamManagement = lazy(() => import("./pages/admin/TeamManagement"));
@@ -53,6 +54,7 @@ export default function AdminAppRoutes() {
           <Route path="demandes/:id" element={<DemandeDetail />} />
           <Route path="proprietes" element={<PropertiesManagement />} />
           <Route path="clients" element={<ClientsManagement />} />
+          <Route path="messages" element={<AdminMessages />} />
           <Route path="documents" element={<ClientsDocuments />} />
           <Route path="statistiques" element={<StatistiquesPage />} />
           <Route path="parametres" element={<ParametresPage />} />

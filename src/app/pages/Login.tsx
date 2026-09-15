@@ -152,8 +152,8 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 relative overflow-hidden flex items-center justify-center px-6 py-12">
-      <div className="absolute inset-0 opacity-5">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 relative overflow-hidden flex flex-col items-center justify-center px-6 pt-28 sm:pt-36 pb-16">
+      <div className="absolute inset-0 opacity-5 pointer-events-none">
         <div
           className="absolute inset-0"
           style={{
@@ -162,17 +162,19 @@ export default function Login() {
           }}
         />
       </div>
-      <div className="absolute top-20 left-20 w-96 h-96 bg-[#d4af37]/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl" />
+      <div className="absolute top-24 left-10 w-96 h-96 bg-[#d4af37]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-md">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-gray-500 hover:text-[#d4af37] transition-colors mb-8"
-        >
-          <HomeIcon className="w-4 h-4" />
-          <span className="text-sm font-medium">Retour à l'accueil</span>
-        </Link>
+        <div className="mb-6">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/80 border border-gray-200 text-gray-600 hover:text-[#d4af37] hover:border-[#d4af37]/40 shadow-sm transition-all text-xs font-medium backdrop-blur-sm"
+          >
+            <HomeIcon className="w-3.5 h-3.5" />
+            <span>Retour à l'accueil</span>
+          </Link>
+        </div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

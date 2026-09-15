@@ -17,6 +17,7 @@ import {
   Shield,
   UserCog,
   FolderOpen,
+  MessageSquare,
 } from "lucide-react";
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 
@@ -32,6 +33,11 @@ export default function AdminLayout() {
   // Navigation de base pour tous les admins
   const baseNavigation = [
     { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+    {
+      name: "Messagerie Clients",
+      href: "/admin/messages",
+      icon: MessageSquare,
+    },
     { name: "Demandes de Devis", href: "/admin/demandes", icon: FileText },
     { name: "Propriétés", href: "/admin/proprietes", icon: Building2 },
     { name: "Clients", href: "/admin/clients", icon: Users },
