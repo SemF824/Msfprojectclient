@@ -19,6 +19,7 @@ import { z } from "zod";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { supabase } from "../../hooks/useSupabaseAuth";
+import { useCurrency } from "../../context/CurrencyContext";
 
 const adminEmail =
   (import.meta as any).env.VITE_ADMIN_EMAIL || "promotions@msfcongo.com";
@@ -47,6 +48,8 @@ const contactFormSchema = z.object({
 
 export default function Contact() {
   const { executeRecaptcha } = useGoogleReCaptcha();
+  const { formatPrice, currency } = useCurrency();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -229,11 +232,26 @@ export default function Contact() {
   ];
 
   const budgetRanges = [
-    "Moins de 100 000 000 FCFA",
-    "100 000 000 - 200 000 000 FCFA",
-    "200 000 000 - 500 000 000 FCFA",
-    "500 000 000 - 1 000 000 000 FCFA",
-    "Plus de 1 000 000 000 FCFA",
+    {
+      value: `Moins de ${formatPrice(100000000, false)}${currency !== "XAF" ? " (100M FCFA)" : ""}`,
+      label: `Moins de ${formatPrice(100000000, false)}${currency !== "XAF" ? " (≈ 100M FCFA)" : ""}`,
+    },
+    {
+      value: `${formatPrice(100000000, false)} - ${formatPrice(200000000, false)}${currency !== "XAF" ? " (100M - 200M FCFA)" : ""}`,
+      label: `${formatPrice(100000000, false)} - ${formatPrice(200000000, false)}${currency !== "XAF" ? " (≈ 100M - 200M FCFA)" : ""}`,
+    },
+    {
+      value: `${formatPrice(200000000, false)} - ${formatPrice(500000000, false)}${currency !== "XAF" ? " (200M - 500M FCFA)" : ""}`,
+      label: `${formatPrice(200000000, false)} - ${formatPrice(500000000, false)}${currency !== "XAF" ? " (≈ 200M - 500M FCFA)" : ""}`,
+    },
+    {
+      value: `${formatPrice(500000000, false)} - ${formatPrice(1000000000, false)}${currency !== "XAF" ? " (500M - 1 Mrd FCFA)" : ""}`,
+      label: `${formatPrice(500000000, false)} - ${formatPrice(1000000000, false)}${currency !== "XAF" ? " (≈ 500M - 1 Mrd FCFA)" : ""}`,
+    },
+    {
+      value: `Plus de ${formatPrice(1000000000, false)}${currency !== "XAF" ? " (1 Mrd FCFA)" : ""}`,
+      label: `Plus de ${formatPrice(1000000000, false)}${currency !== "XAF" ? " (≈ 1 Mrd FCFA)" : ""}`,
+    },
   ];
 
   const team = [
@@ -596,8 +614,8 @@ export default function Contact() {
                       >
                         <option value="">Sélectionnez un budget</option>
                         {budgetRanges.map((range, idx) => (
-                          <option key={idx} value={range}>
-                            {range}
+                          <option key={idx} value={range.value}>
+                            {range.label}
                           </option>
                         ))}
                       </select>
