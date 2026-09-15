@@ -12,7 +12,9 @@ import {
   User,
   AlertCircle,
   Archive,
+  ArchiveRestore,
   RefreshCw,
+  FolderLock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -21,7 +23,9 @@ interface EncryptedChatProps {
   currentUserId: string;
   currentUserRole: "client" | "agent" | "admin" | "superadmin";
   partnerName?: string;
-  onStatusChange?: (newStatus: "open" | "closed") => Promise<void> | void;
+  onStatusChange?: (
+    newStatus: "open" | "closed" | "archived",
+  ) => Promise<void> | void;
 }
 
 export default function EncryptedChat({
@@ -170,9 +174,9 @@ export default function EncryptedChat({
     const cleanText = inputText.trim();
     if (!cleanText || sending || !supabase) return;
 
-    if (conversation.status === "closed") {
+    if (conversation.status === "closed" || conversation.status === "archived") {
       setError(
-        "Cette conversation est clôturée. Vous ne pouvez plus envoyer de message.",
+        "Cette conversation est clôturée ou archivée. Vous ne pouvez pas envoyer de message.",
       );
       return;
     }
@@ -271,10 +275,16 @@ export default function EncryptedChat({
                 className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded-full tracking-wider ${
                   conversation.status === "open"
                     ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                    : "bg-gray-700 text-gray-300 border border-gray-600"
+                    : conversation.status === "archived"
+                      ? "bg-purple-900/40 text-purple-300 border border-purple-500/30"
+                      : "bg-gray-700 text-gray-300 border border-gray-600"
                 }`}
               >
-                {conversation.status === "open" ? "En cours" : "Clôturée"}
+                {conversation.status === "open"
+                  ? "En cours"
+                  : conversation.status === "archived"
+                    ? "Archivé"
+                    : "Clôturé"}
               </span>
             </div>
             <p className="text-xs text-gray-400 truncate max-w-xs md:max-w-md">
@@ -284,31 +294,55 @@ export default function EncryptedChat({
         </div>
 
         {/* BADGE DE CHIFFREMENT ET ACTIONS */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-emerald-950/60 border border-emerald-500/40 rounded-full text-emerald-400 text-xs font-medium">
             <Lock className="w-3.5 h-3.5" />
             <span>AES-256 Chiffré</span>
           </div>
 
           {isStaff && onStatusChange && (
-            <button
-              onClick={() =>
-                onStatusChange(
-                  conversation.status === "open" ? "closed" : "open",
-                )
-              }
-              className="text-xs px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg border border-gray-700 transition-colors flex items-center gap-1.5"
-              title={
-                conversation.status === "open"
-                  ? "Clôturer le fil"
-                  : "Rouvrir la conversation"
-              }
-            >
-              <Archive className="w-3.5 h-3.5 text-[#d4af37]" />
-              <span className="hidden md:inline">
-                {conversation.status === "open" ? "Clôturer" : "Rouvrir"}
-              </span>
-            </button>
+            <div className="flex items-center gap-1.5">
+              {conversation.status === "archived" ? (
+                <button
+                  onClick={() => onStatusChange("open")}
+                  className="text-xs px-2.5 py-1.5 bg-purple-950/70 hover:bg-purple-900 text-purple-200 rounded-lg border border-purple-600 transition-colors flex items-center gap-1.5"
+                  title="Désarchiver et rouvrir le dossier"
+                >
+                  <ArchiveRestore className="w-3.5 h-3.5 text-purple-300" />
+                  <span className="hidden md:inline">Désarchiver</span>
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() =>
+                      onStatusChange(
+                        conversation.status === "open" ? "closed" : "open",
+                      )
+                    }
+                    className="text-xs px-2.5 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg border border-gray-700 transition-colors flex items-center gap-1.5"
+                    title={
+                      conversation.status === "open"
+                        ? "Clôturer le fil"
+                        : "Rouvrir la conversation"
+                    }
+                  >
+                    <FolderLock className="w-3.5 h-3.5 text-[#d4af37]" />
+                    <span className="hidden md:inline">
+                      {conversation.status === "open" ? "Clôturer" : "Rouvrir"}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => onStatusChange("archived")}
+                    className="text-xs px-2.5 py-1.5 bg-gray-800 hover:bg-purple-950/80 text-gray-200 hover:text-purple-200 rounded-lg border border-gray-700 hover:border-purple-600 transition-colors flex items-center gap-1.5"
+                    title="Archiver ce dossier traité"
+                  >
+                    <Archive className="w-3.5 h-3.5 text-purple-400" />
+                    <span className="hidden md:inline">Archiver</span>
+                  </button>
+                </>
+              )}
+            </div>
           )}
 
           <button
@@ -327,7 +361,7 @@ export default function EncryptedChat({
           <ShieldCheck className="w-4 h-4 text-[#d4af37] flex-shrink-0" />
           <span>
             Les échanges au sein de cette session sont chiffrés de bout en bout.
-            Aucun intermédiaire ne peut lire vos données en clair.
+            Aucun tiers ne peut lire vos données en clair.
           </span>
         </div>
       </div>
@@ -420,12 +454,18 @@ export default function EncryptedChat({
 
       {/* ZONE DE SAISIE */}
       <div className="p-4 bg-white border-t border-gray-200">
-        {conversation.status === "closed" ? (
+        {conversation.status === "archived" ? (
+          <div className="p-3 bg-purple-50 border border-purple-200 rounded-xl text-center text-xs text-purple-800 font-medium flex items-center justify-center gap-2">
+            <Archive className="w-4 h-4 text-purple-600" />
+            <span>
+              Ce dossier est archivé. Restaurez-le pour réactiver l'envoi de messages.
+            </span>
+          </div>
+        ) : conversation.status === "closed" ? (
           <div className="p-3 bg-gray-100 border border-gray-300 rounded-xl text-center text-xs text-gray-600 font-medium flex items-center justify-center gap-2">
             <Clock className="w-4 h-4 text-gray-400" />
             <span>
-              Cette conversation a été clôturée. Pour reprendre contact, ouvrez
-              une nouvelle demande.
+              Cette conversation est clôturée. Rouvrez-la pour reprendre les échanges.
             </span>
           </div>
         ) : (
@@ -449,23 +489,17 @@ export default function EncryptedChat({
                 className="absolute right-3 bottom-3 text-gray-400"
                 title="Chiffrement matériel AES-256 actif"
               >
-                <Lock className="w-4 h-4 text-[#d4af37]" />
+                <Lock className="w-4 h-4 text-emerald-600" />
               </div>
             </div>
 
             <button
               type="submit"
-              disabled={!inputText.trim() || sending}
-              className="h-[54px] px-5 bg-gradient-to-r from-[#d4af37] to-[#b89528] text-[#0a0f1e] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#d4af37]/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex-shrink-0"
+              disabled={sending || !inputText.trim()}
+              className="p-3 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] font-bold rounded-xl hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Envoyer le message"
             >
-              {sending ? (
-                <div className="w-5 h-5 border-2 border-[#0a0f1e] border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  <span className="hidden sm:inline">Envoyer</span>
-                  <Send className="w-4 h-4" />
-                </>
-              )}
+              <Send className="w-5 h-5" />
             </button>
           </form>
         )}
