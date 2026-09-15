@@ -19,7 +19,13 @@ import {
 import { supabase } from "../../hooks/useSupabaseAuth";
 import { toast } from "sonner";
 import { encryptDevisRequest } from "../../utils/devisEncryption";
+import { z } from "zod";
+import { isValidPhone } from "../../utils/phone";
 
+export const phoneSchema = z.string().refine(
+  (val) => isValidPhone(val, "CG") || isValidPhone(val),
+  { message: "Numéro de téléphone invalide." }
+);
 export default function DevisRequest() {
   const { propertyId } = useParams();
   const navigate = useNavigate();

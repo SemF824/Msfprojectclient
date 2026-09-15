@@ -16,6 +16,7 @@ import {
   Shield,
   UserX,
   User,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -23,6 +24,7 @@ interface ProfileItem {
   id: string;
   email?: string;
   full_name?: string;
+  avatar_url?: string;
   role?: string;
 }
 
@@ -31,6 +33,7 @@ interface TeamMember {
   role: string;
   email?: string;
   full_name: string;
+  avatar_url?: string;
 }
 
 export default function AdminMessages() {
@@ -71,15 +74,39 @@ export default function AdminMessages() {
 
       const { data: profs, error: profErr } = await supabase
         .from("profiles")
-        .select("id, email, full_name")
+        .select("id, email, full_name, avatar_url")
         .in("id", staffIds);
 
-      if (profErr) throw profErr;
+      if (profErr) {
+        // Tentative de fallback si la colonne avatar_url n'est pas encore créée
+        const { data: fallbackProfs } = await supabase
+          .from("profiles")
+          .select("id, email, full_name")
+          .in("id", staffIds);
+
+        const members: TeamMember[] = (roles || []).map((r) => {
+          const p = (fallbackProfs || []).find((prof) => prof.id === r.user_id);
+          let displayName = p?.full_name?.trim();
+          if (!displayName && p?.email) {
+            const prefix = p.email.split("@")[0];
+            displayName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+          }
+          return {
+            user_id: r.user_id,
+            role: r.role,
+            email: p?.email || "Email non renseigné",
+            full_name:
+              displayName ||
+              (r.role === "superadmin" ? "Super Administrateur" : "Conseiller MSF"),
+          };
+        });
+        setTeamMembers(members);
+        return;
+      }
 
       const members: TeamMember[] = (roles || []).map((r) => {
         const p = (profs || []).find((prof) => prof.id === r.user_id);
         
-        // Résolution claire du nom du conseiller
         let displayName = p?.full_name?.trim();
         if (!displayName && p?.email) {
           const prefix = p.email.split("@")[0];
@@ -93,6 +120,7 @@ export default function AdminMessages() {
           full_name:
             displayName ||
             (r.role === "superadmin" ? "Super Administrateur" : "Conseiller MSF"),
+          avatar_url: p?.avatar_url,
         };
       });
 
@@ -127,10 +155,24 @@ export default function AdminMessages() {
       if (allUserIds.length > 0) {
         const { data: profs, error: profErr } = await supabase
           .from("profiles")
-          .select("id, email, full_name")
+          .select("id, email, full_name, avatar_url")
           .in("id", allUserIds);
 
-        if (!profErr && profs) {
+        if (profErr) {
+          // Fallback sans la colonne avatar_url si elle n'existe pas en table
+          const { data: fallbackProfs } = await supabase
+            .from("profiles")
+            .select("id, email, full_name")
+            .in("id", allUserIds);
+
+          if (fallbackProfs) {
+            const map: Record<string, ProfileItem> = {};
+            fallbackProfs.forEach((p) => {
+              map[p.id] = p;
+            });
+            setProfilesMap((prev) => ({ ...prev, ...map }));
+          }
+        } else if (profs) {
           const map: Record<string, ProfileItem> = {};
           profs.forEach((p) => {
             map[p.id] = p;
@@ -289,6 +331,22 @@ export default function AdminMessages() {
     return stats;
   }, [teamMembers, conversations]);
 
+  // Obtenir le nom complet d'un client
+  const getClientInfo = (clientId: string) => {
+    const prof = profilesMap[clientId];
+    let name = prof?.full_name?.trim();
+    if (!name && prof?.email) {
+      const prefix = prof.email.split("@")[0];
+      name = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+    }
+    return {
+      fullName: name || "Client MSF",
+      email: prof?.email || null,
+      avatarUrl: prof?.avatar_url || null,
+      initial: (name || "C").charAt(0).toUpperCase(),
+    };
+  };
+
   // Filtrage combiné (Recherche, Statut, Filtre SuperAdmin / Agent)
   const filteredConversations = useMemo(() => {
     return conversations.filter((conv) => {
@@ -315,24 +373,24 @@ export default function AdminMessages() {
       // 3. Barre de recherche (Nom client, Email client, Sujet, Conseiller)
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        const client = profilesMap[conv.client_id];
-        const assignedAgent = conv.agent_id ? profilesMap[conv.agent_id] : null;
+        const clientInfo = getClientInfo(conv.client_id);
         const assignedMember = conv.agent_id
           ? teamMembers.find((m) => m.user_id === conv.agent_id)
           : null;
+        const assignedAgentProfile = conv.agent_id ? profilesMap[conv.agent_id] : null;
 
-        const name = (client?.full_name || "").toLowerCase();
-        const email = (client?.email || "").toLowerCase();
+        const clientName = clientInfo.fullName.toLowerCase();
+        const clientEmail = (clientInfo.email || "").toLowerCase();
         const agentName = (
           assignedMember?.full_name ||
-          assignedAgent?.full_name ||
+          assignedAgentProfile?.full_name ||
           ""
         ).toLowerCase();
         const subject = conv.subject.toLowerCase();
 
         return (
-          name.includes(q) ||
-          email.includes(q) ||
+          clientName.includes(q) ||
+          clientEmail.includes(q) ||
           agentName.includes(q) ||
           subject.includes(q)
         );
@@ -613,9 +671,7 @@ export default function AdminMessages() {
               </div>
             ) : (
               filteredConversations.map((conv) => {
-                const client = profilesMap[conv.client_id];
-                const clientName =
-                  client?.full_name || client?.email || "Client";
+                const clientInfo = getClientInfo(conv.client_id);
                 const isSelected = selectedConversation?.id === conv.id;
                 const isAssignedToMe = conv.agent_id === user?.id;
                 const assignedAgentName = getAgentName(conv.agent_id);
@@ -630,17 +686,34 @@ export default function AdminMessages() {
                         : "bg-white hover:bg-gray-50 border-gray-200"
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center">
-                          {clientName[0]?.toUpperCase() || "C"}
+                    {/* EN-TÊTE DU DOSSIER : AVATAR & NOM DU CLIENT */}
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {clientInfo.avatarUrl ? (
+                          <img
+                            src={clientInfo.avatarUrl}
+                            alt={clientInfo.fullName}
+                            className="w-8 h-8 rounded-full object-cover border border-[#d4af37]/40 shadow-xs flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-800 to-[#0a0f1e] text-[#d4af37] font-bold text-xs flex items-center justify-center border border-[#d4af37]/30 shadow-xs flex-shrink-0">
+                            {clientInfo.initial}
+                          </div>
+                        )}
+                        <div className="truncate">
+                          <div className="text-xs font-bold text-[#0a0f1e] truncate">
+                            {clientInfo.fullName}
+                          </div>
+                          {clientInfo.email && (
+                            <div className="text-[10px] text-gray-400 truncate">
+                              {clientInfo.email}
+                            </div>
+                          )}
                         </div>
-                        <span className="text-xs font-bold text-[#0a0f1e] truncate max-w-[130px]">
-                          {clientName}
-                        </span>
                       </div>
+
                       <span
-                        className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                        className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full flex-shrink-0 ${
                           conv.status === "open"
                             ? "bg-emerald-100 text-emerald-800"
                             : conv.status === "archived"
@@ -656,7 +729,7 @@ export default function AdminMessages() {
                       </span>
                     </div>
 
-                    <h4 className="text-xs font-semibold text-gray-900 line-clamp-1 mb-2">
+                    <h4 className="text-xs font-medium text-gray-900 line-clamp-1 mb-2">
                       {conv.subject}
                     </h4>
 
@@ -712,20 +785,36 @@ export default function AdminMessages() {
                       <ArrowLeft className="w-4 h-4" />
                     </button>
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500">Client :</span>
-                      <strong className="text-xs text-[#0a0f1e]">
-                        {profilesMap[selectedConversation.client_id]?.full_name ||
-                          profilesMap[selectedConversation.client_id]?.email ||
-                          selectedConversation.client_id}
-                      </strong>
-                    </div>
-                    {profilesMap[selectedConversation.client_id]?.email && (
-                      <span className="text-[11px] text-gray-400 block">
-                        {profilesMap[selectedConversation.client_id]?.email}
-                      </span>
+
+                  {/* IDENTITÉ DU CLIENT AVEC IMAGE / AVATAR */}
+                  <div className="flex items-center gap-3">
+                    {getClientInfo(selectedConversation.client_id).avatarUrl ? (
+                      <img
+                        src={getClientInfo(selectedConversation.client_id).avatarUrl!}
+                        alt={getClientInfo(selectedConversation.client_id).fullName}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-[#d4af37]/40 shadow-xs"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-900 to-[#0a0f1e] text-[#d4af37] font-bold text-sm flex items-center justify-center border-2 border-[#d4af37]/30 shadow-xs">
+                        {getClientInfo(selectedConversation.client_id).initial}
+                      </div>
                     )}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <strong className="text-sm font-bold text-[#0a0f1e]">
+                          {getClientInfo(selectedConversation.client_id).fullName}
+                        </strong>
+                        <span className="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-medium">
+                          Compte Client
+                        </span>
+                      </div>
+                      {getClientInfo(selectedConversation.client_id).email && (
+                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                          <Mail className="w-3 h-3 text-gray-400" />
+                          {getClientInfo(selectedConversation.client_id).email}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -773,10 +862,7 @@ export default function AdminMessages() {
                   conversation={selectedConversation}
                   currentUserId={user?.id || ""}
                   currentUserRole={isSuperAdmin ? "superadmin" : "agent"}
-                  partnerName={
-                    profilesMap[selectedConversation.client_id]?.full_name ||
-                    "Client MSF"
-                  }
+                  partnerName={getClientInfo(selectedConversation.client_id).fullName}
                   onStatusChange={(newStatus) =>
                     handleStatusChange(selectedConversation.id, newStatus)
                   }

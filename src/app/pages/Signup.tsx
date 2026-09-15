@@ -7,6 +7,13 @@ import {
   ChevronLeft, Loader2, AlertCircle
 } from "lucide-react";
 import { supabase } from "../../hooks/useSupabaseAuth";
+import { z } from "zod";
+import { isValidPhone } from "../../utils/phone";
+
+export const phoneSchema = z.string().refine(
+  (val) => isValidPhone(val, "CG") || isValidPhone(val),
+  { message: "Numéro de téléphone invalide." }
+);
 
 export default function Signup() {
   const navigate = useNavigate();

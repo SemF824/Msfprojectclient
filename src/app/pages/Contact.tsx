@@ -20,6 +20,12 @@ import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { supabase } from "../../hooks/useSupabaseAuth";
 import { useCurrency } from "../../context/CurrencyContext";
+import { isValidPhone } from "../../utils/phone";
+
+export const phoneSchema = z.string().refine(
+  (val) => isValidPhone(val, "CG") || isValidPhone(val),
+  { message: "Numéro de téléphone invalide." }
+);
 
 const adminEmail =
   (import.meta as any).env.VITE_ADMIN_EMAIL || "promotions@msfcongo.com";
