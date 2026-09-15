@@ -15,9 +15,11 @@ interface PhoneInputProps {
   id?: string;
   name?: string;
   label?: string;
+  labelClassName?: string;
   required?: boolean;
   error?: string;
   defaultCountry?: CountryCode;
+  className?: string;
 }
 
 export const PhoneInput: React.FC<PhoneInputProps> = ({
@@ -26,9 +28,11 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   id = "phone-input",
   name = "phone",
   label,
+  labelClassName,
   required = false,
   error,
   defaultCountry = DEFAULT_COUNTRY_CODE,
+  className = "",
 }) => {
   const [selectedCountryCode, setSelectedCountryCode] = useState<CountryCode>(defaultCountry);
   const [isOpen, setIsOpen] = useState(false);
@@ -84,14 +88,17 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   };
 
   return (
-    <div className="w-full space-y-1.5 relative" ref={dropdownRef}>
+    <div className={`w-full relative ${className}`} ref={dropdownRef}>
       {label && (
-        <label htmlFor={id} className="block text-xs font-semibold text-gray-700">
-          {label} {required && <span className="text-red-500">*</span>}
+        <label
+          htmlFor={id}
+          className={labelClassName || "block text-sm text-[#0a0f1e] mb-2 font-medium"}
+        >
+          {label} {required && <span>*</span>}
         </label>
       )}
 
-      <div className="relative flex items-stretch rounded-xl border border-gray-200 bg-gray-50 focus-within:border-[#d4af37] focus-within:ring-1 focus-within:ring-[#d4af37] focus-within:bg-white transition-all h-11">
+      <div className="relative flex items-stretch h-[50px] rounded-xl border border-gray-200 bg-gray-50 focus-within:border-[#d4af37] focus-within:ring-2 focus-within:ring-[#d4af37]/30 focus-within:bg-white transition-all">
         {/* Sélecteur d'indicatif et drapeau à dimension fixe */}
         <button
           type="button"
@@ -122,11 +129,11 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
             value={value}
             onChange={handleInputChange}
             placeholder="Ex: 06 458 86 18"
-            className="w-full h-full pl-3 pr-9 text-sm text-[#0a0f1e] bg-transparent rounded-r-xl outline-none placeholder:text-gray-400 font-medium"
+            className="w-full h-full pl-3.5 pr-9 text-sm text-[#0a0f1e] bg-transparent rounded-r-xl outline-none placeholder:text-gray-500 font-normal"
           />
 
           {value && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
               {validation?.isValid ? (
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
               ) : (
@@ -136,7 +143,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
           )}
         </div>
 
-        {/* Dropdown de recherche de pays */}
+        {/* Dropdown de sélection du pays */}
         {isOpen && (
           <div className="absolute left-0 top-full mt-1.5 w-full min-w-[280px] sm:w-80 max-w-[calc(100vw-2rem)] max-h-72 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
             <div className="p-2 border-b border-gray-100 bg-gray-50/80 sticky top-0 z-10 backdrop-blur-sm">
@@ -184,8 +191,8 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
       </div>
 
       {(error || (value && validation && !validation.isValid && validation.errorMessage)) && (
-        <p className="text-[11px] text-red-500 font-medium flex items-center gap-1 mt-1">
-          <AlertCircle className="w-3 h-3 shrink-0" />
+        <p className="text-[11px] text-red-500 font-medium flex items-center gap-1 mt-1.5">
+          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
           <span>{error || validation?.errorMessage}</span>
         </p>
       )}
