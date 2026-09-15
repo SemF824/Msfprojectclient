@@ -1,444 +1,120 @@
-import { useState, useEffect, useCallback } from "react";
-import { supabase, useSupabaseAuth } from "../../hooks/useSupabaseAuth";
-import { Conversation } from "../../types/database.types";
-import { encryptAES } from "../../utils/encryption";
-import EncryptedChat from "../components/ui/EncryptedChat";
-import Breadcrumb from "../components/Breadcrumb";
-import {
-  MessageSquare,
-  Plus,
-  Lock,
-  ShieldCheck,
-  AlertCircle,
-  FolderLock,
-  ArrowLeft,
-  CheckCircle2,
-} from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+@layer base {
+  :root {
+    --background: hsl(0 0% 100%);
+    --foreground: hsl(222.2 84% 4.9%);
+    --card: hsl(0 0% 100%);
+    --card-foreground: hsl(222.2 84% 4.9%);
+    --popover: hsl(0 0% 100%);
+    --popover-foreground: hsl(222.2 84% 4.9%);
+    --primary: hsl(222.2 47.4% 11.2%);
+    --primary-foreground: hsl(210 40% 98%);
+    --secondary: hsl(210 40% 96.1%);
+    --secondary-foreground: hsl(222.2 47.4% 11.2%);
+    --muted: hsl(210 40% 96.1%);
+    --muted-foreground: hsl(215.4 16.3% 46.9%);
+    --accent: hsl(210 40% 96.1%);
+    --accent-foreground: hsl(222.2 47.4% 11.2%);
+    --destructive: hsl(0 84.2% 60.2%);
+    --destructive-foreground: hsl(210 40% 98%);
+    --border: hsl(214.3 31.8% 91.4%);
+    --input: hsl(214.3 31.8% 91.4%);
+    --ring: hsl(222.2 84% 4.9%);
+    --radius: 0.5rem;
+    --chart-1: hsl(12 76% 61%);
+    --chart-2: hsl(173 58% 39%);
+    --chart-3: hsl(197 37% 24%);
+    --chart-4: hsl(43 74% 66%);
+    --chart-5: hsl(27 87% 67%);
+    --sidebar-background: hsl(0 0% 98%);
+    --sidebar-foreground: hsl(240 5.3% 26.1%);
+    --sidebar-primary: hsl(240 5.9% 10%);
+    --sidebar-primary-foreground: hsl(0 0% 98%);
+    --sidebar-accent: hsl(240 4.8% 95.9%);
+    --sidebar-accent-foreground: hsl(240 5.9% 10%);
+    --sidebar-border: hsl(220 13% 91%);
+    --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  }
 
-export default function ClientMessages() {
-  const { user } = useSupabaseAuth();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedConversation, setSelectedConversation] =
-    useState<Conversation | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  .dark {
+    --background: hsl(222.2 84% 4.9%);
+    --foreground: hsl(210 40% 98%);
+    --card: hsl(222.2 84% 4.9%);
+    --card-foreground: hsl(210 40% 98%);
+    --popover: hsl(222.2 84% 4.9%);
+    --popover-foreground: hsl(210 40% 98%);
+    --primary: hsl(210 40% 98%);
+    --primary-foreground: hsl(222.2 47.4% 11.2%);
+    --secondary: hsl(217.2 32.6% 17.5%);
+    --secondary-foreground: hsl(210 40% 98%);
+    --muted: hsl(217.2 32.6% 17.5%);
+    --muted-foreground: hsl(215 20.2% 65.1%);
+    --accent: hsl(217.2 32.6% 17.5%);
+    --accent-foreground: hsl(210 40% 98%);
+    --destructive: hsl(0 62.8% 30.6%);
+    --destructive-foreground: hsl(210 40% 98%);
+    --border: hsl(217.2 32.6% 17.5%);
+    --input: hsl(217.2 32.6% 17.5%);
+    --ring: hsl(212.7 26.8% 83.9%);
+    --chart-1: hsl(220 70% 50%);
+    --chart-2: hsl(160 60% 45%);
+    --chart-3: hsl(30 80% 55%);
+    --chart-4: hsl(280 65% 60%);
+    --chart-5: hsl(340 75% 55%);
+    --sidebar-background: hsl(240 5.9% 10%);
+    --sidebar-foreground: hsl(240 4.8% 95.9%);
+    --sidebar-primary: hsl(224.3 76.3% 48%);
+    --sidebar-primary-foreground: hsl(0 0% 100%);
+    --sidebar-accent: hsl(240 3.7% 15.9%);
+    --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
+    --sidebar-border: hsl(240 3.7% 15.9%);
+    --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  }
+}
 
-  // États pour la modale d'ouverture de fil
-  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
-  const [newSubject, setNewSubject] = useState("");
-  const [newFirstMessage, setNewFirstMessage] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar-background);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
 
-  const fetchConversations = useCallback(async () => {
-    if (!supabase || !user?.id) return;
-    setLoading(true);
-    setError(null);
-
-    try {
-      const { data, error: fetchErr } = await supabase
-        .from("conversations")
-        .select("*")
-        .eq("client_id", user.id)
-        .order("updated_at", { ascending: false });
-
-      if (fetchErr) throw fetchErr;
-
-      const convList: Conversation[] = data || [];
-      setConversations(convList);
-
-      if (convList.length > 0) {
-        setSelectedConversation((prev) => {
-          if (!prev) return convList[0];
-          const match = convList.find((c) => c.id === prev.id);
-          return match || convList[0];
-        });
-      } else {
-        setSelectedConversation(null);
-      }
-    } catch (err: unknown) {
-      const msg =
-        err instanceof Error
-          ? err.message
-          : "Erreur de chargement des conversations.";
-      console.error("Erreur chargement conversations :", err);
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
-
-  useEffect(() => {
-    if (!supabase || !user?.id) return;
-
-    const channel = supabase
-      .channel("client-conversations-list")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "conversations",
-          filter: `client_id=eq.${user.id}`,
-        },
-        () => {
-          fetchConversations();
-        },
-      )
-      .subscribe();
-
-    return () => {
-      if (supabase) {
-        supabase.removeChannel(channel);
-      }
-    };
-  }, [user?.id, fetchConversations]);
-
-  const handleCreateConversation = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!supabase || !user?.id) return;
-    if (!newSubject.trim() || !newFirstMessage.trim()) {
-      setCreateError("Veuillez renseigner le sujet et votre premier message.");
-      return;
-    }
-
-    setIsCreating(true);
-    setCreateError(null);
-
-    try {
-      const { data: convData, error: convError } = await supabase
-        .from("conversations")
-        .insert({
-          client_id: user.id,
-          subject: newSubject.trim(),
-          status: "open",
-        })
-        .select()
-        .single();
-
-      if (convError) throw convError;
-
-      const encrypted = encryptAES(newFirstMessage.trim());
-      const { error: msgError } = await supabase.from("messages").insert({
-        conversation_id: convData.id,
-        sender_id: user.id,
-        sender_role: "client",
-        content_encrypted: encrypted,
-        is_read: false,
-      });
-
-      if (msgError) throw msgError;
-
-      setNewSubject("");
-      setNewFirstMessage("");
-      setIsNewModalOpen(false);
-
-      await fetchConversations();
-      setSelectedConversation(convData);
-    } catch (err: unknown) {
-      const msg =
-        err instanceof Error
-          ? err.message
-          : "Erreur lors de la création de la conversation.";
-      console.error("Erreur création :", err);
-      setCreateError(msg);
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
-  const formatDate = (dateStr: string) => {
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString("fr-FR", {
-        day: "2-digit",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return "";
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* HEADER & BREADCRUMB */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <Breadcrumb
-            items={[
-              { label: "Dashboard", path: "/client/dashboard" },
-              { label: "Messagerie Sécurisée", path: "/client/messages" },
-            ]}
-          />
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#0a0f1e] mt-2 flex items-center gap-3">
-            <span>Messagerie Sécurisée</span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-full border border-emerald-300">
-              <Lock className="w-3.5 h-3.5" />
-              AES-256
-            </span>
-          </h1>
-          <p className="text-gray-600 text-sm mt-1">
-            Échangez directement et en toute confidentialité avec votre
-            conseiller attitré.
-          </p>
-        </div>
-
-        <button
-          onClick={() => setIsNewModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#d4af37] to-[#b89528] text-[#0a0f1e] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#d4af37]/20 transition-all text-sm"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Nouvelle conversation</span>
-        </button>
-      </div>
-
-      {/* ZONE PRINCIPALE DE MESSAGERIE */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
-        {/* LISTE DES CONVERSATIONS (COLONNE GAUCHE) */}
-        <div
-          className={`lg:col-span-4 bg-white rounded-2xl border border-gray-200 shadow-lg p-4 flex flex-col ${
-            selectedConversation ? "hidden lg:flex" : "flex"
-          }`}
-        >
-          <div className="pb-3 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-gray-700 flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-[#d4af37]" />
-              <span>Vos échanges ({conversations.length})</span>
-            </h2>
-          </div>
-
-          <div className="flex-1 overflow-y-auto space-y-2.5 mt-3 pr-1">
-            {loading ? (
-              <div className="py-12 flex flex-col items-center justify-center gap-2 text-gray-400">
-                <div className="w-6 h-6 border-2 border-[#d4af37] border-t-transparent rounded-full animate-spin" />
-                <span className="text-xs">Chargement...</span>
-              </div>
-            ) : error ? (
-              <div className="p-4 bg-red-50 text-red-700 text-xs rounded-xl flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                <span>{error}</span>
-              </div>
-            ) : conversations.length === 0 ? (
-              <div className="py-12 text-center px-4">
-                <FolderLock className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm font-semibold text-gray-700">
-                  Aucun fil de discussion
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Créez une conversation pour poser vos questions à l'équipe MSF
-                  Congo.
-                </p>
-              </div>
-            ) : (
-              conversations.map((conv) => {
-                const isSelected = selectedConversation?.id === conv.id;
-                return (
-                  <button
-                    key={conv.id}
-                    onClick={() => setSelectedConversation(conv)}
-                    className={`w-full text-left p-3.5 rounded-xl border transition-all relative ${
-                      isSelected
-                        ? "bg-amber-50/70 border-[#d4af37] shadow-sm"
-                        : "bg-gray-50/70 hover:bg-gray-100 border-gray-200"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span
-                        className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                          conv.status === "open"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-gray-200 text-gray-600"
-                        }`}
-                      >
-                        {conv.status === "open" ? "Ouvert" : "Clôturé"}
-                      </span>
-                      <span className="text-[10px] text-gray-400">
-                        {formatDate(conv.updated_at || conv.created_at)}
-                      </span>
-                    </div>
-                    <h3 className="text-sm font-semibold text-[#0a0f1e] line-clamp-1">
-                      {conv.subject}
-                    </h3>
-                    <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                      <Lock className="w-3 h-3 text-[#d4af37]" />
-                      <span>Échanges chiffrés</span>
-                    </p>
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        {/* ZONE DE CHAT SÉLECTIONNÉE (COLONNE DROITE) */}
-        <div
-          className={`lg:col-span-8 flex flex-col ${
-            !selectedConversation ? "hidden lg:flex" : "flex"
-          }`}
-        >
-          {selectedConversation ? (
-            <div className="flex flex-col h-full space-y-3">
-              <div className="lg:hidden">
-                <button
-                  onClick={() => setSelectedConversation(null)}
-                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#0a0f1e] font-medium py-1"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Retour à la liste des échanges</span>
-                </button>
-              </div>
-
-              <div className="flex-1 h-[600px]">
-                <EncryptedChat
-                  conversation={selectedConversation}
-                  currentUserId={user?.id || ""}
-                  currentUserRole="client"
-                  partnerName="Conseiller MSF CONGO"
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="h-full min-h-[500px] bg-white rounded-2xl border border-gray-200 shadow-lg flex flex-col items-center justify-center p-8 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mb-4">
-                <ShieldCheck className="w-8 h-8 text-[#d4af37]" />
-              </div>
-              <h3 className="text-lg font-bold text-[#0a0f1e]">
-                Espace de Messagerie Dédié
-              </h3>
-              <p className="text-sm text-gray-500 max-w-md mt-1 mb-6">
-                Sélectionnez une conversation existante ou créez-en une nouvelle
-                pour échanger directement avec nos experts.
-              </p>
-              <button
-                onClick={() => setIsNewModalOpen(true)}
-                className="px-5 py-2.5 bg-[#0a0f1e] text-white hover:bg-gray-900 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4 text-[#d4af37]" />
-                <span>Ouvrir un nouveau fil</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* MODALE D'OUVERTURE D'UNE CONVERSATION */}
-      <AnimatePresence>
-        {isNewModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-2xl border border-gray-200 shadow-2xl max-w-lg w-full overflow-hidden"
-            >
-              <div className="bg-[#0a0f1e] text-white p-5 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-[#d4af37] text-[#0a0f1e] flex items-center justify-center font-bold">
-                    <Lock className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-base text-white">
-                      Nouvelle Conversation Sécurisée
-                    </h3>
-                    <p className="text-xs text-gray-400">
-                      Canal chiffré AES-256 avec nos agents
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsNewModalOpen(false)}
-                  className="text-gray-400 hover:text-white text-lg font-bold px-2 py-1"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <form
-                onSubmit={handleCreateConversation}
-                className="p-6 space-y-4"
-              >
-                {createError && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                    <span>{createError}</span>
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                    Sujet de votre demande
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ex: Question sur l'acquisition de la Villa Maya"
-                    value={newSubject}
-                    onChange={(e) => setNewSubject(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-xl focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] focus:outline-none bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                    Votre message initial (chiffré)
-                  </label>
-                  <textarea
-                    required
-                    rows={4}
-                    placeholder="Détaillez votre projet, vos questions ou votre disponibilité..."
-                    value={newFirstMessage}
-                    onChange={(e) => setNewFirstMessage(e.target.value)}
-                    className="w-full resize-none p-3.5 text-sm text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-xl focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] focus:outline-none bg-white"
-                  />
-                </div>
-
-                <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800 flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#d4af37] flex-shrink-0" />
-                  <span>
-                    Votre message sera automatiquement chiffré avant
-                    enregistrement dans la base de données.
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-end gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsNewModalOpen(false)}
-                    disabled={isCreating}
-                    className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isCreating}
-                    className="px-5 py-2.5 bg-gradient-to-r from-[#d4af37] to-[#b89528] text-[#0a0f1e] font-semibold rounded-xl text-sm hover:shadow-lg hover:shadow-[#d4af37]/20 transition-all flex items-center gap-2 disabled:opacity-50"
-                  >
-                    {isCreating ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-[#0a0f1e] border-t-transparent rounded-full animate-spin" />
-                        <span>Création en cours...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="w-4 h-4" />
-                        <span>Initier la conversation</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
