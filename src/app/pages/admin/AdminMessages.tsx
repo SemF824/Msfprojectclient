@@ -30,7 +30,7 @@ interface TeamMember {
   user_id: string;
   role: string;
   email?: string;
-  full_name?: string;
+  full_name: string;
 }
 
 export default function AdminMessages() {
@@ -51,18 +51,23 @@ export default function AdminMessages() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // 1. Récupération des membres de l'équipe MSF (Staff)
+  // 1. Récupération stricte des membres de l'équipe MSF (Admins et SuperAdmins uniquement)
   const fetchTeamMembers = useCallback(async () => {
     if (!supabase) return;
     try {
+      // Filtrage strict : seuls les comptes avec le rôle admin ou superadmin sont retenus
       const { data: roles, error: rolesErr } = await supabase
         .from("user_roles")
-        .select("user_id, role");
+        .select("user_id, role")
+        .in("role", ["admin", "superadmin"]);
 
       if (rolesErr) throw rolesErr;
 
       const staffIds = (roles || []).map((r) => r.user_id);
-      if (staffIds.length === 0) return;
+      if (staffIds.length === 0) {
+        setTeamMembers([]);
+        return;
+      }
 
       const { data: profs, error: profErr } = await supabase
         .from("profiles")
@@ -73,17 +78,27 @@ export default function AdminMessages() {
 
       const members: TeamMember[] = (roles || []).map((r) => {
         const p = (profs || []).find((prof) => prof.id === r.user_id);
+        
+        // Résolution claire du nom du conseiller
+        let displayName = p?.full_name?.trim();
+        if (!displayName && p?.email) {
+          const prefix = p.email.split("@")[0];
+          displayName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+        }
+
         return {
           user_id: r.user_id,
           role: r.role,
-          email: p?.email || "Email masqué",
-          full_name: p?.full_name || "Conseiller",
+          email: p?.email || "Email non renseigné",
+          full_name:
+            displayName ||
+            (r.role === "superadmin" ? "Super Administrateur" : "Conseiller MSF"),
         };
       });
 
       setTeamMembers(members);
     } catch (err) {
-      console.error("Erreur de chargement des membres d'équipe :", err);
+      console.error("Erreur de chargement des conseillers et administrateurs :", err);
     }
   }, []);
 
@@ -191,7 +206,7 @@ export default function AdminMessages() {
         toast.success("Dossier assigné à vous avec succès !");
       } else {
         const assignedMember = teamMembers.find((m) => m.user_id === targetAgentId);
-        const name = assignedMember?.full_name || "le collaborateur";
+        const name = assignedMember?.full_name || "le conseiller";
         toast.success(`Dossier assigné à ${name} avec succès !`);
       }
 
@@ -235,11 +250,11 @@ export default function AdminMessages() {
     }
   };
 
-  // Calcul du résumé de charge par membre de l'équipe (Workload pour SuperAdmin)
+  // Calcul du résumé de charge par membre du staff (Admins et SuperAdmins uniquement)
   const teamWorkload = useMemo(() => {
     const stats: Record<
       string,
-      { total: number; open: number; archived: number; name: string }
+      { total: number; open: number; archived: number; name: string; role: string }
     > = {};
 
     teamMembers.forEach((m) => {
@@ -247,7 +262,8 @@ export default function AdminMessages() {
         total: 0,
         open: 0,
         archived: 0,
-        name: m.full_name || m.email || "Conseiller",
+        name: m.full_name,
+        role: m.role,
       };
     });
 
@@ -257,12 +273,13 @@ export default function AdminMessages() {
       open: 0,
       archived: 0,
       name: "Non assignés",
+      role: "none",
     };
 
     conversations.forEach((c) => {
       const key = c.agent_id && stats[c.agent_id] ? c.agent_id : "unassigned";
       if (!stats[key]) {
-        stats[key] = { total: 0, open: 0, archived: 0, name: "Autre" };
+        stats[key] = { total: 0, open: 0, archived: 0, name: "Autre", role: "none" };
       }
       stats[key].total += 1;
       if (c.status === "open") stats[key].open += 1;
@@ -295,14 +312,22 @@ export default function AdminMessages() {
         if (conv.agent_id !== selectedAgentFilter) return false;
       }
 
-      // 3. Barre de recherche (Nom client, Email client, Sujet)
+      // 3. Barre de recherche (Nom client, Email client, Sujet, Conseiller)
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const client = profilesMap[conv.client_id];
         const assignedAgent = conv.agent_id ? profilesMap[conv.agent_id] : null;
+        const assignedMember = conv.agent_id
+          ? teamMembers.find((m) => m.user_id === conv.agent_id)
+          : null;
+
         const name = (client?.full_name || "").toLowerCase();
         const email = (client?.email || "").toLowerCase();
-        const agentName = (assignedAgent?.full_name || "").toLowerCase();
+        const agentName = (
+          assignedMember?.full_name ||
+          assignedAgent?.full_name ||
+          ""
+        ).toLowerCase();
         const subject = conv.subject.toLowerCase();
 
         return (
@@ -318,6 +343,7 @@ export default function AdminMessages() {
   }, [
     conversations,
     profilesMap,
+    teamMembers,
     filterStatus,
     selectedAgentFilter,
     searchQuery,
@@ -344,7 +370,10 @@ export default function AdminMessages() {
     if (fromTeam?.full_name) return fromTeam.full_name;
     const fromMap = profilesMap[agentId];
     if (fromMap?.full_name) return fromMap.full_name;
-    if (fromMap?.email) return fromMap.email;
+    if (fromMap?.email) {
+      const prefix = fromMap.email.split("@")[0];
+      return prefix.charAt(0).toUpperCase() + prefix.slice(1);
+    }
     return "Conseiller MSF";
   };
 
@@ -401,29 +430,29 @@ export default function AdminMessages() {
                   </span>
                 </h2>
                 <p className="text-xs text-gray-400">
-                  Visualisez et filtrez les dossiers gérés par chaque membre de l'équipe MSF.
+                  Visualisez et filtrez les dossiers gérés exclusivement par les conseillers et administrateurs.
                 </p>
               </div>
             </div>
 
-            {/* SÉLECTEUR DE MEMBRE D'ÉQUIPE */}
+            {/* SÉLECTEUR DE CONSEILLER / ADMIN */}
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-300 font-medium flex items-center gap-1">
                 <Users className="w-4 h-4 text-[#d4af37]" />
-                Filtrer par membre :
+                Filtrer par conseiller :
               </span>
               <select
                 value={selectedAgentFilter}
                 onChange={(e) => setSelectedAgentFilter(e.target.value)}
                 className="bg-gray-800 text-white text-xs border border-gray-700 rounded-xl px-3 py-2 focus:outline-none focus:border-[#d4af37] cursor-pointer"
               >
-                <option value="all">Tous les collaborateurs ({conversations.length})</option>
+                <option value="all">Tous les conseillers ({conversations.length})</option>
                 <option value="me">Mes dossiers assignés ({teamWorkload[user?.id || ""]?.total || 0})</option>
                 <option value="unassigned">Non assignés ({teamWorkload["unassigned"]?.total || 0})</option>
-                <optgroup label="Collaborateurs">
+                <optgroup label="Conseillers & Administrateurs MSF">
                   {teamMembers.map((m) => (
                     <option key={m.user_id} value={m.user_id}>
-                      {m.full_name} ({teamWorkload[m.user_id]?.open || 0} ouverts / {teamWorkload[m.user_id]?.total || 0} totaux)
+                      {m.full_name} ({m.role === "superadmin" ? "SuperAdmin" : "Admin"}) — {teamWorkload[m.user_id]?.open || 0} ouverts / {teamWorkload[m.user_id]?.total || 0} totaux
                     </option>
                   ))}
                 </optgroup>
@@ -431,7 +460,7 @@ export default function AdminMessages() {
             </div>
           </div>
 
-          {/* BADGES RAPIDES DE CHARGE PAR COLLABORATEUR */}
+          {/* VIGNETTES RAPIDES DE CHARGE PAR CONSEILLER */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-4">
             <button
               onClick={() => setSelectedAgentFilter("unassigned")}
@@ -463,8 +492,19 @@ export default function AdminMessages() {
                       : "bg-gray-800/60 border-gray-700 hover:bg-gray-800"
                   }`}
                 >
-                  <div className="text-[10px] text-gray-300 font-bold truncate">
-                    {m.full_name}
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[10px] text-gray-300 font-bold truncate max-w-[90px]" title={m.full_name}>
+                      {m.full_name}
+                    </span>
+                    <span
+                      className={`text-[8px] font-bold px-1 rounded uppercase ${
+                        m.role === "superadmin"
+                          ? "bg-[#d4af37] text-black"
+                          : "bg-blue-900/60 text-blue-200"
+                      }`}
+                    >
+                      {m.role === "superadmin" ? "Super" : "Admin"}
+                    </span>
                   </div>
                   <div className="text-lg font-bold text-white mt-0.5">
                     {stat.open}{" "}
@@ -495,7 +535,7 @@ export default function AdminMessages() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Rechercher par client, collaborateur, sujet..."
+              placeholder="Rechercher par client, conseiller, sujet..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-xs text-gray-900 placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37]"
@@ -632,7 +672,10 @@ export default function AdminMessages() {
                           Mon dossier
                         </span>
                       ) : conv.agent_id ? (
-                        <span className="text-blue-800 bg-blue-50 border border-blue-200 text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 max-w-[140px] truncate" title={`Assigné à : ${assignedAgentName}`}>
+                        <span
+                          className="text-blue-800 bg-blue-50 border border-blue-200 text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 max-w-[140px] truncate"
+                          title={`Assigné à : ${assignedAgentName}`}
+                        >
                           <User className="w-3 h-3 text-blue-600 flex-shrink-0" />
                           <span className="truncate">{assignedAgentName}</span>
                         </span>
@@ -703,7 +746,7 @@ export default function AdminMessages() {
                       <option value="">Non assigné (Libre)</option>
                       {teamMembers.map((m) => (
                         <option key={m.user_id} value={m.user_id}>
-                          {m.full_name} {m.user_id === user?.id ? "(Moi)" : ""}
+                          {m.full_name} ({m.role === "superadmin" ? "SuperAdmin" : "Admin"}) {m.user_id === user?.id ? "— (Moi)" : ""}
                         </option>
                       ))}
                     </select>
@@ -750,7 +793,7 @@ export default function AdminMessages() {
               </h3>
               <p className="text-xs text-gray-500 max-w-sm mt-1">
                 Choisissez un fil de discussion dans la colonne de gauche pour
-                consulter le dossier, réassigner le collaborateur ou répondre au client.
+                consulter le dossier, réassigner le conseiller ou répondre au client.
               </p>
             </div>
           )}
