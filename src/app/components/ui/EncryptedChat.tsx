@@ -62,7 +62,6 @@ export default function EncryptedChat({
     }
   }, [conversation.id, currentUserId]);
 
-  // Chargement initial des messages
   const fetchMessages = useCallback(async () => {
     if (!supabase || !conversation.id) return;
     setLoading(true);
@@ -100,7 +99,6 @@ export default function EncryptedChat({
     fetchMessages();
   }, [fetchMessages]);
 
-  // Abonnement Realtime Supabase
   useEffect(() => {
     if (!supabase || !conversation.id) return;
 
@@ -167,7 +165,6 @@ export default function EncryptedChat({
     };
   }, [conversation.id, currentUserId, markMessagesAsRead, scrollToBottom]);
 
-  // Envoi d'un message chiffré
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const cleanText = inputText.trim();
@@ -200,7 +197,6 @@ export default function EncryptedChat({
 
       if (insertErr) throw insertErr;
 
-      // Mise à jour de l'horodatage de la conversation
       await supabase
         .from("conversations")
         .update({ updated_at: new Date().toISOString() })
@@ -399,7 +395,7 @@ export default function EncryptedChat({
 
                     <div
                       className={`flex items-center justify-end gap-1 mt-1 text-[10px] ${
-                        isMe ? "text-gray-400" : "text-gray-400"
+                        isMe ? "text-gray-400" : "text-gray-500"
                       }`}
                     >
                       <Lock className="w-2.5 h-2.5 opacity-60" />
@@ -447,7 +443,7 @@ export default function EncryptedChat({
                 placeholder="Écrivez votre message chiffré... (Entrée pour envoyer)"
                 rows={2}
                 disabled={sending}
-                className="w-full resize-none p-3 pr-10 text-sm border border-gray-200 rounded-xl focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] focus:outline-none placeholder:text-gray-400 bg-gray-50/50 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full resize-none p-3 pr-10 text-sm text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-xl focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] focus:outline-none bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
               <div
                 className="absolute right-3 bottom-3 text-gray-400"

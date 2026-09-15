@@ -1,88 +1,76 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useSupabaseAuth, supabase } from "../../../hooks/useSupabaseAuth";
+import { supabase, useSupabaseAuth } from "../../../hooks/useSupabaseAuth";
 import { Conversation } from "../../../types/database.types";
 import EncryptedChat from "../../components/ui/EncryptedChat";
 import {
   MessageSquare,
   Search,
-  ShieldCheck,
   Lock,
-  User,
   UserCheck,
-  Clock,
-  CheckCircle,
-  AlertCircle,
   FolderLock,
-  Filter,
-  Mail,
   ArrowLeft,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 
-interface ClientProfile {
+interface ProfileItem {
   id: string;
-  full_name: string | null;
-  email: string | null;
-  phone: string | null;
+  email?: string;
+  full_name?: string;
 }
 
 export default function AdminMessages() {
-  const { user, userRole } = useSupabaseAuth();
+  const { user } = useSupabaseAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [profilesMap, setProfilesMap] = useState<Record<string, ClientProfile>>(
-    {},
-  );
+  const [profilesMap, setProfilesMap] = useState<Record<string, ProfileItem>>({});
   const [selectedConversation, setSelectedConversation] =
     useState<Conversation | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "open" | "closed">(
     "all",
   );
-  const [assigningId, setAssigningId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  // Récupération de toutes les conversations et des profils associés
   const fetchConversationsData = useCallback(async () => {
     if (!supabase) return;
     setLoading(true);
-
     try {
-      // 1. Récupération des conversations
-      const { data: convData, error: convErr } = await supabase
+      const { data: convs, error: convErr } = await supabase
         .from("conversations")
         .select("*")
         .order("updated_at", { ascending: false });
 
       if (convErr) throw convErr;
 
-      const convList: Conversation[] = convData || [];
+      const convList: Conversation[] = convs || [];
       setConversations(convList);
 
-      // 2. Récupération des profils des clients impliqués
-      const clientIds = Array.from(
-        new Set(convList.map((c) => c.client_id).filter(Boolean)),
-      );
+      const clientIds = Array.from(new Set(convList.map((c) => c.client_id)));
+
       if (clientIds.length > 0) {
-        const { data: profData, error: profErr } = await supabase
+        const { data: profs, error: profErr } = await supabase
           .from("profiles")
-          .select("id, full_name, email, phone")
+          .select("id, email, full_name")
           .in("id", clientIds);
 
-        if (!profErr && profData) {
-          const map: Record<string, ClientProfile> = {};
-          profData.forEach((p) => {
+        if (!profErr && profs) {
+          const map: Record<string, ProfileItem> = {};
+          profs.forEach((p) => {
             map[p.id] = p;
           });
           setProfilesMap(map);
         }
       }
 
-      // Conserver ou synchroniser la conversation sélectionnée
-      setSelectedConversation((prev) => {
-        if (!prev) return convList[0] || null;
-        const currentInList = convList.find((c) => c.id === prev.id);
-        return currentInList || convList[0] || null;
-      });
+      if (convList.length > 0) {
+        setSelectedConversation((prev) => {
+          if (!prev) return convList[0];
+          const match = convList.find((c) => c.id === prev.id);
+          return match || convList[0];
+        });
+      } else {
+        setSelectedConversation(null);
+      }
     } catch (err: unknown) {
       console.error("Erreur chargement des conversations admin :", err);
       toast.error("Impossible de charger les conversations.");
@@ -95,7 +83,6 @@ export default function AdminMessages() {
     fetchConversationsData();
   }, [fetchConversationsData]);
 
-  // Abonnement Realtime global aux conversations
   useEffect(() => {
     if (!supabase) return;
 
@@ -117,10 +104,8 @@ export default function AdminMessages() {
     };
   }, [fetchConversationsData]);
 
-  // Assignation de la conversation au conseiller connecté
   const handleAssignToMe = async (convId: string) => {
     if (!supabase || !user?.id) return;
-    setAssigningId(convId);
     try {
       const { error } = await supabase
         .from("conversations")
@@ -131,21 +116,19 @@ export default function AdminMessages() {
         .eq("id", convId);
 
       if (error) throw error;
-
-      toast.success("Vous êtes maintenant assigné à cette conversation.");
+      toast.success("Dossier assigné avec succès !");
       await fetchConversationsData();
     } catch (err: unknown) {
-      console.error("Erreur lors de l'assignation :", err);
-      toast.error("Erreur lors de l'assignation.");
-    } finally {
-      setAssigningId(null);
+      const msg = err instanceof Error ? err.message : "Erreur d'attribution.";
+      toast.error(msg);
     }
   };
 
-  // Clôture ou réouverture de conversation
-  const handleToggleStatus = async (newStatus: "open" | "closed") => {
-    if (!supabase || !selectedConversation) return;
-
+  const handleToggleStatus = async (
+    convId: string,
+    newStatus: "open" | "closed",
+  ) => {
+    if (!supabase) return;
     try {
       const { error } = await supabase
         .from("conversations")
@@ -153,46 +136,43 @@ export default function AdminMessages() {
           status: newStatus,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", selectedConversation.id);
+        .eq("id", convId);
 
       if (error) throw error;
-
       toast.success(
-        newStatus === "open"
-          ? "Conversation réouverte."
-          : "Conversation clôturée.",
+        newStatus === "closed"
+          ? "Conversation clôturée."
+          : "Conversation rouverte.",
       );
       await fetchConversationsData();
     } catch (err: unknown) {
-      console.error("Erreur mise à jour statut :", err);
-      toast.error("Impossible de modifier le statut de la conversation.");
+      const msg =
+        err instanceof Error ? err.message : "Erreur de mise à jour du statut.";
+      toast.error(msg);
     }
   };
 
-  // Filtrage des conversations
   const filteredConversations = useMemo(() => {
     return conversations.filter((conv) => {
-      const client = profilesMap[conv.client_id];
-      const matchStatus =
-        filterStatus === "all" ? true : conv.status === filterStatus;
-
-      const q = searchQuery.toLowerCase().trim();
-      if (!q) return matchStatus;
-
-      const matchSubject = conv.subject.toLowerCase().includes(q);
-      const matchClientName = client?.full_name?.toLowerCase().includes(q);
-      const matchClientEmail = client?.email?.toLowerCase().includes(q);
-
-      return (
-        matchStatus && (matchSubject || matchClientName || matchClientEmail)
-      );
+      if (filterStatus !== "all" && conv.status !== filterStatus) {
+        return false;
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const client = profilesMap[conv.client_id];
+        const name = (client?.full_name || "").toLowerCase();
+        const email = (client?.email || "").toLowerCase();
+        const subject = conv.subject.toLowerCase();
+        return name.includes(q) || email.includes(q) || subject.includes(q);
+      }
+      return true;
     });
   }, [conversations, profilesMap, filterStatus, searchQuery]);
 
   const formatDate = (dateStr: string) => {
     try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString("fr-FR", {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString("fr-FR", {
         day: "2-digit",
         month: "short",
         hour: "2-digit",
@@ -203,30 +183,35 @@ export default function AdminMessages() {
     }
   };
 
-  const selectedClient = selectedConversation
-    ? profilesMap[selectedConversation.client_id]
-    : null;
-
   return (
     <div className="space-y-6">
-      {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      {/* EN-TÊTE */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-[#0a0f1e] flex items-center gap-3">
-            <span>Messagerie Sécurisée Clients</span>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full border border-emerald-300">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              AES-256 E2E
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#0a0f1e] flex items-center gap-3">
+            <span>Messagerie & Support Client</span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-full border border-emerald-300">
+              <Lock className="w-3.5 h-3.5" />
+              AES-256 Actif
             </span>
           </h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Gérez les échanges chiffrés en direct avec les acquéreurs et
-            investisseurs de MSF CONGO.
+          <p className="text-gray-600 text-sm mt-1">
+            Gérez et répondez de manière sécurisée et chiffrée aux demandes de
+            vos clients.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 font-medium">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={fetchConversationsData}
+            className="px-3.5 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-semibold rounded-xl transition-colors flex items-center gap-2 shadow-sm"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Actualiser</span>
+          </button>
+
+          <span className="px-3.5 py-2 bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold rounded-xl flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             {conversations.filter((c) => c.status === "open").length}{" "}
             discussions ouvertes
           </span>
@@ -249,7 +234,7 @@ export default function AdminMessages() {
               placeholder="Rechercher par client, email ou sujet..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37]"
+              className="w-full pl-9 pr-3 py-2 text-xs text-gray-900 placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37]"
             />
           </div>
 
@@ -360,7 +345,7 @@ export default function AdminMessages() {
                           Mon dossier
                         </span>
                       ) : conv.agent_id ? (
-                        <span className="text-gray-500">Assigné</span>
+                        <span className="text-gray-500 italic">Assigné</span>
                       ) : (
                         <span className="text-amber-600 font-medium">
                           Non assigné
@@ -374,7 +359,7 @@ export default function AdminMessages() {
           </div>
         </div>
 
-        {/* CADRE DU CHAT SÉLECTIONNÉ (COLONNE DROITE) */}
+        {/* ZONE DE CHAT SÉLECTIONNÉE (COLONNE DROITE) */}
         <div
           className={`lg:col-span-8 flex flex-col ${
             !selectedConversation ? "hidden lg:flex" : "flex"
@@ -382,8 +367,8 @@ export default function AdminMessages() {
         >
           {selectedConversation ? (
             <div className="flex flex-col h-full space-y-3">
-              {/* Entête avec options d'assignation et profil du client */}
-              <div className="bg-white border border-gray-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+              {/* Barre de contexte Agent */}
+              <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="lg:hidden">
                     <button
@@ -393,24 +378,18 @@ export default function AdminMessages() {
                       <ArrowLeft className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="w-9 h-9 rounded-full bg-slate-900 text-[#d4af37] font-bold flex items-center justify-center text-sm">
-                    {selectedClient?.full_name?.[0]?.toUpperCase() || "C"}
-                  </div>
                   <div>
-                    <h3 className="text-sm font-bold text-[#0a0f1e]">
-                      {selectedClient?.full_name || "Client"}
-                    </h3>
-                    <p className="text-xs text-gray-500 flex items-center gap-2">
-                      {selectedClient?.email && (
-                        <span className="flex items-center gap-1">
-                          <Mail className="w-3 h-3" />
-                          {selectedClient.email}
-                        </span>
-                      )}
-                      {selectedClient?.phone && (
-                        <span>• {selectedClient.phone}</span>
-                      )}
-                    </p>
+                    <span className="text-xs text-gray-500">Client :</span>
+                    <strong className="text-xs text-[#0a0f1e] ml-1">
+                      {profilesMap[selectedConversation.client_id]?.full_name ||
+                        profilesMap[selectedConversation.client_id]?.email ||
+                        selectedConversation.client_id}
+                    </strong>
+                    {profilesMap[selectedConversation.client_id]?.email && (
+                      <span className="text-[11px] text-gray-400 ml-2">
+                        ({profilesMap[selectedConversation.client_id]?.email})
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -418,45 +397,41 @@ export default function AdminMessages() {
                   {selectedConversation.agent_id !== user?.id && (
                     <button
                       onClick={() => handleAssignToMe(selectedConversation.id)}
-                      disabled={assigningId === selectedConversation.id}
-                      className="px-3 py-1.5 text-xs font-semibold bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                      className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5"
                     >
                       <UserCheck className="w-3.5 h-3.5 text-[#d4af37]" />
-                      <span>
-                        {assigningId === selectedConversation.id
-                          ? "Attribution..."
-                          : "Prendre en charge"}
-                      </span>
+                      <span>M'assigner ce dossier</span>
                     </button>
                   )}
                 </div>
               </div>
 
-              {/* CHAT CHIFFRÉ EN TEMPS RÉEL */}
-              <div className="flex-1 h-[560px]">
+              <div className="flex-1 h-[580px]">
                 <EncryptedChat
                   conversation={selectedConversation}
                   currentUserId={user?.id || ""}
-                  currentUserRole={
-                    (userRole as "agent" | "admin" | "superadmin") || "admin"
+                  currentUserRole="agent"
+                  partnerName={
+                    profilesMap[selectedConversation.client_id]?.full_name ||
+                    "Client MSF"
                   }
-                  partnerName={selectedClient?.full_name || "Client MSF"}
-                  onStatusChange={handleToggleStatus}
+                  onStatusChange={(newStatus) =>
+                    handleToggleStatus(selectedConversation.id, newStatus)
+                  }
                 />
               </div>
             </div>
           ) : (
             <div className="h-full min-h-[500px] bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col items-center justify-center p-8 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center mb-4">
+              <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-gray-200 flex items-center justify-center mb-4">
                 <MessageSquare className="w-8 h-8 text-[#d4af37]" />
               </div>
-              <h3 className="text-base font-bold text-[#0a0f1e]">
-                Sélectionnez un échange
+              <h3 className="text-lg font-bold text-[#0a0f1e]">
+                Sélectionnez une conversation
               </h3>
               <p className="text-xs text-gray-500 max-w-sm mt-1">
-                Choisissez une conversation dans la colonne de gauche pour
-                consulter l'historique chiffré et répondre au client en temps
-                réel.
+                Choisissez un fil de discussion dans la colonne de gauche pour
+                déchiffrer et répondre aux messages du client.
               </p>
             </div>
           )}
