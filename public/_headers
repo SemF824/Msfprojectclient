@@ -1,4 +1,6 @@
 /*
+  # Forçage HTTPS Strict Transport Security (1 an + sous-domaines + preload)
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   # Empêche l'inclusion du site dans des iframes (Anti-Clickjacking)
   X-Frame-Options: DENY
   # Bloque le reniflage de type MIME

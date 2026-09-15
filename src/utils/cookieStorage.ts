@@ -1,9 +1,10 @@
 /**
- * MSF CONGO - Stockage Sécurisé de Session basé sur les Cookies
+ * MSF CONGO - Adaptateur de Stockage Sécurisé de Session (Cookies)
  *
- * Remplace le stockage localStorage standard par des cookies sécurisés
- * compatibles avec les environnements Hetzner + Cloudflare (HTTPS, SameSite=Strict).
- * Gère automatiquement le chunking si la taille du jeton d'authentification dépasse 3 Ko.
+ * Implémente un stockage sécurisé conforme aux standards OWASP :
+ * - Attributs Secure, SameSite=Strict, Path=/
+ * - Expiration synchronisée (7 jours)
+ * - Gestion du chunking pour contourner la limite de 4 Ko par cookie
  */
 
 interface CookieOptions {
@@ -14,8 +15,8 @@ interface CookieOptions {
   domain?: string;
 }
 
-const CHUNK_SIZE = 3000; // Limite sûre sous le plafond des 4 Ko par cookie
-const COOKIE_EXPIRY_DAYS = 7; // Durée de persistance de la session
+const CHUNK_SIZE = 3000;
+const COOKIE_EXPIRY_DAYS = 7;
 
 const isHttps = (): boolean => {
   if (typeof window === "undefined") return false;
@@ -91,78 +92,65 @@ const removeCookie = (
   document.cookie = cookieString;
 };
 
-/**
- * Adaptateur de stockage conforme à l'interface Supabase SupportedStorage.
- * Permet d'écrire/lire les tokens dans les cookies avec gestion de fragmentation.
- */
 export const secureCookieStorage = {
   getItem: (key: string): string | null => {
     if (typeof document === "undefined") return null;
 
-    // Vérifier si le cookie est fragmenté
-    const countStr = getCookie(`${key}.chunks`);
+    const countStr = getCookie(`${key}_chunks`);
     if (countStr) {
       const count = parseInt(countStr, 10);
       if (!isNaN(count) && count > 0) {
-        let fullValue = "";
+        let result = "";
         for (let i = 0; i < count; i++) {
-          const chunk = getCookie(`${key}.${i}`);
-          if (chunk) {
-            fullValue += chunk;
-          } else {
-            return null;
-          }
+          const chunk = getCookie(`${key}_${i}`);
+          if (chunk === null) return null;
+          result += chunk;
         }
-        return fullValue;
+        return result;
       }
     }
 
-    // Cookie simple
     return getCookie(key);
   },
 
   setItem: (key: string, value: string): void => {
     if (typeof document === "undefined") return;
 
-    // Supprimer les anciens fragments éventuels
-    const oldCountStr = getCookie(`${key}.chunks`);
-    if (oldCountStr) {
-      const oldCount = parseInt(oldCountStr, 10);
-      for (let i = 0; i < oldCount; i++) {
-        removeCookie(`${key}.${i}`);
+    // Suppression préalable d'anciens fragments
+    const oldCount = getCookie(`${key}_chunks`);
+    if (oldCount) {
+      const count = parseInt(oldCount, 10);
+      for (let i = 0; i < count; i++) {
+        removeCookie(`${key}_${i}`);
       }
-      removeCookie(`${key}.chunks`);
+      removeCookie(`${key}_chunks`);
     }
-
-    // Si la valeur est courte, on stocke directement
-    if (value.length <= CHUNK_SIZE) {
-      setCookie(key, value);
-      return;
-    }
-
-    // Si la valeur est volumineuse, on segmente en chunks
     removeCookie(key);
-    const totalChunks = Math.ceil(value.length / CHUNK_SIZE);
-    setCookie(`${key}.chunks`, totalChunks.toString());
 
-    for (let i = 0; i < totalChunks; i++) {
-      const chunk = value.substring(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
-      setCookie(`${key}.${i}`, chunk);
+    if (value.length > CHUNK_SIZE) {
+      const chunks = Math.ceil(value.length / CHUNK_SIZE);
+      setCookie(`${key}_chunks`, chunks.toString());
+      for (let i = 0; i < chunks; i++) {
+        const start = i * CHUNK_SIZE;
+        const chunk = value.substring(start, start + CHUNK_SIZE);
+        setCookie(`${key}_${i}`, chunk);
+      }
+    } else {
+      setCookie(key, value);
     }
   },
 
   removeItem: (key: string): void => {
     if (typeof document === "undefined") return;
 
-    const countStr = getCookie(`${key}.chunks`);
+    const countStr = getCookie(`${key}_chunks`);
     if (countStr) {
       const count = parseInt(countStr, 10);
       for (let i = 0; i < count; i++) {
-        removeCookie(`${key}.${i}`);
+        removeCookie(`${key}_${i}`);
       }
-      removeCookie(`${key}.chunks`);
+      removeCookie(`${key}_chunks`);
     }
-
     removeCookie(key);
   },
 };

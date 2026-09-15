@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import {
   Mail,
   Lock,
@@ -9,25 +9,36 @@ import {
   Eye,
   EyeOff,
   AlertCircle,
+  CheckCircle2,
+  RefreshCw,
 } from "lucide-react";
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 import { Provider } from "@supabase/supabase-js";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { user, isAdmin, userRole, signIn, resetPassword, getUserRole } =
-    useSupabaseAuth();
+  const [searchParams] = useSearchParams();
+  const { user, isAdmin, userRole, signIn, resetPassword, getUserRole } = useSupabaseAuth();
+  
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [resetMessage, setResetMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isResetMode, setIsResetMode] = useState(false);
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
-  // Redirection automatique adaptée au rôle si l'utilisateur est déjà connecté
+  useEffect(() => {
+    if (searchParams.get("confirmed") === "true") {
+      setSuccessMessage("Votre adresse email a été confirmée avec succès. Vous pouvez maintenant vous connecter.");
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     if (user) {
       if (isAdmin || userRole === "admin" || userRole === "superadmin") {
@@ -38,15 +49,42 @@ export default function Login() {
     }
   }, [user, isAdmin, userRole, navigate]);
 
+  const handleResendConfirmation = async () => {
+    const targetEmail = unconfirmedEmail || formData.email;
+    if (!targetEmail) return;
+
+    setIsResendingEmail(true);
+    try {
+      if (!supabase) throw new Error("Client Supabase indisponible.");
+      const { error: resendErr } = await supabase.auth.resend({
+        type: "signup",
+        email: targetEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/login?confirmed=true`,
+        },
+      });
+
+      if (resendErr) throw resendErr;
+      setSuccessMessage("Un nouvel email de confirmation a été envoyé à votre adresse.");
+      setError(null);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Échec du renvoi de l'email.";
+      setError(message);
+    } finally {
+      setIsResendingEmail(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    setResetMessage(null);
+    setSuccessMessage(null);
+    setUnconfirmedEmail(null);
 
     if (isResetMode) {
       if (!resetPassword) {
-        setError("Fonctionnalité indisponible.");
+        setError("Fonctionnalité de réinitialisation indisponible.");
         setIsLoading(false);
         return;
       }
@@ -55,7 +93,7 @@ export default function Login() {
       if (resetErr) {
         setError(resetErr.message || "Erreur lors de l'envoi de l'email.");
       } else {
-        setResetMessage("Un email contenant un lien sécurisé a été envoyé.");
+        setSuccessMessage("Si cette adresse correspond à un compte actif, un lien de réinitialisation a été envoyé.");
       }
       setIsLoading(false);
       return;
@@ -64,29 +102,36 @@ export default function Login() {
     try {
       const { data, error: signInError } = await signIn(
         formData.email,
-        formData.password,
+        formData.password
       );
 
       if (signInError) {
-        setError(signInError.message || "Identifiants incorrects");
+        const errorMsg = signInError.message.toLowerCase();
+        if (errorMsg.includes("email not confirmed") || errorMsg.includes("non confirmé")) {
+          setUnconfirmedEmail(formData.email);
+          setError("Votre adresse email n'a pas encore été confirmée. Veuillez cliquer sur le lien reçu par email.");
+        } else if (errorMsg.includes("invalid login credentials") || errorMsg.includes("identifiants incorrects")) {
+          setError("Identifiants incorrects ou compte introuvable.");
+        } else {
+          setError(signInError.message || "Erreur d'authentification.");
+        }
         setIsLoading(false);
         return;
       }
 
-      // Détermination du rôle pour une redirection immédiate et sans friction
       const role = await getUserRole(data?.user);
       if (role === "admin" || role === "superadmin") {
         navigate("/admin/dashboard", { replace: true });
       } else {
         navigate("/client/dashboard", { replace: true });
       }
-    } catch (err: any) {
-      setError(err.message || "Une erreur est survenue");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Une erreur inattendue est survenue.";
+      setError(message);
       setIsLoading(false);
     }
   };
 
-  // Fonction pour la connexion via les réseaux sociaux
   const handleSocialLogin = async (provider: Provider) => {
     try {
       if (!supabase) {
@@ -99,319 +144,232 @@ export default function Login() {
           redirectTo: `${window.location.origin}/client/dashboard`,
         },
       });
-      if (signInError) {
-        throw signInError;
-      }
-    } catch (err: any) {
-      console.error("Erreur de connexion sociale:", err);
-      setError(err.message || "Erreur lors de la connexion sociale.");
+      if (signInError) throw signInError;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erreur lors de la connexion sociale.";
+      setError(message);
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 relative overflow-hidden flex items-center justify-center px-6 py-12">
-      {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage:
-              "radial-gradient(circle at 2px 2px, #d4af37 1px, transparent 0)",
+            backgroundImage: "radial-gradient(circle at 2px 2px, #d4af37 1px, transparent 0)",
             backgroundSize: "40px 40px",
           }}
         />
       </div>
-
-      {/* Decorative Blurs */}
       <div className="absolute top-20 left-20 w-96 h-96 bg-[#d4af37]/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-20 w-96 h-96 bg-[#1e3a5f]/30 rounded-full blur-3xl" />
+      <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl" />
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Back to Home */}
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-gray-400 hover:text-[#d4af37] transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-gray-500 hover:text-[#d4af37] transition-colors mb-8"
         >
           <HomeIcon className="w-4 h-4" />
-          <span className="text-sm">Retour à l'accueil</span>
+          <span className="text-sm font-medium">Retour à l'accueil</span>
         </Link>
 
-        {/* Login Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="bg-white backdrop-blur-2xl rounded-3xl border border-gray-200 p-8 md:p-10 shadow-2xl"
+          className="bg-white/90 backdrop-blur-2xl rounded-3xl border border-gray-200 p-8 shadow-2xl"
         >
-          {/* Header */}
           <div className="text-center mb-8">
-            <div
-              className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#d4af37]/20 to-transparent rounded-2xl mb-4"
-              aria-hidden="true"
-            >
-              <Lock className="w-8 h-8 text-[#d4af37]" />
-            </div>
-            <h1 className="text-3xl md:text-4xl mb-2">
-              {isResetMode ? (
-                <span className="text-gray-900">Mot de passe </span>
-              ) : (
-                <span className="text-gray-900">Bon retour sur </span>
-              )}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">
-                {isResetMode ? "Oublié" : "MSF Congo"}
-              </span>
+            <h1 className="text-3xl font-bold text-[#0a0f1e] mb-2 tracking-tight">
+              {isResetMode ? "Réinitialisation" : "Espace Client"}
             </h1>
-            <p className="text-gray-600">
+            <p className="text-sm text-gray-500">
               {isResetMode
-                ? "Saisissez votre email pour recevoir un lien de réinitialisation"
-                : "Connectez-vous pour accéder à votre espace client"}
+                ? "Entrez votre email pour recevoir le lien de récupération"
+                : "Connectez-vous pour suivre vos démarches immobilières"}
             </p>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Messages */}
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700"
-              >
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                <p className="text-sm">{error}</p>
-              </motion.div>
-            )}
+          {successMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl mb-6 flex items-start gap-3"
+            >
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs font-medium text-emerald-800 leading-relaxed">
+                {successMessage}
+              </p>
+            </motion.div>
+          )}
 
-            {resetMessage && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700"
-              >
-                <div className="w-5 h-5 flex-shrink-0 bg-green-500 text-white rounded-full flex items-center justify-center text-xs">
-                  ✓
-                </div>
-                <p className="text-sm font-medium">{resetMessage}</p>
-              </motion.div>
-            )}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-4 bg-red-50 border border-red-200 rounded-xl mb-6 space-y-3"
+            >
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs font-medium text-red-700 leading-relaxed">
+                  {error}
+                </p>
+              </div>
+              {unconfirmedEmail && (
+                <button
+                  type="button"
+                  onClick={handleResendConfirmation}
+                  disabled={isResendingEmail}
+                  className="w-full mt-2 py-2 px-3 bg-red-100 hover:bg-red-200 text-red-800 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isResendingEmail ? "animate-spin" : ""}`} />
+                  Renvoyer l'e-mail de confirmation
+                </button>
+              )}
+            </motion.div>
+          )}
 
-            {/* Email */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm text-gray-700 mb-2"
-              >
-                Adresse Email
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-700 ml-1">
+                Adresse email
               </label>
               <div className="relative">
-                <Mail
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d4af37]"
-                  aria-hidden="true"
-                />
+                <Mail className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
                 <input
                   type="email"
-                  id="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:border-[#d4af37] focus:outline-none focus:ring-2 focus:ring-[#d4af37]/30 transition-colors"
-                  placeholder="votre.email@exemple.com"
                   required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="nom@exemple.com"
+                  className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] placeholder:text-gray-400 focus:bg-white focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all text-sm"
                 />
               </div>
             </div>
 
-            {/* Password (Hidden in Reset Mode) */}
             {!isResetMode && (
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm text-gray-700 mb-2"
-                >
-                  Mot de Passe
-                </label>
-                <div className="relative">
-                  <Lock
-                    className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d4af37]"
-                    aria-hidden="true"
-                  />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    id="password"
-                    value={formData.password}
-                    onChange={(e) =>
-                      setFormData({ ...formData, password: e.target.value })
-                    }
-                    className="w-full pl-12 pr-12 py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:border-[#d4af37] focus:outline-none focus:ring-2 focus:ring-[#d4af37]/30 transition-colors"
-                    placeholder="••••••••"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#d4af37] transition-colors focus:outline-none focus:ring-2 focus:ring-[#d4af37]/50 rounded-md p-1"
-                    aria-label={
-                      showPassword
-                        ? "Masquer le mot de passe"
-                        : "Afficher le mot de passe"
-                    }
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5" aria-hidden="true" />
-                    ) : (
-                      <Eye className="w-5 h-5" aria-hidden="true" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Remember & Forgot */}
-            <div className="flex items-center justify-between text-sm">
-              {!isResetMode ? (
-                <>
-                  <label className="flex items-center gap-2 text-gray-600 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 rounded border-gray-300 bg-white text-[#d4af37] focus:ring-[#d4af37] focus:ring-offset-0"
-                    />
-                    <span>Se souvenir de moi</span>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between ml-1">
+                  <label className="text-xs font-semibold text-gray-700">
+                    Mot de passe
                   </label>
                   <button
                     type="button"
                     onClick={() => {
                       setIsResetMode(true);
                       setError(null);
-                      setResetMessage(null);
+                      setSuccessMessage(null);
                     }}
-                    className="text-[#d4af37] hover:underline"
+                    className="text-xs text-[#d4af37] hover:underline font-medium"
                   >
                     Mot de passe oublié ?
                   </button>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsResetMode(false);
-                    setError(null);
-                    setResetMessage(null);
-                  }}
-                  className="text-gray-500 hover:text-gray-900 transition-colors w-full text-center"
-                >
-                  Annuler et retourner à la connexion
-                </button>
-              )}
-            </div>
+                </div>
+                <div className="relative">
+                  <Lock className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="••••••••"
+                    className="w-full pl-12 pr-12 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-[#0a0f1e] placeholder:text-gray-400 focus:bg-white focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+            )}
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full mt-2 py-4 bg-[#0a0f1e] text-white font-semibold rounded-xl hover:bg-[#151f38] transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 text-sm"
             >
               {isLoading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-[#0a0f1e] border-t-transparent rounded-full animate-spin"></div>
-                  <span className="font-medium">Veuillez patienter...</span>
-                </>
+                <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <span className="font-medium">
-                    {isResetMode ? "Envoyer le lien" : "Se Connecter"}
-                  </span>
-                  {!isResetMode && (
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  )}
+                  <span>{isResetMode ? "Envoyer le lien" : "Se connecter"}</span>
+                  <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-400">
-                Ou continuer avec
-              </span>
-            </div>
-          </div>
-
-          {/* Social Logins — Boutons Conformes aux Chartes Officielles */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-            {/* BOUTON GOOGLE OFFICIEL (Quadrichrome + Libellé conforme) */}
-            <button
-              type="button"
-              onClick={() => handleSocialLogin("google")}
-              className="flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 rounded-xl bg-white hover:bg-gray-50 transition-colors shadow-sm"
-            >
-              <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 48 48">
-                <path
-                  fill="#EA4335"
-                  d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
-                />
-                <path
-                  fill="#4285F4"
-                  d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.74 7.17l7.59 5.89c4.43-4.08 6.98-10.09 6.98-17.53z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
-                />
-              </svg>
-              <span className="text-xs font-semibold text-gray-700">
-                Google
-              </span>
-            </button>
-
-            {/* BOUTON FACEBOOK OFFICIEL (Bleu Meta officiel + Libellé conforme) */}
-            <button
-              type="button"
-              onClick={() => handleSocialLogin("facebook")}
-              className="flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] text-white transition-colors shadow-sm"
-            >
-              <svg
-                className="w-5 h-5 fill-current flex-shrink-0"
-                viewBox="0 0 24 24"
+          {isResetMode && (
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsResetMode(false);
+                  setError(null);
+                  setSuccessMessage(null);
+                }}
+                className="text-xs text-gray-500 hover:text-[#0a0f1e] font-medium"
               >
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-              </svg>
-              <span className="text-xs font-semibold">Facebook</span>
-            </button>
-          </div>
+                Retour à la connexion
+              </button>
+            </div>
+          )}
 
-          {/* Sign Up Link */}
-          <div className="text-center">
-            <p className="text-gray-600">
-              Vous n'avez pas de compte ?{" "}
-              <Link
-                to="/signup"
-                className="text-[#d4af37] hover:underline font-medium"
-              >
-                Créer un compte
-              </Link>
-            </p>
-          </div>
-        </motion.div>
+          {!isResetMode && (
+            <>
+              <div className="relative my-6 text-center">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200" />
+                </div>
+                <span className="relative bg-white px-4 text-xs text-gray-400 uppercase tracking-wider font-semibold">
+                  Ou continuer avec
+                </span>
+              </div>
 
-        {/* Trust Badge */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="mt-6 text-center"
-        >
-          <p className="text-xs text-gray-500">
-            🔒 Connexion sécurisée • Vos données sont protégées
-          </p>
+              <div className="grid grid-cols-1 gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleSocialLogin("google")}
+                  className="w-full py-3 px-4 border border-gray-200 rounded-xl font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors flex items-center justify-center gap-3 text-sm"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path
+                      fill="#4285F4"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                    />
+                  </svg>
+                  <span>Google</span>
+                </button>
+              </div>
+
+              <div className="mt-8 text-center">
+                <p className="text-xs text-gray-500">
+                  Vous n'avez pas de compte ?{" "}
+                  <Link
+                    to="/signup"
+                    className="font-bold text-[#d4af37] hover:underline"
+                  >
+                    Créer un compte
+                  </Link>
+                </p>
+              </div>
+            </>
+          )}
         </motion.div>
       </div>
     </div>
