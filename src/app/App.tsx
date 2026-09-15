@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router";
 import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "sonner";
 import CookieConsent from "./components/CookieConsent";
+import { CurrencyProvider } from "../context/CurrencyContext";
 
 // Fallback global de chargement
 const FullScreenLoader = () => (
@@ -17,7 +18,7 @@ const FullScreenLoader = () => (
 const ClientAppRoutes = lazy(() => import("./ClientAppRoutes"));
 const AdminAppRoutes = lazy(() => import("./AdminAppRoutes"));
 
-// ✅ Composant réactif pour scroller au top à chaque changement de route
+// Composant réactif pour scroller au top à chaque changement de route
 function ScrollToTop() {
   const { pathname } = useLocation();
 
@@ -31,24 +32,26 @@ function ScrollToTop() {
 export default function App() {
   return (
     <BrowserRouter>
-      {/* Écouteur de navigation globale */}
-      <ScrollToTop />
+      <CurrencyProvider>
+        {/* Écouteur de navigation globale */}
+        <ScrollToTop />
 
-      {/* Gestionnaire de notifications global de l'application */}
-      <Toaster position="top-right" richColors closeButton />
+        {/* Gestionnaire de notifications global de l'application */}
+        <Toaster position="top-right" richColors closeButton />
 
-      {/* Bannière de consentement pour les cookies (RGPD/CCPA) */}
-      <CookieConsent />
+        {/* Bannière de consentement pour les cookies (RGPD/CCPA) */}
+        <CookieConsent />
 
-      <Suspense fallback={<FullScreenLoader />}>
-        <Routes>
-          {/* TOUT ce qui commence par /admin est géré par la branche Admin */}
-          <Route path="/admin/*" element={<AdminAppRoutes />} />
+        <Suspense fallback={<FullScreenLoader />}>
+          <Routes>
+            {/* TOUT ce qui commence par /admin est géré par la branche Admin */}
+            <Route path="/admin/*" element={<AdminAppRoutes />} />
 
-          {/* TOUT le reste est géré par la branche Client */}
-          <Route path="/*" element={<ClientAppRoutes />} />
-        </Routes>
-      </Suspense>
+            {/* TOUT le reste est géré par la branche Client */}
+            <Route path="/*" element={<ClientAppRoutes />} />
+          </Routes>
+        </Suspense>
+      </CurrencyProvider>
     </BrowserRouter>
   );
 }

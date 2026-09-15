@@ -16,6 +16,7 @@ import {
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 import Breadcrumb from "../components/Breadcrumb";
 import { EmptyState } from "../components/EmptyState";
+import { PriceTag } from "../components/PriceTag";
 
 interface Property {
   id: string;
@@ -45,7 +46,6 @@ export default function Favorites() {
       setError(null);
 
       try {
-        // 1. Récupération des IDs des favoris de l'utilisateur
         const { data: favData, error: favError } = await supabase
           .from("favorites")
           .select("property_id")
@@ -63,7 +63,6 @@ export default function Favorites() {
 
         const propertyIds = favData.map((fav) => fav.property_id);
 
-        // 2. Récupération des détails des propriétés associées
         const { data: propData, error: propError } = await supabase
           .from("properties")
           .select("*")
@@ -94,7 +93,7 @@ export default function Favorites() {
   }, [user]);
 
   const removeFavorite = async (propertyId: string, e: React.MouseEvent) => {
-    e.preventDefault(); // Évite la navigation si le bouton est dans un lien enveloppant
+    e.preventDefault();
     if (!user || !supabase) return;
 
     try {
@@ -106,7 +105,6 @@ export default function Favorites() {
 
       if (deleteError) throw deleteError;
 
-      // Mise à jour optimiste de l'état local
       setFavorites((prev) => prev.filter((item) => item.id !== propertyId));
     } catch (err) {
       console.error("Erreur lors de la suppression du favori :", err);
@@ -234,13 +232,12 @@ export default function Favorites() {
 
                   {/* Prix & Actions */}
                   <div className="space-y-4 pt-1 flex-shrink-0">
-                    <p className="text-[#0a0f1e] font-black text-xl">
-                      {typeof property.price === "number"
-                        ? new Intl.NumberFormat("fr-FR").format(
-                            property.price,
-                          ) + " FCFA"
-                        : property.price}
-                    </p>
+                    <div>
+                      <PriceTag
+                        amountInXaf={property.price}
+                        className="text-[#0a0f1e] font-black text-xl"
+                      />
+                    </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <Link
@@ -253,7 +250,7 @@ export default function Favorites() {
                         onClick={(e) => removeFavorite(property.id, e)}
                         className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 font-semibold rounded-xl hover:bg-red-100 transition-colors text-sm group"
                       >
-                        <Trash2 className="w-4 h-4 transition-transform group-hover:scale-110" />{" "}
+                        <Trash2 className="w-4 h-4 transition-transform group-hover:scale-110" />
                         Supprimer
                       </button>
                     </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { Link, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { PopupModal } from "react-calendly";
@@ -22,22 +22,21 @@ import {
   Shield,
   Waves,
   Dumbbell,
-  Camera,
-  Map as MapIcon,
-  Building2,
-  TreePine,
   ShoppingCart,
   GraduationCap,
   Hospital,
+  Building2,
+  TreePine,
   FileText,
   Loader2,
   Info,
   Image as ImageIcon,
+  Map as MapIcon,
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
+import { PriceTag } from "../components/PriceTag";
 
-// On récupère l'URL depuis les variables d'environnement, avec un fallback de sécurité
 const calendlyUrl = (import.meta as any).env.VITE_CALENDLY_URL;
 
 const DEFAULT_IMAGES = [
@@ -58,11 +57,9 @@ export default function PropertyDetails() {
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
 
-  // ── Chargement dynamique de la propriété depuis Supabase ──
   const {
     data: dbProperty,
     isLoading,
-    error,
   } = useQuery({
     queryKey: ["property-detail", id],
     queryFn: async () => {
@@ -78,17 +75,12 @@ export default function PropertyDetails() {
     },
   });
 
-  // Construction de l'objet property dynamique
   const property = dbProperty
     ? {
         id: dbProperty.id,
         title: dbProperty.title || "Propriété de Prestige",
         location: dbProperty.location || "Congo",
         price: dbProperty.price,
-        priceLabel:
-          typeof dbProperty.price === "number"
-            ? `${new Intl.NumberFormat("fr-FR").format(dbProperty.price)} FCFA`
-            : dbProperty.price || "Sur demande",
         type: dbProperty.type
           ? dbProperty.type.charAt(0).toUpperCase() + dbProperty.type.slice(1)
           : "Villa de Luxe",
@@ -133,7 +125,7 @@ export default function PropertyDetails() {
               : DEFAULT_IMAGES.map((url) => ({ url, description: "" })),
         features:
           Array.isArray(dbProperty.features) && dbProperty.features.length > 0
-            ? dbProperty.features.slice(0, 10) // Limite à 10 caractéristiques
+            ? dbProperty.features.slice(0, 10)
             : [
                 "Cuisine équipée haut de gamme",
                 "Piscine & terrasse spacieuse",
@@ -143,7 +135,7 @@ export default function PropertyDetails() {
                 "Système de sécurité 24/7",
                 "Climatisation centrale",
                 "Générateur de secours",
-              ].slice(0, 10), // Limite également les caractéristiques par défaut
+              ].slice(0, 10),
         amenities: [
           { icon: Waves, label: "Piscine Privée" },
           { icon: Car, label: "Garage Sécurisé" },
@@ -171,7 +163,6 @@ export default function PropertyDetails() {
       }
     : null;
 
-  // Vérifier si la propriété est dans les favoris au chargement
   useEffect(() => {
     const checkFavorite = async () => {
       if (!user || !supabase || !property?.id) return;
@@ -200,7 +191,6 @@ export default function PropertyDetails() {
     setIsTogglingFavorite(true);
     try {
       if (isFavorite) {
-        // Retirer des favoris
         await supabase
           .from("favorites")
           .delete()
@@ -208,7 +198,6 @@ export default function PropertyDetails() {
           .eq("property_id", property.id);
         setIsFavorite(false);
       } else {
-        // Ajouter aux favoris
         await supabase.from("favorites").insert({
           user_id: user.id,
           property_id: property.id,
@@ -223,7 +212,7 @@ export default function PropertyDetails() {
   };
 
   const PropertyMap = ({ location }: { location: string }) => {
-    const apiKey = (import.meta as any as any).env.VITE_GOOGLE_MAPS_API_KEY;
+    const apiKey = (import.meta as any).env.VITE_GOOGLE_MAPS_API_KEY;
 
     if (!apiKey) {
       return (
@@ -321,7 +310,7 @@ export default function PropertyDetails() {
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
               <button
-                onClick={() => setIsGalleryOpen(true)}
+                onClick={() => setShowGallery(true)}
                 className="absolute bottom-6 right-6 px-4 py-2 bg-white/90 backdrop-blur-sm text-[#0a0f1e] font-semibold rounded-xl hover:bg-white transition-all shadow-lg flex items-center gap-2 z-20"
               >
                 <ImageIcon className="w-4 h-4" />
@@ -340,7 +329,7 @@ export default function PropertyDetails() {
                 className="relative rounded-2xl overflow-hidden group cursor-pointer"
                 onClick={() => {
                   setSelectedImage(idx + 1);
-                  setIsGalleryOpen(true);
+                  setShowGallery(true);
                 }}
               >
                 <img
@@ -376,7 +365,7 @@ export default function PropertyDetails() {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <p className="text-[#d4af37] text-sm mb-2">{property.type}</p>
-                  <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mb-2">
+                  <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mb-2 font-bold">
                     {property.title}
                   </h1>
                   <div className="flex items-center gap-2 text-gray-600">
@@ -441,7 +430,7 @@ export default function PropertyDetails() {
               transition={{ delay: 0.1 }}
               className="bg-white backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-8"
             >
-              <h2 className="text-2xl text-[#0a0f1e] mb-4">Description</h2>
+              <h2 className="text-2xl text-[#0a0f1e] mb-4 font-bold">Description</h2>
               <p className="text-gray-700 leading-relaxed">
                 {property.description}
               </p>
@@ -454,7 +443,7 @@ export default function PropertyDetails() {
               transition={{ delay: 0.2 }}
               className="bg-white backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-8"
             >
-              <h2 className="text-2xl text-[#0a0f1e] mb-6">Caractéristiques</h2>
+              <h2 className="text-2xl text-[#0a0f1e] mb-6 font-bold">Caractéristiques</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {property.features.map((feature: string, idx: number) => (
                   <div key={idx} className="flex items-center gap-3">
@@ -472,7 +461,7 @@ export default function PropertyDetails() {
               transition={{ delay: 0.3 }}
               className="bg-white backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-8"
             >
-              <h2 className="text-2xl text-[#0a0f1e] mb-6">Équipements</h2>
+              <h2 className="text-2xl text-[#0a0f1e] mb-6 font-bold">Équipements</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {property.amenities.map((amenity, idx) => {
                   const Icon = amenity.icon;
@@ -500,7 +489,7 @@ export default function PropertyDetails() {
               transition={{ delay: 0.4 }}
               className="bg-white backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-8"
             >
-              <h2 className="text-2xl text-[#0a0f1e] mb-6">Visite Virtuelle</h2>
+              <h2 className="text-2xl text-[#0a0f1e] mb-6 font-bold">Visite Virtuelle</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="relative h-64 bg-gray-100 rounded-xl overflow-hidden group cursor-pointer">
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/30 transition-colors">
@@ -508,7 +497,7 @@ export default function PropertyDetails() {
                       <div className="w-16 h-16 bg-[#d4af37] rounded-full flex items-center justify-center">
                         <Play className="w-8 h-8 text-[#0a0f1e] ml-1" />
                       </div>
-                      <span className="text-white">Visite Vidéo 360°</span>
+                      <span className="text-white font-medium">Visite Vidéo 360°</span>
                     </div>
                   </div>
                   <ImageWithFallback
@@ -523,7 +512,7 @@ export default function PropertyDetails() {
                       <div className="w-16 h-16 bg-[#d4af37] rounded-full flex items-center justify-center">
                         <Maximize2 className="w-8 h-8 text-[#0a0f1e]" />
                       </div>
-                      <span className="text-white">Plan 3D Interactif</span>
+                      <span className="text-white font-medium">Plan 3D Interactif</span>
                     </div>
                   </div>
                   <ImageWithFallback
@@ -617,16 +606,14 @@ export default function PropertyDetails() {
               transition={{ delay: 0.5 }}
               className="bg-white backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-8"
             >
-              <h2 className="text-2xl text-[#0a0f1e] mb-6">
+              <h2 className="text-2xl text-[#0a0f1e] mb-6 font-bold">
                 Localisation & Quartier
               </h2>
 
-              {/* Google Map */}
               <div className="mb-6">
                 <PropertyMap location={property.location} />
               </div>
 
-              {/* Nearby Places */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {property.neighborhood.map((place, idx) => {
                   const Icon = place.icon;
@@ -653,18 +640,18 @@ export default function PropertyDetails() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Price Card */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               className="bg-white backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-6 sticky top-24"
             >
               <div className="mb-6">
-                <p className="text-gray-600 text-sm mb-1">Prix</p>
-                <p className="text-4xl text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">
-                  {property.priceLabel}
-                </p>
-                <p className="text-gray-600 text-sm mt-1">Prêt disponible</p>
+                <p className="text-gray-600 text-sm mb-1">Prix indicatif</p>
+                <PriceTag
+                  amountInXaf={property.price}
+                  className="text-3xl sm:text-4xl text-[#d4af37] font-black"
+                />
+                <p className="text-gray-600 text-xs mt-2">Prêt & simulation disponibles</p>
               </div>
 
               {/* Action Buttons */}

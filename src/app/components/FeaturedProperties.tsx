@@ -4,6 +4,7 @@ import { Bath, Bed, MapPin, Maximize, TrendingUp, Loader2 } from "lucide-react";
 import { motion, useInView } from "motion/react";
 import { Link } from "react-router";
 import { supabase } from "../../hooks/useSupabaseAuth";
+import { PriceTag } from "./PriceTag";
 
 interface Property {
   id: string;
@@ -22,7 +23,6 @@ interface FeaturedPropertiesProps {
   filters?: { type: string; location: string; price: string };
 }
 
-// TON COMPOSANT ANIMATEDCARD INTACT (AJOUT DU H-FULL)
 const AnimatedCard = ({
   children,
   delay = 0,
@@ -60,19 +60,13 @@ export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
       if (error) throw error;
       return data || [];
     },
-    staleTime: 1000 * 60 * 10, // 10 minutes de cache (le catalogue change peu)
+    staleTime: 1000 * 60 * 10,
   });
-
-  const formatPrice = (price: string | number) =>
-    typeof price === "number"
-      ? `${new Intl.NumberFormat("fr-FR").format(price)} FCFA`
-      : price;
 
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {
       if (!filters) return true;
 
-      // 1. Filtrage par type (robuste, insensible à la casse et au pluriel)
       let typeMatch = true;
       if (filters.type && filters.type !== "all") {
         const typeMap: Record<string, string[]> = {
@@ -91,7 +85,6 @@ export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
         );
       }
 
-      // 2. Filtrage par localisation (villes / quartiers)
       let locMatch = true;
       if (filters.location) {
         locMatch = (property.location || "")
@@ -99,7 +92,6 @@ export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
           .includes(filters.location.toLowerCase());
       }
 
-      // 3. Filtrage par prix
       let priceMatch = true;
       if (filters.price && filters.price !== "all") {
         const propPrice = Number(property.price);
@@ -206,8 +198,11 @@ export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
                         {property.location}
                       </span>
                     </div>
-                    <div className="text-xl sm:text-2xl md:text-3xl text-[#d4af37] mb-4 sm:mb-6 font-black truncate">
-                      {formatPrice(property.price)}
+                    <div className="mb-4 sm:mb-6">
+                      <PriceTag
+                        amountInXaf={property.price}
+                        className="text-xl sm:text-2xl md:text-3xl text-[#d4af37] font-black"
+                      />
                     </div>
                     <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-gray-100 mt-auto">
                       <div className="flex items-center gap-1.5 text-gray-600 font-medium">

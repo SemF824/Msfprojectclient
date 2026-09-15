@@ -12,62 +12,26 @@ import {
   X,
   Shield,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
-import { useNotifications } from "../../hooks/useNotifications"; // <--- NOUVEL IMPORT
+import { useSupabaseAuth } from "../../hooks/useSupabaseAuth";
+import { useNotifications } from "../../hooks/useNotifications";
+import { CurrencySelector } from "./CurrencySelector";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  // const [unreadCount, setUnreadCount] = useState(0); // <--- ANCIEN ÉTAT SUPPRIMÉ
 
   const { user, isAdmin, signOut } = useSupabaseAuth();
-  const { unreadCount } = useNotifications(); // <--- UTILISATION DU NOUVEAU HOOK
+  const { unreadCount } = useNotifications();
   const navigate = useNavigate();
   const isLoggedIn = !!user;
-
-  // ── L'ANCIEN BLOC useEffect POUR LES NOTIFICATIONS EST SUPPRIMÉ CAR GÉRÉ PAR useNotifications ──
-  // useEffect(() => {
-  //   if (!user || !supabase) return;
-
-  //   const fetchUnreadCount = async () => {
-  //     const { count } = await supabase
-  //       .from("notifications")
-  //       .select("*", { count: "exact", head: true })
-  //       .eq("user_id", user.id)
-  //       .eq("is_read", false);
-  //     setUnreadCount(count || 0);
-  //   };
-
-  //   fetchUnreadCount();
-
-  //   const channel = supabase
-  //     .channel("header-notifications")
-  //     .on(
-  //       "postgres_changes",
-  //       {
-  //         event: "*",
-  //         schema: "public",
-  //         table: "notifications",
-  //         filter: `user_id=eq.${user.id}`,
-  //       },
-  //       fetchUnreadCount,
-  //     )
-  //     .subscribe();
-
-  //   return () => {
-  //     supabase.removeChannel(channel);
-  //   };
-  // }, [user]);
-  // ────────────────────────────────────────────────────────────────────────────────────────────────
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // On redirige vers la page propriétés avec la query de recherche
       navigate(`/properties?search=${encodeURIComponent(searchQuery)}`);
       setIsSearchOpen(false);
       setSearchQuery("");
@@ -78,7 +42,7 @@ export function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16 sm:h-20">
-          {/* ── Logo ────────────────────────────────────────────────────────── */}
+          {/* Logo */}
           <Link to="/" className="flex items-center gap-2 sm:gap-3 z-50">
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-lg flex items-center justify-center shadow-sm">
               <Building2 className="w-4 h-4 sm:w-6 sm:h-6 text-[#0a0f1e]" />
@@ -93,7 +57,7 @@ export function Header() {
             </div>
           </Link>
 
-          {/* ── Navigation Desktop ──────────────────────────────────────────── */}
+          {/* Navigation Desktop */}
           <nav className="hidden lg:flex items-center gap-8">
             <Link
               to="/"
@@ -127,8 +91,13 @@ export function Header() {
             </Link>
           </nav>
 
-          {/* ── Boutons d'action ────────────────────────────────────────────── */}
-          <div className="flex items-center gap-4">
+          {/* Actions & Sélecteur de Devise */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Sélecteur de monnaie Desktop */}
+            <div className="hidden sm:block">
+              <CurrencySelector />
+            </div>
+
             {/* Recherche dynamique */}
             <div className="relative flex items-center">
               {isSearchOpen ? (
@@ -321,9 +290,16 @@ export function Header() {
           </div>
         </div>
 
-        {/* ── Menu Mobile ─────────────────────────────────────────────────── */}
+        {/* Menu Mobile */}
         {isMenuOpen && (
           <div className="lg:hidden py-4 border-t border-gray-100 absolute left-0 right-0 bg-white px-4 shadow-xl">
+            <div className="mb-4 pb-3 border-b border-gray-100 flex items-center justify-between">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Devise d'affichage
+              </span>
+              <CurrencySelector />
+            </div>
+
             <nav className="flex flex-col gap-4">
               <Link
                 to="/"

@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { motion } from "motion/react";
-import { Calculator, DollarSign, Calendar, Percent, ShieldCheck, ArrowRight } from "lucide-react";
+import { Calculator, Calendar, Percent, ShieldCheck, ArrowRight } from "lucide-react";
 import { Link } from "react-router";
 import Breadcrumb from "../components/Breadcrumb";
 import { toast } from "sonner";
+import { useCurrency } from "../../context/CurrencyContext";
 
 export default function ClientLoan() {
+  const { currency, formatPrice } = useCurrency();
   const [amount, setAmount] = useState<number>(150000000);
   const [downPayment, setDownPayment] = useState<number>(30000000);
   const [years, setYears] = useState<number>(20);
@@ -36,12 +37,11 @@ export default function ClientLoan() {
     }
   }, [amount, downPayment, years, rate]);
 
-  const formatFCFA = (val: number) => 
-    new Intl.NumberFormat("fr-FR", { style: "decimal", maximumFractionDigits: 0 }).format(val);
-
   const handleSaveSimulation = () => {
     toast.success("Votre simulation de financement a été enregistrée dans votre espace conseiller.");
   };
+
+  const isForeign = currency !== "XAF";
 
   return (
     <div className="space-y-6 text-[#0a0f1e]">
@@ -66,8 +66,13 @@ export default function ClientLoan() {
           {/* Prix du bien */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <label className="text-sm font-semibold text-gray-700">Prix indicatif du bien immobiliers</label>
-              <span className="text-sm font-bold text-[#d4af37]">{formatFCFA(amount)} FCFA</span>
+              <label className="text-sm font-semibold text-gray-700">Prix indicatif du bien</label>
+              <div className="text-right">
+                <span className="text-sm font-bold text-[#d4af37]">{formatPrice(amount)}</span>
+                {isForeign && (
+                  <span className="block text-[11px] text-gray-400">≈ {formatPrice(amount, "XAF")}</span>
+                )}
+              </div>
             </div>
             <div className="relative flex items-center gap-4">
               <input 
@@ -82,7 +87,12 @@ export default function ClientLoan() {
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <label className="text-sm font-semibold text-gray-700">Apport Personnel</label>
-              <span className="text-sm font-bold text-gray-600">{formatFCFA(downPayment)} FCFA</span>
+              <div className="text-right">
+                <span className="text-sm font-bold text-gray-600">{formatPrice(downPayment)}</span>
+                {isForeign && (
+                  <span className="block text-[11px] text-gray-400">≈ {formatPrice(downPayment, "XAF")}</span>
+                )}
+              </div>
             </div>
             <div className="relative flex items-center gap-4">
               <input 
@@ -144,17 +154,20 @@ export default function ClientLoan() {
               Mensualité Estimée
             </h3>
             
-            <div className="text-4xl md:text-5xl font-black text-[#d4af37] mb-1 tracking-tight">
-              {formatFCFA(monthlyPayment)}
+            <div className="text-3xl md:text-5xl font-black text-[#d4af37] mb-1 tracking-tight">
+              {formatPrice(monthlyPayment)}
             </div>
             
-            <p className="text-[#d4af37] font-bold text-lg mb-6">FCFA / mois</p>
+            <p className="text-gray-300 font-medium text-sm mb-2">par mois</p>
+            {isForeign && (
+              <p className="text-xs text-gray-400 mb-6">≈ {formatPrice(monthlyPayment, "XAF")} / mois</p>
+            )}
             
             {/* Tableau récapitulatif condensé */}
             <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-xl p-4 mb-6 text-left space-y-2 text-xs">
               <div className="flex justify-between text-gray-400">
                 <span>Montant du crédit :</span>
-                <span className="text-white font-semibold">{formatFCFA(Math.max(0, amount - downPayment))} FCFA</span>
+                <span className="text-white font-semibold">{formatPrice(Math.max(0, amount - downPayment))}</span>
               </div>
               <div className="flex justify-between text-gray-400">
                 <span>Nombre d'échéances :</span>
@@ -162,7 +175,7 @@ export default function ClientLoan() {
               </div>
               <div className="flex justify-between text-gray-400 border-t border-white/10 pt-2">
                 <span>Coût total estimé (hors assurance) :</span>
-                <span className="text-[#d4af37] font-bold">{formatFCFA(monthlyPayment * years * 12)} FCFA</span>
+                <span className="text-[#d4af37] font-bold">{formatPrice(monthlyPayment * years * 12)}</span>
               </div>
             </div>
 
