@@ -174,7 +174,17 @@ export default function Contact() {
       );
 
       if (error) {
-        throw new Error(error.message || "Erreur de connexion au serveur.");
+        let serverErrorMsg = error.message;
+        // Extraction du message d'erreur JSON précis retourné par Deno
+        if ("context" in error && (error as any).context?.json) {
+          try {
+            const body = await (error as any).context.json();
+            if (body?.error) serverErrorMsg = body.error;
+          } catch {
+            // Utilise error.message par défaut
+          }
+        }
+        throw new Error(serverErrorMsg);
       }
 
       if (data && data.error) {
