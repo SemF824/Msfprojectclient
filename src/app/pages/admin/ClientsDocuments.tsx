@@ -1,17 +1,18 @@
 // src/app/pages/admin/ClientsDocuments.tsx
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "../../../hooks/useSupabaseAuth";
+import { supabase, useSupabaseAuth } from "../../../hooks/useSupabaseAuth";
+import { decryptDocument } from "../../../utils/crypto/documentCrypto";
 import {
-  Search, FileText, CheckCircle, XCircle,
-  Trash2, AlertTriangle, ExternalLink, Loader2,
+  Search, CheckCircle,
+  Trash2, AlertTriangle, Loader2,
   Lock, RefreshCw, IdCard, Coins, Landmark, FolderOpen,
-  ShieldAlert, ChevronDown, ChevronUp, ZoomIn, Download, X
+  ChevronDown, ChevronUp, ZoomIn, Download, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const BUCKET  = "msf-private-docs";
-const TTL     = 120; // 2 minutes pour admin
+const TTL     = 120; // 2 minutes de fallback
 
 const isPdf   = (name: string) => /\.pdf$/i.test(name ?? "");
 const isImage = (name: string) => /\.(jpg|jpeg|png|gif|webp)$/i.test(name ?? "");
@@ -48,6 +49,8 @@ interface Document {
   storage_path: string;
   admin_comment?: string;
   user_id: string;
+  iv?: string;
+  signature?: string;
 }
 
 interface ClientGroup {
@@ -59,8 +62,8 @@ interface ClientGroup {
 
 interface ToastItem { id: string; type: "ok" | "err" | "warn"; text: string; }
 
-// ─────────────────────────────────────────────────────────────────────────────
 export default function ClientsDocuments() {
+  const { user } = useSupabaseAuth();
   const [clientGroups, setClientGroups] = useState<ClientGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -85,7 +88,6 @@ export default function ClientsDocuments() {
   // Preview
   const [previewDoc, setPreviewDoc] = useState<any>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [previewError, setPreviewError] = useState<string | null>(null);
 
   // ─── Chargement Global ──────────────────────────────────────────────────────
   const loadData = async () => {
@@ -117,7 +119,7 @@ export default function ClientsDocuments() {
       if (profilesError) throw profilesError;
 
       // 4. Grouper les documents par client
-      const groups: ClientGroup[] = profilesData.map(profile => ({
+      const groups: ClientGroup[] = (profilesData || []).map(profile => ({
         user_id: profile.id,
         email: profile.email || "Email inconnu",
         full_name: profile.full_name || "Client non nommé",
@@ -130,7 +132,7 @@ export default function ClientsDocuments() {
         const bPending = b.documents.some(d => d.status === 'en_attente');
         if (aPending && !bPending) return -1;
         if (!aPending && bPending) return 1;
-        return b.documents.length - a.documents.length; // Sinon par nb de docs
+        return b.documents.length - a.documents.length;
       });
 
       setClientGroups(groups);
@@ -155,26 +157,91 @@ export default function ClientsDocuments() {
   };
 
   const openSecure = async (doc: Document) => {
-    if (!supabase || !doc.storage_path) return;
+    if (!supabase || !doc.storage_path || !user) return;
     setLoadingSig(doc.id);
-    const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(doc.storage_path, TTL);
-    setLoadingSig(null);
 
-    if (error || !data?.signedUrl) {
-      addToast("err", `Accès refusé : ${error?.message}`);
-      return;
-    }
+    try {
+      // Si le document possède les métadonnées E2EE
+      if (doc.iv && doc.signature) {
+        // 1. Récupération de la clé d'accès enveloppée pour cet administrateur
+        const { data: accessKey, error: accErr } = await supabase
+          .from("document_access_keys")
+          .select("*")
+          .eq("document_id", doc.id)
+          .eq("recipient_id", user.id)
+          .single();
 
-    if (isPdf(doc.name)) {
-      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
-    } else if (isImage(doc.name)) {
-      setPreviewDoc(doc);
-      setPreviewUrl(data.signedUrl);
-    } else {
-      const link = document.createElement("a");
-      link.href = data.signedUrl;
-      link.download = doc.name;
-      link.click();
+        if (accErr || !accessKey) {
+          throw new Error("Clé d'accès E2EE introuvable pour ce document.");
+        }
+
+        // 2. Récupération de la clé publique de l'expéditeur
+        const { data: senderKey, error: sendErr } = await supabase
+          .from("user_public_keys")
+          .select("ecdsa_pub")
+          .eq("user_id", doc.user_id)
+          .single();
+
+        if (sendErr || !senderKey) {
+          throw new Error("Clé publique de signature introuvable.");
+        }
+
+        // 3. Téléchargement du binaire chiffré
+        const { data: blob, error: dlErr } = await supabase.storage
+          .from(BUCKET)
+          .download(doc.storage_path);
+
+        if (dlErr || !blob) throw dlErr;
+
+        // 4. Déchiffrement et vérification de la signature ECDSA
+        const { fileBlob, isValidSignature } = await decryptDocument(
+          blob,
+          doc.iv,
+          doc.signature,
+          senderKey.ecdsa_pub,
+          accessKey.encrypted_aes_key,
+          accessKey.ephemeral_pub
+        );
+
+        if (!isValidSignature) {
+          addToast("err", "ALERTE DE SÉCURITÉ : Signature du document invalide !");
+          return;
+        }
+
+        const url = URL.createObjectURL(fileBlob);
+        if (isPdf(doc.name)) {
+          window.open(url, "_blank", "noopener,noreferrer");
+        } else if (isImage(doc.name)) {
+          setPreviewDoc(doc);
+          setPreviewUrl(url);
+        } else {
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = doc.name;
+          link.click();
+        }
+      } else {
+        // Fallback pour anciens documents
+        const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(doc.storage_path, TTL);
+        if (error || !data?.signedUrl) throw error;
+
+        if (isPdf(doc.name)) {
+          window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+        } else if (isImage(doc.name)) {
+          setPreviewDoc(doc);
+          setPreviewUrl(data.signedUrl);
+        } else {
+          const link = document.createElement("a");
+          link.href = data.signedUrl;
+          link.download = doc.name;
+          link.click();
+        }
+      }
+    } catch (error: any) {
+      console.error("Erreur ouverture sécurisée :", error);
+      addToast("err", `Accès refusé : ${error?.message || "Erreur de déchiffrement"}`);
+    } finally {
+      setLoadingSig(null);
     }
   };
 
@@ -189,7 +256,6 @@ export default function ClientsDocuments() {
 
   const confirmReject = async () => {
     if (!supabase || !rejectDocId) return;
-    // Trouver le userId
     let uId = "";
     clientGroups.forEach(g => { if (g.documents.some(d => d.id === rejectDocId)) uId = g.user_id; });
 
@@ -233,7 +299,6 @@ export default function ClientsDocuments() {
     }));
   };
 
-  // ─── Filtrage ───────────────────────────────────────────────────────────────
   const filteredGroups = clientGroups.filter(g => 
     g.full_name.toLowerCase().includes(search.toLowerCase()) || 
     g.email.toLowerCase().includes(search.toLowerCase())
@@ -276,7 +341,7 @@ export default function ClientsDocuments() {
           </div>
           <div>
             <h1 className="text-3xl text-[#0a0f1e] font-bold">Vérification Documents</h1>
-            <p className="text-sm text-gray-500">Validez les pièces justificatives des clients.</p>
+            <p className="text-sm text-gray-500">Validez les pièces justificatives des clients avec déchiffrement E2EE.</p>
           </div>
         </div>
         <button onClick={loadData} className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50">
@@ -309,7 +374,7 @@ export default function ClientsDocuments() {
             return (
               <div key={group.user_id} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition-all">
                 
-                {/* En-tête Client (Cliquable) */}
+                {/* En-tête Client */}
                 <div 
                   onClick={() => toggleExpand(group.user_id)}
                   className="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
@@ -335,7 +400,7 @@ export default function ClientsDocuments() {
                   </div>
                 </div>
 
-                {/* Liste des documents du client */}
+                {/* Liste des documents */}
                 <AnimatePresence>
                   {isExpanded && (
                     <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-hidden">
@@ -364,7 +429,7 @@ export default function ClientsDocuments() {
                                     {doc.status === "en_attente" ? "En attente" : doc.status}
                                   </span>
 
-                                  <button onClick={() => openSecure(doc)} disabled={loadingSig === doc.id} className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors" title="Voir">
+                                  <button onClick={() => openSecure(doc)} disabled={loadingSig === doc.id} className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors" title="Voir / Déchiffrer">
                                     {loadingSig === doc.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ZoomIn className="w-4 h-4" />}
                                   </button>
                                   
@@ -382,7 +447,7 @@ export default function ClientsDocuments() {
                                 </div>
                               </div>
 
-                              {/* Reject Inline */}
+                              {/* Rejet avec motif */}
                               {showReject && (
                                 <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg flex gap-2">
                                   <input type="text" placeholder="Raison du rejet..." value={rejectReason} onChange={e => setRejectReason(e.target.value)} className="flex-1 px-3 py-1.5 text-sm border border-amber-200 rounded-md focus:outline-none focus:border-amber-400" />

@@ -1,22 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "../../../hooks/useSupabaseAuth";
-import { encryptAES, decryptAES } from "../../../utils/encryption";
 import { Conversation, EncryptedMessage } from "../../../types/database.types";
+import { encryptChatMessage, decryptChatMessage } from "../../../utils/crypto/messageCrypto";
+import { RecipientKeyData } from "../../../utils/crypto/documentCrypto";
 import {
   Send,
-  Lock,
   ShieldCheck,
   CheckCheck,
   Check,
-  Clock,
   User,
-  AlertCircle,
-  Archive,
-  ArchiveRestore,
   RefreshCw,
-  FolderLock,
+  Lock,
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
 
 interface EncryptedChatProps {
   conversation: Conversation;
@@ -59,19 +54,57 @@ export default function EncryptedChat({
         .neq("sender_id", currentUserId)
         .eq("is_read", false);
     } catch (err) {
-      console.error(
-        "Erreur lors de la mise à jour des accusés de lecture :",
-        err,
-      );
+      console.error("Erreur lors de la mise à jour des accusés de lecture :", err);
     }
   }, [conversation.id, currentUserId]);
+
+  const decryptMessageRow = async (
+    msg: any,
+    accessKeyMap: Record<string, any>,
+    publicKeysMap: Record<string, any>
+  ): Promise<EncryptedMessage> => {
+    const accessKey = accessKeyMap[msg.id];
+    const senderPubKey = publicKeysMap[msg.sender_id];
+
+    if (!msg.iv || !msg.signature || !accessKey || !senderPubKey) {
+      const { text } = await decryptChatMessage(msg.content_encrypted);
+      return {
+        ...msg,
+        decrypted_content: text,
+        is_verified: false,
+      };
+    }
+
+    try {
+      const { text, isValidSignature } = await decryptChatMessage(
+        msg.content_encrypted,
+        msg.iv,
+        msg.signature,
+        senderPubKey.ecdsa_pub,
+        accessKey.encrypted_aes_key,
+        accessKey.ephemeral_pub
+      );
+      return {
+        ...msg,
+        decrypted_content: text,
+        is_verified: isValidSignature,
+      };
+    } catch {
+      return {
+        ...msg,
+        decrypted_content: "[Impossible de déchiffrer ce message]",
+        is_verified: false,
+      };
+    }
+  };
 
   const fetchMessages = useCallback(async () => {
     if (!supabase || !conversation.id) return;
     setLoading(true);
     setError(null);
     try {
-      const { data, error: fetchErr } = await supabase
+      // 1. Récupération des messages
+      const { data: rawMessages, error: fetchErr } = await supabase
         .from("messages")
         .select("*")
         .eq("conversation_id", conversation.id)
@@ -79,34 +112,67 @@ export default function EncryptedChat({
 
       if (fetchErr) throw fetchErr;
 
-      const decryptedList: EncryptedMessage[] = (data || []).map((msg) => ({
-        ...msg,
-        decrypted_content: decryptAES(msg.content_encrypted),
-      }));
+      const messageList = rawMessages || [];
+      if (messageList.length === 0) {
+        setMessages([]);
+        setLoading(false);
+        return;
+      }
+
+      const messageIds = messageList.map((m) => m.id);
+      const senderIds = Array.from(new Set(messageList.map((m) => m.sender_id)));
+
+      // 2. Clés d'accès de l'utilisateur connecté
+      const { data: accessKeys } = await supabase
+        .from("message_access_keys")
+        .select("*")
+        .in("message_id", messageIds)
+        .eq("recipient_id", currentUserId);
+
+      const accessKeyMap: Record<string, any> = {};
+      (accessKeys || []).forEach((ak) => {
+        accessKeyMap[ak.message_id] = ak;
+      });
+
+      // 3. Clés publiques des expéditeurs
+      const { data: publicKeys } = await supabase
+        .from("user_public_keys")
+        .select("user_id, ecdsa_pub")
+        .in("user_id", senderIds);
+
+      const publicKeysMap: Record<string, any> = {};
+      (publicKeys || []).forEach((pk) => {
+        publicKeysMap[pk.user_id] = pk;
+      });
+
+      // 4. Déchiffrement local
+      const decryptedList = await Promise.all(
+        messageList.map((m) => decryptMessageRow(m, accessKeyMap, publicKeysMap))
+      );
 
       setMessages(decryptedList);
       setTimeout(() => scrollToBottom(false), 50);
       await markMessagesAsRead();
     } catch (err: unknown) {
       const message =
-        err instanceof Error
-          ? err.message
-          : "Erreur de chargement des messages.";
+        err instanceof Error ? err.message : "Erreur de chargement des messages.";
       console.error("Erreur chargement messages :", err);
       setError(message);
     } finally {
       setLoading(false);
     }
-  }, [conversation.id, markMessagesAsRead, scrollToBottom]);
+  }, [conversation.id, currentUserId, markMessagesAsRead, scrollToBottom]);
 
   useEffect(() => {
     fetchMessages();
   }, [fetchMessages]);
 
+  // Écoute des nouveaux messages Realtime
   useEffect(() => {
     if (!supabase || !conversation.id) return;
+    const client = supabase;
 
-    const channel = supabase
+    const channel = client
       .channel(`chat-conversation-${conversation.id}`)
       .on(
         "postgres_changes",
@@ -116,24 +182,39 @@ export default function EncryptedChat({
           table: "messages",
           filter: `conversation_id=eq.${conversation.id}`,
         },
-        (payload) => {
-          const newMsg = payload.new as EncryptedMessage;
-          const decryptedMsg: EncryptedMessage = {
-            ...newMsg,
-            decrypted_content: decryptAES(newMsg.content_encrypted),
-          };
+        async (payload) => {
+          const newMsg = payload.new as any;
+          if (newMsg.sender_id === currentUserId) return;
+
+          // Récupérer la clé d'accès et la clé publique de l'expéditeur
+          const [{ data: ak }, { data: pk }] = await Promise.all([
+            client
+              .from("message_access_keys")
+              .select("*")
+              .eq("message_id", newMsg.id)
+              .eq("recipient_id", currentUserId)
+              .maybeSingle(),
+            client
+              .from("user_public_keys")
+              .select("user_id, ecdsa_pub")
+              .eq("user_id", newMsg.sender_id)
+              .maybeSingle(),
+          ]);
+
+          const decrypted = await decryptMessageRow(
+            newMsg,
+            ak ? { [newMsg.id]: ak } : {},
+            pk ? { [pk.user_id]: pk } : {}
+          );
 
           setMessages((prev) => {
-            if (prev.some((m) => m.id === decryptedMsg.id)) return prev;
-            return [...prev, decryptedMsg];
+            if (prev.some((m) => m.id === decrypted.id)) return prev;
+            return [...prev, decrypted];
           });
 
-          if (newMsg.sender_id !== currentUserId) {
-            markMessagesAsRead();
-          }
-
+          markMessagesAsRead();
           setTimeout(() => scrollToBottom(true), 50);
-        },
+        }
       )
       .on(
         "postgres_changes",
@@ -148,24 +229,16 @@ export default function EncryptedChat({
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === updatedMsg.id
-                ? {
-                    ...msg,
-                    is_read: updatedMsg.is_read,
-                    decrypted_content:
-                      msg.decrypted_content ||
-                      decryptAES(updatedMsg.content_encrypted),
-                  }
-                : msg,
-            ),
+                ? { ...msg, is_read: updatedMsg.is_read }
+                : msg
+            )
           );
-        },
+        }
       )
       .subscribe();
 
     return () => {
-      if (supabase) {
-        supabase.removeChannel(channel);
-      }
+      client.removeChannel(channel);
     };
   }, [conversation.id, currentUserId, markMessagesAsRead, scrollToBottom]);
 
@@ -175,9 +248,7 @@ export default function EncryptedChat({
     if (!cleanText || sending || !supabase) return;
 
     if (conversation.status === "closed" || conversation.status === "archived") {
-      setError(
-        "Cette conversation est clôturée ou archivée. Vous ne pouvez pas envoyer de message.",
-      );
+      setError("Cette conversation est clôturée ou archivée.");
       return;
     }
 
@@ -185,21 +256,64 @@ export default function EncryptedChat({
     setError(null);
 
     try {
-      const encrypted = encryptAES(cleanText);
+      // 1. Détermination des destinataires (Client + Admins / Superadmins)
+      const recipientIds = new Set<string>([currentUserId, conversation.client_id]);
+      if (conversation.agent_id) recipientIds.add(conversation.agent_id);
 
-      const { data, error: insertErr } = await supabase
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .in("role", ["admin", "superadmin"]);
+
+      (adminRoles || []).forEach((r) => recipientIds.add(r.user_id));
+
+      const { data: keysData, error: keysErr } = await supabase
+        .from("user_public_keys")
+        .select("user_id, ecdh_pub")
+        .in("user_id", Array.from(recipientIds));
+
+      if (keysErr || !keysData || keysData.length === 0) {
+        throw new Error("Clés publiques des participants introuvables.");
+      }
+
+      const recipients: RecipientKeyData[] = keysData.map((k) => ({
+        recipientId: k.user_id,
+        ecdhPubJwk: k.ecdh_pub,
+      }));
+
+      // 2. Chiffrement E2EE & Signature ECDSA
+      const encrypted = await encryptChatMessage(cleanText, recipients);
+
+      // 3. Insertion du message
+      const { data: insertedMsg, error: insertErr } = await supabase
         .from("messages")
         .insert({
           conversation_id: conversation.id,
           sender_id: currentUserId,
           sender_role: currentUserRole,
-          content_encrypted: encrypted,
+          content_encrypted: encrypted.ciphertext,
+          iv: encrypted.iv,
+          signature: encrypted.signature,
           is_read: false,
         })
         .select()
         .single();
 
       if (insertErr) throw insertErr;
+
+      // 4. Insertion des clés d'accès par destinataire
+      const accessKeyRows = encrypted.accessKeys.map((ak) => ({
+        message_id: insertedMsg.id,
+        recipient_id: ak.recipientId,
+        encrypted_aes_key: ak.encryptedAesKey,
+        ephemeral_pub: ak.ephemeralPubKey,
+      }));
+
+      const { error: accessKeysInsertErr } = await supabase
+        .from("message_access_keys")
+        .insert(accessKeyRows);
+
+      if (accessKeysInsertErr) throw accessKeysInsertErr;
 
       await supabase
         .from("conversations")
@@ -208,22 +322,20 @@ export default function EncryptedChat({
 
       setInputText("");
 
-      if (data) {
-        const addedMsg: EncryptedMessage = {
-          ...data,
-          decrypted_content: cleanText,
-        };
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === addedMsg.id)) return prev;
-          return [...prev, addedMsg];
-        });
-        setTimeout(() => scrollToBottom(true), 50);
-      }
+      const addedMsg: EncryptedMessage = {
+        ...insertedMsg,
+        decrypted_content: cleanText,
+        is_verified: true,
+      };
+
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === addedMsg.id)) return prev;
+        return [...prev, addedMsg];
+      });
+      setTimeout(() => scrollToBottom(true), 50);
     } catch (err: unknown) {
       const msg =
-        err instanceof Error
-          ? err.message
-          : "Erreur lors de l'envoi du message.";
+        err instanceof Error ? err.message : "Erreur lors de l'envoi du message.";
       console.error("Erreur envoi message :", err);
       setError(msg);
     } finally {
@@ -243,267 +355,132 @@ export default function EncryptedChat({
     }
   };
 
-  const getRoleLabel = (role: string) => {
-    switch (role) {
-      case "client":
-        return "Client";
-      case "agent":
-        return "Conseiller MSF";
-      case "admin":
-        return "Administrateur";
-      case "superadmin":
-        return "Direction MSF";
-      default:
-        return "Interlocuteur";
-    }
-  };
-
   return (
-    <div className="flex flex-col h-full bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
-      {/* HEADER DU CHAT */}
-      <div className="bg-[#0a0f1e] text-white px-6 py-4 flex items-center justify-between border-b border-gray-800">
+    <div className="flex flex-col h-full bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+      {/* En-tête */}
+      <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 flex items-center justify-between bg-white">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] flex items-center justify-center text-[#0a0f1e] font-bold">
+          <div className="w-10 h-10 rounded-full bg-[#d4af37]/10 flex items-center justify-center text-[#d4af37] font-bold">
             <User className="w-5 h-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-white text-base">
+            <div className="flex items-center gap-1.5">
+              <h3 className="font-bold text-sm sm:text-base text-gray-900 leading-tight">
                 {partnerName}
               </h3>
-              <span
-                className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded-full tracking-wider ${
-                  conversation.status === "open"
-                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                    : conversation.status === "archived"
-                      ? "bg-purple-900/40 text-purple-300 border border-purple-500/30"
-                      : "bg-gray-700 text-gray-300 border border-gray-600"
-                }`}
-              >
-                {conversation.status === "open"
-                  ? "En cours"
-                  : conversation.status === "archived"
-                    ? "Archivé"
-                    : "Clôturé"}
+              <span title="Chiffrement E2EE & Signature ECC actifs" className="inline-flex items-center">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
               </span>
             </div>
-            <p className="text-xs text-gray-400 truncate max-w-xs md:max-w-md">
-              Sujet : {conversation.subject}
+            <p className="text-xs text-gray-500 font-medium truncate max-w-[200px] sm:max-w-xs">
+              {conversation.subject}
             </p>
           </div>
         </div>
 
-        {/* BADGE DE CHIFFREMENT ET ACTIONS */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-emerald-950/60 border border-emerald-500/40 rounded-full text-emerald-400 text-xs font-medium">
-            <Lock className="w-3.5 h-3.5" />
-            <span>AES-256 Chiffré</span>
-          </div>
-
-          {isStaff && onStatusChange && (
-            <div className="flex items-center gap-1.5">
-              {conversation.status === "archived" ? (
-                <button
-                  onClick={() => onStatusChange("open")}
-                  className="text-xs px-2.5 py-1.5 bg-purple-950/70 hover:bg-purple-900 text-purple-200 rounded-lg border border-purple-600 transition-colors flex items-center gap-1.5"
-                  title="Désarchiver et rouvrir le dossier"
-                >
-                  <ArchiveRestore className="w-3.5 h-3.5 text-purple-300" />
-                  <span className="hidden md:inline">Désarchiver</span>
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={() =>
-                      onStatusChange(
-                        conversation.status === "open" ? "closed" : "open",
-                      )
-                    }
-                    className="text-xs px-2.5 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg border border-gray-700 transition-colors flex items-center gap-1.5"
-                    title={
-                      conversation.status === "open"
-                        ? "Clôturer le fil"
-                        : "Rouvrir la conversation"
-                    }
-                  >
-                    <FolderLock className="w-3.5 h-3.5 text-[#d4af37]" />
-                    <span className="hidden md:inline">
-                      {conversation.status === "open" ? "Clôturer" : "Rouvrir"}
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => onStatusChange("archived")}
-                    className="text-xs px-2.5 py-1.5 bg-gray-800 hover:bg-purple-950/80 text-gray-200 hover:text-purple-200 rounded-lg border border-gray-700 hover:border-purple-600 transition-colors flex items-center gap-1.5"
-                    title="Archiver ce dossier traité"
-                  >
-                    <Archive className="w-3.5 h-3.5 text-purple-400" />
-                    <span className="hidden md:inline">Archiver</span>
-                  </button>
-                </>
-              )}
-            </div>
-          )}
-
-          <button
-            onClick={fetchMessages}
-            className="p-1.5 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors"
-            title="Rafraîchir les messages"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* BANNIÈRE D'INFORMATION DE SÉCURITÉ */}
-      <div className="bg-amber-50/80 border-b border-amber-200/60 px-4 py-2 flex items-center justify-between text-xs text-amber-900">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-[#d4af37] flex-shrink-0" />
-          <span>
-            Les échanges au sein de cette session sont chiffrés de bout en bout.
-            Aucun tiers ne peut lire vos données en clair.
-          </span>
+          {onStatusChange && isStaff && (
+            <button
+              onClick={() => onStatusChange(conversation.status === "closed" ? "open" : "closed")}
+              className="text-xs px-2.5 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 font-medium text-gray-600"
+            >
+              {conversation.status === "closed" ? "Rouvrir" : "Clôturer"}
+            </button>
+          )}
         </div>
       </div>
 
-      {/* ZONE CENTRALE DE DÉFILEMENT DES MESSAGES */}
-      <div className="flex-1 p-4 md:p-6 overflow-y-auto space-y-4 bg-gradient-to-b from-slate-50 to-gray-50 min-h-[350px]">
+      {error && (
+        <div className="p-2.5 bg-red-50 text-red-700 text-xs border-b border-red-100 text-center font-medium">
+          {error}
+        </div>
+      )}
+
+      {/* Zone des messages */}
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-gray-50/50">
         {loading ? (
-          <div className="h-full flex items-center justify-center">
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-8 h-8 border-3 border-[#d4af37] border-t-transparent rounded-full animate-spin" />
-              <span className="text-xs text-gray-500 font-medium">
-                Déchiffrement sécurisé en cours...
-              </span>
-            </div>
-          </div>
-        ) : error ? (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <span>{error}</span>
+          <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
+            <RefreshCw className="w-5 h-5 animate-spin text-[#d4af37]" />
+            <span className="text-xs">Déchiffrement des échanges...</span>
           </div>
         ) : messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-8 text-gray-400">
-            <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200/50 flex items-center justify-center mb-3">
-              <Lock className="w-8 h-8 text-[#d4af37]" />
-            </div>
-            <h4 className="text-base font-semibold text-[#0a0f1e] mb-1">
-              Canal de discussion privé ouvert
-            </h4>
-            <p className="text-xs text-gray-500 max-w-sm">
-              Initiez la conversation. Vos messages seront automatiquement
-              sécurisés et chiffrés avec la clé AES-256 de MSF CONGO.
+          <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
+            <Lock className="w-8 h-8 text-[#d4af37]" />
+            <p className="text-xs text-center font-medium">
+              Début de la conversation chiffrée de bout en bout.
             </p>
           </div>
         ) : (
-          <AnimatePresence initial={false}>
-            {messages.map((msg) => {
-              const isMe = msg.sender_id === currentUserId;
-              return (
-                <motion.div
-                  key={msg.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}
+          messages.map((msg) => {
+            const isMe = msg.sender_id === currentUserId;
+            return (
+              <div
+                key={msg.id}
+                className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}
+              >
+                <div
+                  className={`max-w-[85%] sm:max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm text-sm ${
+                    isMe
+                      ? "bg-[#0a0f1e] text-white rounded-br-none"
+                      : "bg-white text-gray-900 border border-gray-200 rounded-bl-none"
+                  }`}
                 >
+                  <p className="whitespace-pre-wrap break-words">
+                    {msg.decrypted_content}
+                  </p>
                   <div
-                    className={`text-[10px] mb-1 font-medium text-gray-500 flex items-center gap-1 ${
-                      isMe ? "pr-1" : "pl-1"
+                    className={`flex items-center justify-end gap-1 mt-1 text-[10px] ${
+                      isMe ? "text-gray-400" : "text-gray-400"
                     }`}
                   >
-                    <span>{isMe ? "Vous" : getRoleLabel(msg.sender_role)}</span>
-                    <span>•</span>
+                    {msg.is_verified && (
+                      <span className="flex items-center text-emerald-500 font-medium mr-1" title="Signature vérifiée">
+                        <ShieldCheck className="w-3 h-3 mr-0.5" /> Signé
+                      </span>
+                    )}
                     <span>{formatMessageTime(msg.created_at)}</span>
+                    {isMe && (
+                      msg.is_read ? (
+                        <CheckCheck className="w-3.5 h-3.5 text-[#d4af37]" />
+                      ) : (
+                        <Check className="w-3.5 h-3.5" />
+                      )
+                    )}
                   </div>
-
-                  <div
-                    className={`max-w-[80%] md:max-w-[70%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm relative group ${
-                      isMe
-                        ? "bg-[#0a0f1e] text-white rounded-br-none"
-                        : "bg-white text-gray-900 border border-gray-200 rounded-bl-none"
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap break-words">
-                      {msg.decrypted_content || "Message chiffré illisible"}
-                    </p>
-
-                    <div
-                      className={`flex items-center justify-end gap-1 mt-1 text-[10px] ${
-                        isMe ? "text-gray-400" : "text-gray-500"
-                      }`}
-                    >
-                      <Lock className="w-2.5 h-2.5 opacity-60" />
-                      {isMe && (
-                        <span>
-                          {msg.is_read ? (
-                            <CheckCheck className="w-3.5 h-3.5 text-emerald-400 inline" />
-                          ) : (
-                            <Check className="w-3.5 h-3.5 text-gray-400 inline" />
-                          )}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
+                </div>
+              </div>
+            );
+          })
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* ZONE DE SAISIE */}
-      <div className="p-4 bg-white border-t border-gray-200">
-        {conversation.status === "archived" ? (
-          <div className="p-3 bg-purple-50 border border-purple-200 rounded-xl text-center text-xs text-purple-800 font-medium flex items-center justify-center gap-2">
-            <Archive className="w-4 h-4 text-purple-600" />
-            <span>
-              Ce dossier est archivé. Restaurez-le pour réactiver l'envoi de messages.
-            </span>
-          </div>
-        ) : conversation.status === "closed" ? (
-          <div className="p-3 bg-gray-100 border border-gray-300 rounded-xl text-center text-xs text-gray-600 font-medium flex items-center justify-center gap-2">
-            <Clock className="w-4 h-4 text-gray-400" />
-            <span>
-              Cette conversation est clôturée. Rouvrez-la pour reprendre les échanges.
-            </span>
-          </div>
-        ) : (
-          <form onSubmit={handleSendMessage} className="flex items-end gap-2">
-            <div className="flex-1 relative">
-              <textarea
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-                placeholder="Écrivez votre message chiffré... (Entrée pour envoyer)"
-                rows={2}
-                disabled={sending}
-                className="w-full resize-none p-3 pr-10 text-sm text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-xl focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] focus:outline-none bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
-              />
-              <div
-                className="absolute right-3 bottom-3 text-gray-400"
-                title="Chiffrement matériel AES-256 actif"
-              >
-                <Lock className="w-4 h-4 text-emerald-600" />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={sending || !inputText.trim()}
-              className="p-3 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] font-bold rounded-xl hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Envoyer le message"
-            >
-              <Send className="w-5 h-5" />
-            </button>
-          </form>
-        )}
-      </div>
+      {/* Saisie */}
+      <form onSubmit={handleSendMessage} className="p-3 sm:p-4 bg-white border-t border-gray-100 flex items-center gap-2">
+        <input
+          type="text"
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          placeholder={
+            conversation.status === "closed"
+              ? "Cette conversation est clôturée."
+              : "Écrivez votre message chiffré..."
+          }
+          disabled={conversation.status === "closed" || sending}
+          className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#d4af37] disabled:opacity-50"
+        />
+        <button
+          type="submit"
+          disabled={!inputText.trim() || sending || conversation.status === "closed"}
+          className="bg-[#d4af37] hover:bg-[#c29f30] text-[#0a0f1e] font-bold p-2.5 rounded-xl disabled:opacity-40 transition-colors flex items-center justify-center"
+        >
+          {sending ? (
+            <RefreshCw className="w-5 h-5 animate-spin" />
+          ) : (
+            <Send className="w-5 h-5" />
+          )}
+        </button>
+      </form>
     </div>
   );
 }

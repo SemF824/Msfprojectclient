@@ -9,6 +9,7 @@ import {
 } from "@supabase/supabase-js";
 import * as Sentry from "@sentry/react";
 import { secureCookieStorage } from "../utils/cookieStorage";
+import { initializeUserKeys } from "../utils/crypto/e2ee";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as
@@ -89,6 +90,35 @@ if (typeof window !== "undefined") {
     }
   });
 }
+
+// Synchronise ou génère les clés cryptographiques E2EE (IndexedDB + Supabase public keys)
+const ensureUserE2EEKeys = async (userId: string) => {
+  if (!supabase) return;
+  try {
+    const keys = await initializeUserKeys();
+    if (!keys) return;
+
+    const { error } = await supabase
+      .from("user_public_keys")
+      .upsert(
+        {
+          user_id: userId,
+          ecdh_pub: keys.ecdhPubJwk,
+          ecdsa_pub: keys.ecdsaPubJwk,
+        },
+        { onConflict: "user_id" },
+      );
+
+    if (error) {
+      console.warn(
+        "[useSupabaseAuth] Erreur lors de l'enregistrement des clés publiques E2EE :",
+        error,
+      );
+    }
+  } catch (err) {
+    console.warn("[useSupabaseAuth] Exception lors de l'initialisation E2EE :", err);
+  }
+};
 
 interface UseSupabaseAuthReturn {
   user: User | null;
@@ -205,6 +235,7 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
           Sentry.setUser({ id: sessionUser.id, email: sessionUser.email });
           setupGlobalActivityListeners();
           resetInactivityTimer();
+          await ensureUserE2EEKeys(sessionUser.id);
         } else {
           if (isMounted) setUserRole(null);
           Sentry.setUser(null);
@@ -255,6 +286,7 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
           Sentry.setUser({ id: sessionUser.id, email: sessionUser.email });
           setupGlobalActivityListeners();
           resetInactivityTimer();
+          ensureUserE2EEKeys(sessionUser.id);
         } else {
           setUserRole(null);
           Sentry.setUser(null);
@@ -302,6 +334,7 @@ export function useSupabaseAuth(): UseSupabaseAuthReturn {
         const role = await resolveRole(data.user);
         setUserRole(role);
         Sentry.setUser({ id: data.user.id, email: data.user.email });
+        await ensureUserE2EEKeys(data.user.id);
       }
 
       return { data, error: null };

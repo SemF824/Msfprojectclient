@@ -1,136 +1,91 @@
-/**
- * MSF CONGO - Types TypeScript stricts pour les tables Supabase
- *
- * Schéma de la base de données :
- * - favorites : propriétés favorites des utilisateurs
- * - notifications : notifications système
- * - transactions : historique des transactions immobilières
- * - documents : documents liés aux transactions
- * - appointments : rendez-vous de visite
- * - devis_requests : demandes de devis client
- */
+// src/types/database.types.ts
+export type UserRole = "client" | "agent" | "admin" | "superadmin";
 
-// Table: favorites
-export interface Favorite {
-  id: string;
-  user_id: string;
-  property_id: string;
-  created_at: string;
-}
+export type PropertyCategory = "Villas" | "Appartements" | "Terrains" | "Commercial";
+export type PropertyStatus = "disponible" | "sous_offre" | "vendu" | "en_construction" | "bientot_disponible";
 
-// Table: notifications
-export interface Notification {
+export type ProjectStatus = "planning" | "in_progress" | "review" | "completed" | "on_hold";
+export type DocCategory = "identity" | "finance" | "land_title" | "other";
+export type DocStatus = "en_attente" | "approuve" | "rejete";
+
+export type DevisStatus = "nouveau" | "en_cours" | "traite" | "annule";
+export type DevisPriority = "basse" | "normale" | "haute" | "urgente";
+
+export interface Property {
   id: string;
-  user_id: string;
-  type: "info" | "success" | "payment" | "document" | "appointment" | "warning";
   title: string;
-  message: string;
-  read: boolean;
-  created_at: string;
-}
-
-// Table: transactions
-export interface Transaction {
-  id: string;
-  user_id: string;
-  property_id: string;
-  property_name: string;
-  transaction_type: "purchase" | "sale" | "rental" | "reservation";
-  amount: number;
-  status: "pending" | "completed" | "cancelled" | "in_progress";
-  date: string;
+  price: number;
+  location: string;
+  category: PropertyCategory;
+  type: string;
+  status: PropertyStatus;
+  surface: number;
+  bedrooms: number;
+  bathrooms: number;
+  features: string[];
+  description: string;
+  images: string[];
+  featured: boolean;
+  virtual_tour_url?: string;
   created_at: string;
   updated_at: string;
 }
 
-// ─── Catégories de documents sécurisés ───────────────────────────────────────
-export type DocCategory = "identity" | "finance" | "land_title" | "other";
-
-// Table: documents
 export interface Document {
   id: string;
   user_id: string;
-  transaction_id?: string;
   name: string;
-  type: string; // mime-type du fichier
-  url: string; // conservé pour rétrocompat (vide pour bucket privé)
-  storage_path: string; // chemin réel dans le bucket msf-private-docs
-  category: DocCategory; // catégorie sécurisée pour filtrage admin
-  size: number; // en bytes
-  status?: "en_attente" | "approuve" | "rejete";
-  admin_comment?: string | null;
-  uploaded_at: string;
+  type: string;
+  size: number;
+  url: string;
+  storage_path: string;
+  category: DocCategory;
+  status: DocStatus;
   created_at: string;
+  updated_at?: string;
+  admin_comment?: string;
+  iv?: string;
+  signature?: string;
 }
 
-// Table: appointments
-export interface Appointment {
+export interface ClientRequest {
+  id: string;
+  client_id: string;
+  type: string;
+  details: Record<string, any>;
+  status: "en_attente" | "traitee" | "rejetee";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Notification {
   id: string;
   user_id: string;
-  property_id: string;
-  property_name: string;
-  title?: string;
-  type: "visit" | "consultation" | "signature" | "visite";
-  date: string;
-  time: string;
-  appointment_date: string;
-  appointment_time: string;
-  location?: string;
-  status: "scheduled" | "confirmed" | "completed" | "cancelled" | "planifie";
-  agent_name?: string;
-  notes?: string;
+  title: string;
+  message: string;
+  read: boolean;
+  type: "info" | "warning" | "success" | "error";
   created_at: string;
-  updated_at: string;
-  cancel_url?: string;
-  reschedule_url?: string;
 }
 
-// Table: devis_requests
-export interface DevisRequest {
+export interface Project {
   id: string;
-  client_id?: string;
-  client_email: string;
-  client_first_name: string;
-  client_last_name: string;
-  client_phone: string;
-  property_id: string;
-  property_name: string;
-  property_price: number;
-  request_type: "achat" | "location" | "information";
-  status: "nouveau" | "en_cours" | "documents" | "approuve" | "rejete";
-  message?: string;
+  title: string;
+  description: string;
+  status: ProjectStatus;
+  progress: number;
+  client_id: string;
+  start_date: string;
+  end_date?: string;
+  budget?: number;
   created_at: string;
   updated_at: string;
 }
 
-// Statistiques pour le Dashboard
-export interface DashboardStats {
-  activeRequests: number;
-  favoriteProperties: number;
-  scheduledVisits: number;
-  documentsCount: number;
-}
+export type NotificationIcon = "info" | "success" | "payment" | "document" | "appointment" | "warning";
+export type TransactionStatus = "pending" | "completed" | "cancelled" | "in_progress";
+export type AppointmentStatus = "scheduled" | "confirmed" | "completed" | "cancelled";
 
-// Types d'aide pour l'UI
-export type NotificationIcon =
-  | "info"
-  | "success"
-  | "payment"
-  | "document"
-  | "appointment"
-  | "warning";
-export type TransactionStatus =
-  | "pending"
-  | "completed"
-  | "cancelled"
-  | "in_progress";
-export type AppointmentStatus =
-  | "scheduled"
-  | "confirmed"
-  | "completed"
-  | "cancelled";
-
-// ─── Module de Messagerie Sécurisée Chiffrée AES-256 ────────────────────────
 export interface Conversation {
   id: string;
   client_id: string;
@@ -139,7 +94,6 @@ export interface Conversation {
   status: "open" | "closed" | "archived";
   created_at: string;
   updated_at: string;
-  // Métadonnées d'affichage optionnelles
   client_name?: string;
   client_email?: string;
   agent_name?: string;
@@ -154,8 +108,36 @@ export interface EncryptedMessage {
   sender_id: string;
   sender_role: "client" | "agent" | "admin" | "superadmin";
   content_encrypted: string;
+  iv?: string | null;
+  signature?: string | null;
   is_read: boolean;
   created_at: string;
-  // Attribut calculé en mémoire après déchiffrement
   decrypted_content?: string;
+  is_verified?: boolean;
+}
+
+// ─── Tables E2EE ─────────────────────────────────────────────────────────────
+export interface UserPublicKey {
+  user_id: string;
+  ecdh_pub: JsonWebKey;
+  ecdsa_pub: JsonWebKey;
+  created_at: string;
+}
+
+export interface DocumentAccessKey {
+  id: string;
+  document_id: string;
+  recipient_id: string;
+  encrypted_aes_key: string;
+  ephemeral_pub: JsonWebKey;
+  created_at: string;
+}
+
+export interface MessageAccessKey {
+  id: string;
+  message_id: string;
+  recipient_id: string;
+  encrypted_aes_key: string;
+  ephemeral_pub: JsonWebKey;
+  created_at: string;
 }

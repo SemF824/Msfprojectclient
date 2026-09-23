@@ -1,3 +1,4 @@
+// src/app/pages/ClientDocuments.tsx
 import { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import {
@@ -9,12 +10,14 @@ import {
   Coins,
   Landmark,
   FolderOpen,
+  Download,
 } from "lucide-react";
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 import { EmptyState } from "../components/EmptyState";
 import Breadcrumb from "../components/Breadcrumb";
 import { toast } from "sonner";
 import type { Document, DocCategory } from "../../types/database.types";
+import { processDocumentForUpload, decryptDocument, type RecipientKeyData } from "../../utils/crypto/documentCrypto";
 
 const BUCKET = "msf-private-docs";
 const MAX_SIZE_MB = 10;
@@ -89,16 +92,11 @@ export default function ClientDocuments() {
   const handleFileUpload = async (file: File) => {
     if (!authUser || !supabase) return;
 
-    // Validations de taille
     if (isPdf(file.name) && file.size > PDF_MAX_MB * 1_048_576) {
       toast.error(`Ce document PDF est trop lourd (Maximum ${PDF_MAX_MB} Mo).`);
       return;
     }
-    if (
-      !isImage(file.name) &&
-      !isPdf(file.name) &&
-      file.size > MAX_SIZE_MB * 1_048_576
-    ) {
+    if (!isImage(file.name) && !isPdf(file.name) && file.size > MAX_SIZE_MB * 1_048_576) {
       toast.error(`Fichier trop volumineux (Maximum ${MAX_SIZE_MB} Mo).`);
       return;
     }
@@ -107,19 +105,66 @@ export default function ClientDocuments() {
     setUploadProgress(10);
 
     try {
+      // 1. Récupération de la clé E2EE de l'utilisateur
+      const { data: clientKey, error: clientKeyErr } = await supabase
+        .from("user_public_keys")
+        .select("ecdh_pub")
+        .eq("user_id", authUser.id)
+        .single();
+
+      if (clientKeyErr || !clientKey) {
+        throw new Error("Vos clés E2EE ne sont pas initialisées. Vous ne pouvez pas chiffrer ce document.");
+      }
+
+      setUploadProgress(20);
+
+      // 2. Récupération des administrateurs pour partager l'accès de façon ciblée
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .in("role", ["admin", "superadmin"]);
+
+      const adminIds = adminRoles ? adminRoles.map(r => r.user_id) : [];
+      let adminKeys: { user_id: string; ecdh_pub: any }[] = [];
+      
+      if (adminIds.length > 0) {
+        const { data: keys } = await supabase
+          .from("user_public_keys")
+          .select("user_id, ecdh_pub")
+          .in("user_id", adminIds);
+        if (keys) adminKeys = keys;
+      }
+
+      // 3. Constitution du pool des destinataires
+      const recipients: RecipientKeyData[] = [
+        { recipientId: authUser.id, ecdhPubJwk: clientKey.ecdh_pub }
+      ];
+
+      adminKeys.forEach(k => {
+        if (k.user_id !== authUser.id) {
+          recipients.push({ recipientId: k.user_id, ecdhPubJwk: k.ecdh_pub });
+        }
+      });
+
+      setUploadProgress(30);
+
+      // 4. Chiffrement local via Web Crypto API E2EE
+      const encrypted = await processDocumentForUpload(file, recipients);
+      setUploadProgress(60);
+
+      // 5. Upload Storage Bucket du BLOB chiffré
       const fname = safeFilename(file.name);
       const storagePath = `${authUser.id}/${docCategory}/${Date.now()}_${fname}`;
 
-      // 1. Upload Storage Bucket
       const { data: stored, error: storeErr } = await supabase.storage
         .from(BUCKET)
-        .upload(storagePath, file, { upsert: false, contentType: file.type });
+        .upload(storagePath, encrypted.ciphertextBlob, { upsert: false, contentType: "application/octet-stream" });
 
       if (storeErr) throw storeErr;
-      setUploadProgress(60);
+      setUploadProgress(75);
 
-      // 2. Indexation en base de données
-      const { error: dbErr } = await supabase.from("documents").insert({
+      // 6. Indexation en base de données avec vecteur d'initialisation et signature
+      const { data: newDoc, error: dbErr } = await supabase.from("documents").insert({
         user_id: authUser.id,
         name: file.name,
         type: file.type,
@@ -128,12 +173,26 @@ export default function ClientDocuments() {
         storage_path: stored.path,
         category: docCategory,
         status: "en_attente",
-      });
+        iv: encrypted.iv,
+        signature: encrypted.signature
+      }).select("id").single();
 
       if (dbErr) throw dbErr;
+      setUploadProgress(90);
+
+      // 7. Distribution des clés AES encapsulées à chaque destinataire
+      const accessKeysRows = encrypted.accessKeys.map(ak => ({
+        document_id: newDoc.id,
+        recipient_id: ak.recipientId,
+        encrypted_aes_key: ak.encryptedAesKey,
+        ephemeral_pub: ak.ephemeralPubKey
+      }));
+
+      const { error: keysErr } = await supabase.from("document_access_keys").insert(accessKeysRows);
+      if (keysErr) throw keysErr;
 
       setUploadProgress(100);
-      toast.success(`"${file.name}" a été archivé et sécurisé avec succès.`);
+      toast.success(`"${file.name}" a été chiffré, archivé et sécurisé avec succès.`);
       await fetchDocuments(true);
 
       setTimeout(() => {
@@ -142,9 +201,78 @@ export default function ClientDocuments() {
       }, 1000);
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.message || "Échec du téléversement du document.");
+      toast.error(err?.message || "Échec du chiffrement ou du téléversement du document.");
       setIsUploading(false);
       setUploadProgress(0);
+    }
+  };
+
+  const handleDownload = async (doc: Document) => {
+    if (!authUser || !supabase) return;
+    
+    if (!doc.iv || !doc.signature) {
+      toast.error("Ce document n'a pas été chiffré par le protocole E2EE ou est corrompu.");
+      return;
+    }
+
+    const toastId = toast.loading("Déchiffrement cryptographique en cours...");
+
+    try {
+      // 1. Récupérer la clé d'accès (AES enveloppée) du document pour cet utilisateur
+      const { data: accessKey, error: accessErr } = await supabase
+        .from("document_access_keys")
+        .select("*")
+        .eq("document_id", doc.id)
+        .eq("recipient_id", authUser.id)
+        .single();
+        
+      if (accessErr || !accessKey) throw new Error("Clé d'accès introuvable. Vous n'avez pas l'autorisation.");
+
+      // 2. Récupérer la clé publique ECDSA de l'expéditeur d'origine
+      const { data: senderKeys, error: senderErr } = await supabase
+        .from("user_public_keys")
+        .select("ecdsa_pub")
+        .eq("user_id", doc.user_id)
+        .single();
+        
+      if (senderErr || !senderKeys) throw new Error("Clé publique de l'expéditeur introuvable.");
+
+      // 3. Télécharger le binaire brut chiffré (Ciphertext)
+      const { data: blob, error: downloadErr } = await supabase.storage
+        .from(BUCKET)
+        .download(doc.storage_path);
+        
+      if (downloadErr || !blob) throw new Error("Erreur de téléchargement depuis le stockage privé.");
+
+      // 4. Déchiffrement et vérification de la signature ECDSA
+      const { fileBlob, isValidSignature } = await decryptDocument(
+        blob,
+        doc.iv,
+        doc.signature,
+        senderKeys.ecdsa_pub,
+        accessKey.encrypted_aes_key,
+        accessKey.ephemeral_pub
+      );
+
+      if (!isValidSignature) {
+        toast.error("ALERTE DE SÉCURITÉ : La signature du document est invalide ! Le fichier a été altéré.", { id: toastId });
+        return;
+      }
+
+      // 5. Restitution du fichier déchiffré à l'utilisateur
+      const url = URL.createObjectURL(fileBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = doc.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success("Document vérifié et déchiffré avec succès.", { id: toastId });
+    } catch (err: any) {
+      console.error("Échec de déchiffrement:", err);
+      toast.error(err.message || "Échec de l'accès au document.", { id: toastId });
     }
   };
 
@@ -176,7 +304,7 @@ export default function ClientDocuments() {
           Documents Sécurisés
         </h1>
         <p className="text-gray-500 text-xs sm:text-sm">
-          Stockez et gérez vos justificatifs en toute confidentialité.
+          Stockez et gérez vos justificatifs en toute confidentialité avec chiffrement de bout en bout (E2EE).
         </p>
       </div>
 
@@ -249,7 +377,7 @@ export default function ClientDocuments() {
                 <div className="flex flex-col items-center py-4 w-full">
                   <Loader2 className="w-8 h-8 text-[#d4af37] animate-spin mb-3" />
                   <p className="text-xs font-bold text-[#d4af37] mb-2">
-                    Téléversement en cours... {uploadProgress}%
+                    Chiffrement & Transfert... {uploadProgress}%
                   </p>
                   <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
                     <div
@@ -293,7 +421,7 @@ export default function ClientDocuments() {
         >
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6">
             <h2 className="text-base sm:text-lg font-bold mb-4 sm:mb-6">
-              Mes Archives
+              Mes Archives Sécurisées
             </h2>
             {isDataLoading ? (
               <div className="py-12 flex flex-col items-center justify-center gap-2 text-gray-400">
@@ -345,6 +473,13 @@ export default function ClientDocuments() {
                             ? "Rejeté"
                             : "En attente"}
                       </span>
+                      <button
+                        onClick={() => handleDownload(doc)}
+                        className="p-1.5 text-gray-400 hover:text-[#d4af37] hover:bg-[#d4af37]/10 rounded-lg transition-colors flex-shrink-0"
+                        title="Déchiffrer et télécharger"
+                      >
+                        <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </button>
                     </div>
                   </div>
                 ))}
