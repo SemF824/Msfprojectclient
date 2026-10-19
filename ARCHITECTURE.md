@@ -1,406 +1,195 @@
-# MSF CONGO - Architecture Séparée Client/Admin
+# 🏗️ MSF CONGO - Architecture Système & Sécurité E2EE
 
-## 📋 Vue d'Ensemble
+## 📋 Vue d'Ensemble du Système
 
-Ce projet MSF Congo est composé de **DEUX applications distinctes** qui partagent la même base de données Supabase :
+La plateforme **MSF Congo** est construite sur une architecture bi-application unifiée partageant la même codebase et la même base de données Supabase, avec une isolation stricte des rôles et du chiffrement de bout en bout (E2EE) :
 
-### 🌐 **CLIENT APP** - Site Public
-- **URL Production** : `https://msfcongo.com` ou `https://www.msfcongo.com`
+### 🌐 **CLIENT APP** - Interface Publique & Espace Client
+- **URL Production** : `https://msfcongo.com` / `https://www.msfcongo.com`
 - **URL Dev** : `http://localhost:5173/`
-- **Public** : Visiteurs, clients, prospects
-- **Fonctionnalités** :
-  - Catalogue de propriétés
-  - Demande de devis en ligne
-  - Espace client (profil, favoris, transactions)
-  - Notifications
+- **Public & Utilisateurs** : Prospects, acheteurs, investisseurs
+- **Fonctionnalités Principales** :
+  - Catalogue interactif des biens et programmes côtiers
+  - Moteur de calcul et demande de devis personnalisés
+  - Messagerie chiffrée de bout en bout (E2EE) avec les agents
+  - Coffre-fort documentaire chiffré (CNI, contrats, promesses de vente)
+  - Prise de rendez-vous en ligne (Calendly)
+  - Suivi des demandes, simulations de prêts et historique financier
+  - Multi-devises dynamique (XAF / EUR / USD)
 
-### 🔧 **ADMIN APP** - BackOffice
+### 🔧 **ADMIN APP** - Backoffice d'Administration & Gestion
 - **URL Production** : `https://admin.msfcongo.com`
-- **URL Dev** : `http://localhost:5173/?admin=true`
-- **Restreint** : Personnel MSF Congo uniquement
-- **Fonctionnalités** :
-  - Dashboard analytique
-  - Gestion demandes de devis
-  - Validation documents
-  - Base clients
-  - Statistiques ventes
+- **URL Dev** : `http://localhost:5173/?admin=true` ou `http://localhost:5173/admin`
+- **Accès Restreint** : Personnel habilité (`agent`, `admin`, `superadmin`)
+- **Fonctionnalités Principales** :
+  - Dashboard analytique & suivi du chiffre d'affaires
+  - Traitement et déchiffrement sécurisé des demandes de devis
+  - Messagerie E2EE d'entreprise avec les clients
+  - Validation et audit des documents clients uploadés
+  - Gestion du catalogue immobilier (prix, photos, caractéristiques)
+  - Gestion des utilisateurs, des agents et attribution des rôles
+  - Statistiques de conversion et exportations de données
 
 ---
 
-## 🏗️ Structure du Projet
+## 🏛️ Structure du Codebase
 
 ```
 📁 /src
 ├── 📱 /app
-│   ├── App.tsx                      ⚡ Point d'entrée (détecte quelle app charger)
-│   ├── ClientApp.tsx                🌐 Application CLIENT (routes publiques)
-│   ├── AdminApp.tsx                 🔧 Application ADMIN (routes admin)
+│   ├── App.tsx                      ⚡ Point d'entrée (détection de sous-domaine / URL)
+│   ├── ClientAppRoutes.tsx          🌐 Routage de l'Application Client (27 pages)
+│   ├── AdminAppRoutes.tsx           🔧 Routage du Backoffice Admin (12 pages)
 │   │
-│   ├── 📁 /components
-│   │   ├── Layout.tsx               🌐 Layout CLIENT
-│   │   ├── AdminLayout.tsx          🔧 Layout ADMIN
-│   │   ├── Header.tsx               🌐 Header CLIENT
-│   │   └── Footer.tsx               🌐 Footer CLIENT
+│   ├── 📁 /components               🧩 Composants partagés & métier
+│   │   ├── Header.tsx               🌐 En-tête Client & sélecteur de devises
+│   │   ├── Footer.tsx               🌐 Pied de page & informations légales
+│   │   ├── Layout.tsx               🌐 Layout global Client
+│   │   ├── AdminLayout.tsx          🔧 Layout du Backoffice Admin
+│   │   ├── ProtectedRoute.tsx       🔒 Protection authentification Client
+│   │   ├── ProtectedAdminRoute.tsx  🔒 Protection accès Admin/Agent
+│   │   ├── SuperAdminGuard.tsx      🔒 Protection accès réservé SuperAdmin
+│   │   ├── CookieConsent.tsx        🍪 Gestion du consentement RGPD
+│   │   ├── CurrencySelector.tsx     💵 Composant de conversion XAF/EUR/USD
+│   │   └── 📁 /ui
+│   │       ├── EncryptedChat.tsx    💬 Interface de messagerie E2EE en temps réel
+│   │       └── PhoneInput.tsx       📞 Champ téléphone international (libphonenumber-js)
 │   │
-│   ├── 📁 /pages
-│   │   ├── Home.tsx                 🌐 Page d'accueil CLIENT
-│   │   ├── PropertyDetails.tsx     🌐 Détails propriété CLIENT
-│   │   ├── DevisRequest.tsx        🌐 Formulaire devis CLIENT
-│   │   ├── Dashboard.tsx            🌐 Dashboard utilisateur CLIENT
-│   │   ├── Profile.tsx              🌐 Profil CLIENT
-│   │   ├── ... (autres pages client)
-│   │   │
-│   │   └── 📁 /admin
-│   │       ├── AdminLogin.tsx       🔧 Connexion ADMIN
-│   │       ├── AdminDashboard.tsx   🔧 Dashboard ADMIN
-│   │       ├── DemandesManagement.tsx 🔧 Liste demandes ADMIN
-│   │       └── DemandeDetail.tsx    🔧 Détail demande ADMIN
-│   │
-│   └── routes.tsx                   ❌ DEPRECATED (remplacé par ClientApp/AdminApp)
+│   └── 📁 /pages                   📄 Pages applicatives (Client & Admin)
+│       ├── Home.tsx, DevisRequest.tsx, Properties.tsx, ...
+│       └── 📁 /admin                📄 Pages du Backoffice
+│           ├── AdminDashboard.tsx, DemandesManagement.tsx, ...
 │
-├── 📁 /config
-│   └── supabase.config.ts           🔗 Configuration PARTAGÉE Supabase
+├── 📁 /utils
+│   ├── 📁 /crypto                   🔐 Modules de Cybersécurité E2EE
+│   │   ├── e2ee.ts                  🔑 Initialisation & export des clés WebCrypto JWK
+│   │   ├── keyStore.ts              💾 Stockage IndexedDB des clés privées
+│   │   ├── messageCrypto.ts         💬 Chiffrement/Déchiffrement hybride des chats
+│   │   └── documentCrypto.ts        📄 Chiffrement/Déchiffrement hybride des fichiers
+│   ├── devisEncryption.ts           🔒 Chiffrement AES-256 des devis au repos
+│   ├── encryption.ts                🔐 Utilitaires CryptoJS
+│   ├── currency.ts                  💵 Utilitaires de conversion monétaire
+│   └── phone.ts                     📞 Formatage & validation des numéros
 │
-└── 📁 /utils
-    └── /supabase
-        └── info.tsx                 🔗 Identifiants Supabase (partagés)
+├── 📁 /context                      🔄 Contextes React
+│   └── CurrencyContext.tsx          💵 Gestion centralisée de la devise (XAF/EUR/USD)
+│
+├── 📁 /hooks                        🪝 Hooks React personnalisés
+│   ├── useSupabaseAuth.ts           🔑 Gestion de la session et des rôles
+│   ├── useClientRequests.ts         📩 Gestion des demandes de devis
+│   ├── useNotifications.ts          🔔 Centre de notifications
+│   └── useSEO.ts                    🔍 Optimisation du référencement
+│
+└── 📁 /config
+    └── supabase.config.ts           🔗 Helper de connexion Supabase
+
+📁 /supabase
+├── 📁 /functions                    ⚡ Supabase Edge Functions (Deno/Hono)
+│   ├── 📁 /calendly-webhook         📅 Webhook de synchronisation Calendly
+│   ├── 📁 /submit-contact           📬 Traitement sécurisé du formulaire contact + reCAPTCHA
+│   └── 📁 /server                   🌐 API Hono avec Key-Value Store
+└── config.toml                      ⚙️ Configuration local Supabase CLI
+
+📁 /dataconnect                      📊 Firebase DataConnect (Schéma GraphQL)
+├── schema/schema.gql                📜 Définition des types et entités
+└── dataconnect.yaml                 ⚙️ Configuration DataConnect
 ```
 
 ---
 
-## 🔄 Flux de Routing
+## 🔐 Architecture de Cybersécurité E2EE
 
-### App.tsx (Point d'Entrée)
+Le système intègre un modèle cryptographique hybride avancé reposant sur l'API native `window.crypto.subtle` (WebCrypto) :
 
-```typescript
-// Détection automatique de l'application
-if (hostname.startsWith('admin.')) {
-  // Charger ADMIN APP
-  return <AdminApp />;
-} else {
-  // Charger CLIENT APP
-  return <ClientApp />;
-}
+```
+[ Expéditeur ]                                                   [ Destinataire ]
+      │                                                                 │
+  Génère clé symétrique AES-256 (GCM)                                   │
+      │                                                                 │
+  Chiffre le message / document ➔ Ciphertext                             │
+      │                                                                 │
+  Signe le Ciphertext avec sa clé privée ECDSA (SHA-256)                 │
+      │                                                                 │
+  Pour chaque destinataire :                                            │
+  ├─ Récupère sa clé publique ECDH (P-256)                              │
+  ├─ Génère paire éphémère ECDH                                         │
+  ├─ Dérive clé de déballage (AES-KW 256)                               │
+  └─ Enveloppe la clé AES ➔ WrappedAesKey                               │
+      │                                                                 │
+      └──────────────── Envoi via Supabase ─────────────────────────────┘
+                                                                        │
+                                                 Récupère sa clé privée ECDH (IndexedDB)
+                                                                        │
+                                                 Déballe la clé AES via ECDH éphémère
+                                                                        │
+                                                 Vérifie la signature ECDSA de l'expéditeur
+                                                                        │
+                                                 Déchiffre le Ciphertext en clair
 ```
 
-### En Développement Local
-
-| URL | Application Chargée |
-|-----|---------------------|
-| `http://localhost:5173/` | 🌐 CLIENT APP |
-| `http://localhost:5173/?admin=true` | 🔧 ADMIN APP |
-
-### En Production
-
-| Domaine | Application Chargée |
-|---------|---------------------|
-| `msfcongo.com` | 🌐 CLIENT APP |
-| `www.msfcongo.com` | 🌐 CLIENT APP |
-| `admin.msfcongo.com` | 🔧 ADMIN APP |
+### Protocoles & Formats
+- **Échange de clés** : ECDH avec courbe elliptique `P-256`.
+- **Signature numérique** : ECDSA (`P-256` avec Hash `SHA-256`) garantissant l'impossibilité d'usurpation d'identité ou d'altération de message.
+- **Chiffrement de contenu** : `AES-GCM` 256 bits avec IV de 96 bits généré aléatoirement.
+- **Stockage local des clés** : IndexedDB (`keyStore.ts`) avec paires de clés définies en `extractable: false` pour interdire toute extraction malveillante de la clé privée hors de l'appareil.
 
 ---
 
-## 🗄️ Base de Données Partagée
+## 🗄️ Modèle de Données & RLS (Row Level Security)
 
-Les deux applications utilisent **la même instance Supabase** :
+### Tables Principalement Exploitees
 
-### Tables Communes
-
-| Table | Utilisée par | Description |
-|-------|--------------|-------------|
-| `devis_requests` | CLIENT + ADMIN | Demandes de devis |
-| `users` | CLIENT + ADMIN | Utilisateurs (clients + admins) |
-| `kv_store_3c1961a2` | CLIENT + ADMIN | Propriétés (KV store) |
-| `documents` | CLIENT + ADMIN | Documents uploadés |
-| `transactions` | CLIENT + ADMIN | Historique transactions |
-| `admin_notes` | ADMIN uniquement | Notes internes |
-| `timeline_events` | ADMIN uniquement | Historique événements |
-
-### Permissions (RLS - Row Level Security)
-
-```sql
--- CLIENT : Peut voir/modifier UNIQUEMENT ses propres données
-CREATE POLICY "client_own_data" ON devis_requests
-  FOR SELECT USING (auth.uid() = client_id);
-
--- ADMIN : Peut voir/modifier TOUTES les données
-CREATE POLICY "admin_all_data" ON devis_requests
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE id = auth.uid() 
-      AND role IN ('admin', 'agent', 'superadmin')
-    )
-  );
-```
-
-### Buckets de Stockage
-
-| Bucket | Utilisé par | Contenu |
-|--------|-------------|---------|
-| `make-3c1961a2-documents` | CLIENT + ADMIN | CNI, justificatifs, etc. |
-| `make-3c1961a2-properties` | ADMIN | Photos propriétés |
-| `make-3c1961a2-avatars` | CLIENT | Photos de profil |
+| Table | Rôles & Accès | Description & Rôle Métier |
+|-------|---------------|---------------------------|
+| `users` | All (Lecture/Écriture propre) | Profils utilisateurs, rôle (`client`, `agent`, `admin`, `superadmin`), infos de contact |
+| `user_keys` | All (Lecture publique / Écriture propre) | Clés publiques JWK (ECDH & ECDSA) nécessaires à l'établissement du canal E2EE |
+| `devis_requests` | Client (Propre) / Admin (Global) | Demandes de devis chiffrées en AES-256 au repos (`devisEncryption.ts`) |
+| `chat_messages` | Destinataires autorisés (E2EE) | Messages chiffrés de bout en bout avec clés d'accès (`accessKeys`) |
+| `documents` | Client (Propre) / Admin (Audit) | Fichiers chiffrés en Storage Supabase avec métadonnées d'accès E2EE |
+| `transactions` | Client (Propre) / Admin (Comptabilité) | Historique financier et reçus de règlement |
+| `admin_notes` | Admin / Agent | Notes confidentielles internes sur les dossiers clients |
+| `timeline_events` | Admin / Client (Rétreint) | Journal d'audit et d'évolution des demandes |
 
 ---
 
-## 🚀 Déploiement
+## ⚡ Supabase Edge Functions & Integrations
 
-### Option 1 : Déploiement Simple (Même Serveur)
+1. **`calendly-webhook`** :
+   - Écoute les événements de prise de RDV Calendly.
+   - Crée ou met à jour automatiquement les enregistrements dans la table `appointments` de Supabase.
 
-Déployer les deux apps sur le même serveur avec détection par sous-domaine.
+2. **`submit-contact`** :
+   - Reçoit le formulaire de contact public.
+   - Vérifie le jeton **Google reCAPTCHA v3** auprès des serveurs Google.
+   - Valide les données, applique un nettoyage strict et notifie l'équipe commerciale MSF.
 
-**Configuration Nginx :**
-```nginx
-# CLIENT APP
-server {
-    server_name msfcongo.com www.msfcongo.com;
-    root /var/www/msfcongo/client;
-    # Servir index.html qui charge ClientApp
-}
-
-# ADMIN APP
-server {
-    server_name admin.msfcongo.com;
-    root /var/www/msfcongo/admin;
-    # Servir index.html qui charge AdminApp
-}
-```
-
-### Option 2 : Déploiement Séparé (Recommandé)
-
-Créer **deux projets de build distincts**.
-
-#### Build CLIENT
-```bash
-# Dans package.json, créer un script
-"build:client": "vite build --mode client"
-
-# Fichier .env.client
-VITE_APP_TYPE=client
-```
-
-#### Build ADMIN
-```bash
-# Dans package.json, créer un script
-"build:admin": "vite build --mode admin"
-
-# Fichier .env.admin
-VITE_APP_TYPE=admin
-```
-
-Modifier `App.tsx` pour lire la variable d'environnement :
-```typescript
-const appType = import.meta.env.VITE_APP_TYPE || 'client';
-```
-
-### Déploiement sur Vercel/Netlify
-
-#### CLIENT APP
-- **Repository** : `msfcongo-client`
-- **Build Command** : `npm run build:client`
-- **Domain** : `msfcongo.com`
-
-#### ADMIN APP
-- **Repository** : `msfcongo-admin`
-- **Build Command** : `npm run build:admin`
-- **Domain** : `admin.msfcongo.com`
+3. **`server` (API Hono/Deno)** :
+   - Offre des endpoints légers ultra-rapides et un Key-Value Store de secours.
 
 ---
 
-## 🔐 Sécurité
+## 🌐 Multi-Devises & Internationalisation
 
-### CLIENT APP
-- ✅ Authentification Supabase (email/password)
-- ✅ RLS : Utilisateur voit uniquement ses données
-- ✅ Pas d'accès aux notes admin
-- ✅ Pas d'accès aux autres clients
-
-### ADMIN APP
-- ✅ Authentification renforcée (2FA recommandé)
-- ✅ Vérification rôle admin dans Supabase
-- ✅ Accès à TOUTES les demandes
-- ✅ Validation documents
-- ✅ Notes internes
-- ✅ Logs d'activité
-
-### Protection Routes Admin (À Implémenter)
-
-```typescript
-// Dans AdminApp.tsx
-const ProtectedRoute = ({ children }) => {
-  const { user } = useSupabaseAuth();
-  
-  if (!user || user.role !== 'admin') {
-    return <Navigate to="/login" />;
-  }
-  
-  return children;
-};
-```
+La plateforme gère nativement le marché immobilier international avec le franc CFA (XAF) comme devise de référence :
+- **Taux de conversion dynamiques** : XAF ➔ EUR (1 EUR = 655.957 XAF) & XAF ➔ USD.
+- **Contexte React Centralisé** : `CurrencyContext.tsx` permettant un basculement instantané dans toute l'interface.
+- **Formatage Téléphonique** : Composant `PhoneInput.tsx` adossé à `libphonenumber-js` pour la prise en charge des indicatifs internationaux (+242 Congo, +33 France, etc.).
 
 ---
 
-## 📊 Flux de Données Typique
+## 🚀 Guide de Déploiement & Configuration
 
-### 1️⃣ Client Demande un Devis
-
-```
-CLIENT APP (/devis/:propertyId)
-    ↓
-Formulaire rempli
-    ↓
-INSERT dans devis_requests (Supabase)
-    ↓
-Email notification → Admin
-    ↓
-ADMIN APP (/admin/demandes)
-    ↓
-Admin voit nouvelle demande
-```
-
-### 2️⃣ Admin Valide une Demande
-
-```
-ADMIN APP (/admin/demandes/REQ-001)
-    ↓
-Change statut → "En Cours"
-    ↓
-UPDATE devis_requests (Supabase)
-    ↓
-INSERT timeline_event
-    ↓
-Email notification → Client
-    ↓
-CLIENT APP (/notifications)
-    ↓
-Client voit notification
-```
-
-### 3️⃣ Upload Document
-
-```
-CLIENT APP (/devis/:propertyId)
-    ↓
-Upload CNI.pdf
-    ↓
-STORAGE Supabase (make-3c1961a2-documents)
-    ↓
-INSERT documents table
-    ↓
-ADMIN APP (/admin/demandes/REQ-001)
-    ↓
-Admin voit document
-    ↓
-Valide ✅ ou Rejette ❌
-    ↓
-UPDATE documents.status
-```
+### Netlify / Vercel
+1. Définir les variables d'environnement dans le panneau d'administration :
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_RECAPTCHA_SITE_KEY`
+   - `VITE_SENTRY_DSN`
+2. Configurer les redirections SPA (Single Page Application) :
+   - `netlify.toml` inclus à la racine.
+3. Définir la gestion des sous-domaines (`msfcongo.com` ➔ Client, `admin.msfcongo.com` ➔ Admin).
 
 ---
 
-## 🧪 Testing
+© 2024-2026 MSF Congo - Architecture & Ingénierie
 
-### CLIENT APP
-```bash
-# Lancer en mode client
-npm run dev
-
-# Tester
-http://localhost:5173/
-http://localhost:5173/propriete/tchikobo-villa-5
-http://localhost:5173/devis/tchikobo-villa-5
-```
-
-### ADMIN APP
-```bash
-# Lancer en mode admin
-npm run dev
-
-# Tester
-http://localhost:5173/?admin=true
-# Login: admin@msfcongo.com / admin123
-http://localhost:5173/?admin=true#/dashboard
-http://localhost:5173/?admin=true#/demandes
-```
-
----
-
-## 📝 Variables d'Environnement
-
-### Partagées (les deux apps)
-```env
-VITE_SUPABASE_URL=https://xxx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJxxx...
-```
-
-### CLIENT uniquement
-```env
-VITE_APP_NAME=MSF Congo
-VITE_SUPPORT_EMAIL=contact@msfcongo.com
-```
-
-### ADMIN uniquement
-```env
-VITE_APP_NAME=MSF Congo Admin
-VITE_ADMIN_EMAIL=admin@msfcongo.com
-VITE_LOG_LEVEL=debug
-```
-
----
-
-## 🔧 Maintenance
-
-### Ajouter une Page CLIENT
-```typescript
-// 1. Créer /src/app/pages/NouvelePage.tsx
-// 2. Importer dans ClientApp.tsx
-import NouvelePage from "./pages/NouvelePage";
-
-// 3. Ajouter route
-{
-  path: "nouvelle-page",
-  Component: NouvelePage
-}
-```
-
-### Ajouter une Page ADMIN
-```typescript
-// 1. Créer /src/app/pages/admin/NouvellePage.tsx
-// 2. Importer dans AdminApp.tsx
-import NouvellePage from "./pages/admin/NouvellePage";
-
-// 3. Ajouter route
-{
-  path: "nouvelle-page",
-  Component: NouvellePage
-}
-```
-
-### Mettre à Jour la Config Partagée
-```typescript
-// Modifier /src/config/supabase.config.ts
-export const supabaseConfig = {
-  // Ajouter nouvelles tables, types, helpers
-};
-```
-
----
-
-## 📞 Support
-
-### CLIENT APP
-- Email : contact@msfcongo.com
-- Téléphone : +242 06 458 86 18
-
-### ADMIN APP
-- Email : admin@msfcongo.com
-- Support technique : tech@msfcongo.com
-
----
-
-## 📜 Licence
-
-© 2024 MSF Congo - Tous droits réservés
-
-**Roger ROC** - Développements Immobiliers de Luxe à Pointe-Noire, Congo
