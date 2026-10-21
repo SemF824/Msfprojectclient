@@ -1,7 +1,7 @@
 {
-  "name": "@figma/my-make-file",
+  "name": "msf-congo-platform",
   "private": true,
-  "version": "0.0.1",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "build": "vite build",
@@ -9,7 +9,6 @@
     "migrate:encrypt-devis": "npx tsx scripts/migrate-encrypt-devis.ts"
   },
   "dependencies": {
-    "@dataconnect/generated": "file:src/dataconnect-generated",
     "@radix-ui/react-accordion": "1.2.3",
     "@radix-ui/react-alert-dialog": "1.1.6",
     "@radix-ui/react-aspect-ratio": "1.1.2",

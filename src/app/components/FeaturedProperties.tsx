@@ -152,11 +152,25 @@ export function FeaturedProperties({ filters }: FeaturedPropertiesProps) {
         </div>
 
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <Loader2 className="w-10 h-10 sm:w-12 sm:h-12 text-[#d4af37] animate-spin" />
-            <p className="text-gray-400 text-sm sm:text-base">
-              Chargement du catalogue...
-            </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm animate-pulse flex flex-col"
+              >
+                <div className="h-64 bg-slate-200/70 w-full" />
+                <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="h-6 bg-slate-200/80 rounded-md w-3/4" />
+                    <div className="h-4 bg-slate-100 rounded-md w-1/2" />
+                  </div>
+                  <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
+                    <div className="h-6 bg-slate-200/80 rounded-md w-1/3" />
+                    <div className="h-9 bg-slate-200/70 rounded-xl w-24" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : filteredProperties.length === 0 ? (
           <div className="text-center text-gray-400 text-sm sm:text-base py-12 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10">

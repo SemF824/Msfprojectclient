@@ -20,8 +20,7 @@ import type { Document, DocCategory } from "../../types/database.types";
 import { processDocumentForUpload, decryptDocument, type RecipientKeyData } from "../../utils/crypto/documentCrypto";
 
 const BUCKET = "msf-private-docs";
-const MAX_SIZE_MB = 10;
-const PDF_MAX_MB = 15;
+const MAX_SIZE_MB = 25;
 
 const isImage = (name: string) =>
   /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(name ?? "");
@@ -92,12 +91,8 @@ export default function ClientDocuments() {
   const handleFileUpload = async (file: File) => {
     if (!authUser || !supabase) return;
 
-    if (isPdf(file.name) && file.size > PDF_MAX_MB * 1_048_576) {
-      toast.error(`Ce document PDF est trop lourd (Maximum ${PDF_MAX_MB} Mo).`);
-      return;
-    }
-    if (!isImage(file.name) && !isPdf(file.name) && file.size > MAX_SIZE_MB * 1_048_576) {
-      toast.error(`Fichier trop volumineux (Maximum ${MAX_SIZE_MB} Mo).`);
+    if (file.size > MAX_SIZE_MB * 1_048_576) {
+      toast.error(`Ce document est trop volumineux (Maximum ${MAX_SIZE_MB} Mo).`);
       return;
     }
 
@@ -108,7 +103,7 @@ export default function ClientDocuments() {
       // 1. Récupération de la clé E2EE de l'utilisateur
       const { data: clientKey, error: clientKeyErr } = await supabase
         .from("user_public_keys")
-        .select("ecdh_pub")
+        .select("ecdh_pub_key")
         .eq("user_id", authUser.id)
         .single();
 
@@ -125,24 +120,28 @@ export default function ClientDocuments() {
         .in("role", ["admin", "superadmin"]);
 
       const adminIds = adminRoles ? adminRoles.map(r => r.user_id) : [];
-      let adminKeys: { user_id: string; ecdh_pub: any }[] = [];
+      let adminKeys: { user_id: string; ecdh_pub_key?: any; ecdh_pub?: any }[] = [];
       
       if (adminIds.length > 0) {
         const { data: keys } = await supabase
           .from("user_public_keys")
-          .select("user_id, ecdh_pub")
+          .select("user_id, ecdh_pub_key")
           .in("user_id", adminIds);
         if (keys) adminKeys = keys;
       }
 
       // 3. Constitution du pool des destinataires
+      const clientPubKey = (clientKey as any).ecdh_pub_key || (clientKey as any).ecdh_pub;
       const recipients: RecipientKeyData[] = [
-        { recipientId: authUser.id, ecdhPubJwk: clientKey.ecdh_pub }
+        { recipientId: authUser.id, ecdhPubJwk: clientPubKey }
       ];
 
       adminKeys.forEach(k => {
         if (k.user_id !== authUser.id) {
-          recipients.push({ recipientId: k.user_id, ecdhPubJwk: k.ecdh_pub });
+          const pubKey = k.ecdh_pub_key || k.ecdh_pub;
+          if (pubKey) {
+            recipients.push({ recipientId: k.user_id, ecdhPubJwk: pubKey });
+          }
         }
       });
 
@@ -185,7 +184,7 @@ export default function ClientDocuments() {
         document_id: newDoc.id,
         recipient_id: ak.recipientId,
         encrypted_aes_key: ak.encryptedAesKey,
-        ephemeral_pub: ak.ephemeralPubKey
+        ephemeral_pub_key: ak.ephemeralPubKey
       }));
 
       const { error: keysErr } = await supabase.from("document_access_keys").insert(accessKeysRows);
@@ -231,7 +230,7 @@ export default function ClientDocuments() {
       // 2. Récupérer la clé publique ECDSA de l'expéditeur d'origine
       const { data: senderKeys, error: senderErr } = await supabase
         .from("user_public_keys")
-        .select("ecdsa_pub")
+        .select("ecdsa_pub_key")
         .eq("user_id", doc.user_id)
         .single();
         
@@ -245,13 +244,16 @@ export default function ClientDocuments() {
       if (downloadErr || !blob) throw new Error("Erreur de téléchargement depuis le stockage privé.");
 
       // 4. Déchiffrement et vérification de la signature ECDSA
+      const senderEcdsa = (senderKeys as any).ecdsa_pub_key || (senderKeys as any).ecdsa_pub;
+      const ephemeralKey = (accessKey as any).ephemeral_pub_key || (accessKey as any).ephemeral_pub;
+
       const { fileBlob, isValidSignature } = await decryptDocument(
         blob,
         doc.iv,
         doc.signature,
-        senderKeys.ecdsa_pub,
+        senderEcdsa,
         accessKey.encrypted_aes_key,
-        accessKey.ephemeral_pub
+        ephemeralKey
       );
 
       if (!isValidSignature) {

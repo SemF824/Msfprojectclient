@@ -10,6 +10,9 @@
  */
 
 
+import type { DevisRequest } from "../types/database.types";
+export type { DevisRequest };
+
 // Use environment variables for security
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
@@ -27,7 +30,7 @@ export const supabaseConfig = {
     users: "users",
 
     // Propriétés
-    properties: "kv_store_3c1961a2", // Using KV store
+    properties: "properties",
 
     // Documents
     documents: "documents",
@@ -42,74 +45,21 @@ export const supabaseConfig = {
     timeline: "timeline_events",
   },
 
-  // Buckets de stockage
+  // Buckets de stockage (Correspondance exacte Supabase Hetzner)
   storage: {
-    documents: "make-3c1961a2-documents",
     properties: "make-3c1961a2-properties",
-    avatars: "make-3c1961a2-avatars",
+    documents: "msf-private-docs",
+    clientDocuments: "client-documents",
+    importantPictures: "Important Pictures",
   },
 
   // Rôles utilisateurs
   roles: {
     client: "client",
     admin: "admin",
-    agent: "agent",
     superadmin: "superadmin",
   },
 };
-
-// Types TypeScript pour les données
-export interface DevisRequest {
-  id: string;
-  created_at: string;
-  updated_at: string;
-
-  // Client info
-  client_id?: string;
-  client_first_name: string;
-  client_last_name: string;
-  client_email: string;
-  client_phone: string;
-  client_alternate_phone?: string;
-  client_address: string;
-  client_city: string;
-  client_country: string;
-  client_profession: string;
-  client_company?: string;
-  client_monthly_income?: string;
-
-  // Property info
-  property_id: string;
-  property_name: string;
-  property_price: number;
-
-  // Request details
-  request_type: "achat" | "location" | "information";
-  financing_needed: "oui" | "non" | "peut-etre";
-  down_payment_amount?: number;
-
-  // Visit
-  visit_date?: string;
-  visit_time?: string;
-  number_of_persons?: number;
-
-  // Message
-  message?: string;
-
-  // Status
-  status:
-    | "nouveau"
-    | "en_cours"
-    | "documents"
-    | "approuve"
-    | "rejete";
-  priority: "haute" | "moyenne" | "basse";
-  assigned_to?: string;
-
-  // Metadata
-  terms_accepted: boolean;
-  contact_accepted: boolean;
-}
 
 export interface Document {
   id: string;

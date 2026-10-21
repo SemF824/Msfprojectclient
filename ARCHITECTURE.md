@@ -20,14 +20,14 @@ La plateforme **MSF Congo** est construite sur une architecture bi-application u
 ### 🔧 **ADMIN APP** - Backoffice d'Administration & Gestion
 - **URL Production** : `https://admin.msfcongo.com`
 - **URL Dev** : `http://localhost:5173/?admin=true` ou `http://localhost:5173/admin`
-- **Accès Restreint** : Personnel habilité (`agent`, `admin`, `superadmin`)
+- **Accès Restreint** : Personnel habilité (`admin`, `superadmin`)
 - **Fonctionnalités Principales** :
-  - Dashboard analytique & suivi du chiffre d'affaires
+  - Dashboard analytique & suivi des demandes de devis
   - Traitement et déchiffrement sécurisé des demandes de devis
   - Messagerie E2EE d'entreprise avec les clients
   - Validation et audit des documents clients uploadés
   - Gestion du catalogue immobilier (prix, photos, caractéristiques)
-  - Gestion des utilisateurs, des agents et attribution des rôles
+  - Gestion des utilisateurs et attribution des rôles administratifs
   - Statistiques de conversion et exportations de données
 
 ---
@@ -88,11 +88,7 @@ La plateforme **MSF Congo** est construite sur une architecture bi-application u
 │   ├── 📁 /calendly-webhook         📅 Webhook de synchronisation Calendly
 │   ├── 📁 /submit-contact           📬 Traitement sécurisé du formulaire contact + reCAPTCHA
 │   └── 📁 /server                   🌐 API Hono avec Key-Value Store
-└── config.toml                      ⚙️ Configuration local Supabase CLI
-
-📁 /dataconnect                      📊 Firebase DataConnect (Schéma GraphQL)
-├── schema/schema.gql                📜 Définition des types et entités
-└── dataconnect.yaml                 ⚙️ Configuration DataConnect
+└── config.toml                      ⚙️ Configuration Supabase CLI (Hetzner Self-Hosted)
 ```
 
 ---

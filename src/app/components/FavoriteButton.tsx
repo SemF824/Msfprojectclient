@@ -4,12 +4,14 @@ import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 
 interface FavoriteButtonProps {
   propertyId: string;
+  propertyName?: string;
   className?: string;
   showText?: boolean;
 }
 
 export default function FavoriteButton({
   propertyId,
+  propertyName,
   className = "p-3 rounded-xl border-2",
   showText = false,
 }: FavoriteButtonProps) {
@@ -61,7 +63,11 @@ export default function FavoriteButton({
       } else {
         await supabase
           .from("favorites")
-          .insert({ user_id: user.id, property_id: propertyId });
+          .insert({
+            user_id: user.id,
+            property_id: propertyId,
+            property_name: propertyName || "Propriété MSF",
+          });
         setIsFavorite(true);
       }
     } catch (error) {

@@ -17,6 +17,8 @@ import {
   Mail,
   User,
   Loader2,
+  BadgeDollarSign,
+  Calendar,
 } from "lucide-react";
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 import { toast } from "sonner";
@@ -39,7 +41,7 @@ export default function TransactionDetail() {
         .from("transactions")
         .select("*")
         .eq("id", id)
-        .eq("user_id", user.id) // SÉCURITÉ FRONT-END
+        .eq("user_id", user.id)
         .single();
 
       if (error) throw error;
@@ -50,41 +52,54 @@ export default function TransactionDetail() {
 
   const getStatusConfig = (status: string) => {
     switch (status) {
+      case "complete":
       case "completed":
         return {
           icon: CheckCircle2,
-          label: "Complété",
-          title: "Transaction Réussie",
-          color: "bg-green-100 text-green-700 border-green-200",
+          label: "Confirmé & Réglé",
+          title: "Paiement Validé",
+          color: "bg-emerald-50 text-emerald-800 border-emerald-200",
         };
+      case "en_attente":
       case "pending":
-        return {
-          icon: Clock,
-          label: "En Attente",
-          title: "En attente de paiement",
-          color: "bg-yellow-100 text-yellow-700 border-yellow-200",
-        };
       case "in_progress":
         return {
-          icon: AlertCircle,
-          label: "En Cours",
-          title: "Traitement en cours",
-          color: "bg-blue-100 text-blue-700 border-blue-200",
+          icon: Clock,
+          label: "En Attente de Validation",
+          title: "En Traitement Bancaire",
+          color: "bg-amber-50 text-amber-800 border-amber-200",
         };
+      case "echoue":
       case "cancelled":
         return {
           icon: XCircle,
-          label: "Échoué",
-          title: "Transaction Annulée",
-          color: "bg-red-100 text-red-700 border-red-200",
+          label: "Rejeté / Annulé",
+          title: "Transaction Non Aboutie",
+          color: "bg-rose-50 text-rose-700 border-rose-200",
         };
       default:
         return {
           icon: Clock,
-          label: "Inconnu",
-          title: "Statut Inconnu",
-          color: "bg-gray-100 text-gray-700 border-gray-200",
+          label: status || "Inconnu",
+          title: "Statut de l'opération",
+          color: "bg-gray-50 text-gray-700 border-gray-200",
         };
+    }
+  };
+
+  const getTransactionTypeLabel = (type?: string | null) => {
+    switch (type) {
+      case "acompte":
+        return "Acompte de réservation";
+      case "mensualite":
+        return "Mensualité / Échéance contractuelle";
+      case "solde":
+        return "Règlement final du solde";
+      case "frais":
+        return "Frais administratifs et notariés";
+      case "paiement":
+      default:
+        return "Versement";
     }
   };
 
@@ -96,8 +111,8 @@ export default function TransactionDetail() {
     if (navigator.share) {
       navigator
         .share({
-          title: `Transaction MSF Congo - ${transaction?.id}`,
-          text: `Détails du versement pour ${transaction?.property_name}`,
+          title: `Reçu Transaction MSF Congo - ${transaction?.id}`,
+          text: `Détails du versement pour ${transaction?.property_name || "votre acquisition"}`,
           url: window.location.href,
         })
         .catch(console.error);
@@ -108,21 +123,27 @@ export default function TransactionDetail() {
   };
 
   const handleDownloadReceipt = () => {
-    toast.success("Génération du reçu officiel en cours de téléchargement...");
+    if (transaction?.invoice_url) {
+      window.open(transaction.invoice_url, "_blank");
+      toast.success("Ouverture du reçu officiel...");
+    } else {
+      window.print();
+      toast.info("Impression ou enregistrement en PDF du bordereau...");
+    }
   };
 
   const handleEmailReceipt = () => {
     toast.success(
-      `Le reçu officiel est en cours d'envoi à l'adresse : ${user?.email}`,
+      `Le bordereau de transaction a été transmis à l'adresse : ${user?.email}`,
     );
   };
 
   if (isLoading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
-        <Loader2 className="w-12 h-12 text-[#d4af37] animate-spin" />
-        <p className="text-gray-500 font-medium">
-          Chargement des détails de la transaction...
+        <Loader2 className="w-10 h-10 text-[#d4af37] animate-spin" />
+        <p className="text-gray-500 font-medium text-sm">
+          Recherche des détails certifiés de la transaction...
         </p>
       </div>
     );
@@ -131,14 +152,14 @@ export default function TransactionDetail() {
   if (isError || !transaction) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-center px-4">
-        <AlertCircle className="w-16 h-16 text-red-400" />
-        <h2 className="text-2xl font-bold text-[#0a0f1e]">Erreur</h2>
-        <p className="text-gray-500">
-          Transaction introuvable ou accès refusé.
+        <AlertCircle className="w-16 h-16 text-rose-400" />
+        <h2 className="text-2xl font-serif font-bold text-[#0a0f1e]">Opération Introuvable</h2>
+        <p className="text-gray-500 text-sm max-w-md">
+          Cette transaction n'existe pas ou vous n'avez pas l'autorisation d'y accéder.
         </p>
         <Link
           to="/client/transactions"
-          className="mt-4 px-6 py-2.5 bg-[#d4af37] text-[#0a0f1e] font-bold rounded-xl hover:bg-[#b8952e] transition-colors shadow-sm"
+          className="mt-4 px-6 py-2.5 bg-[#d4af37] text-[#0a0f1e] font-bold rounded-xl hover:bg-[#b8952e] transition-colors shadow-sm text-sm"
         >
           Retour aux transactions
         </Link>
@@ -148,49 +169,49 @@ export default function TransactionDetail() {
 
   const statusConfig = getStatusConfig(transaction.status);
   const StatusIcon = statusConfig.icon;
-  const formattedDate = new Date(transaction.created_at).toLocaleDateString(
-    "fr-FR",
-    {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    },
-  );
+  const dateToFormat = transaction.created_at || transaction.date_transaction;
+  const formattedDate = dateToFormat
+    ? new Date(dateToFormat).toLocaleDateString("fr-FR", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "Date non précisée";
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto px-2 sm:px-0 text-[#0a0f1e]">
       {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <Link
           to="/client/transactions"
           className="inline-flex items-center gap-2 text-gray-500 hover:text-[#d4af37] transition-colors font-medium text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Retour aux Transactions</span>
+          <span>Retour au Suivi Financier</span>
         </Link>
         <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <button
             onClick={handlePrint}
-            className="flex-1 sm:flex-none p-2.5 text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm flex items-center justify-center"
+            className="flex-1 sm:flex-none p-2.5 text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm flex items-center justify-center cursor-pointer"
             title="Imprimer"
           >
-            <Printer className="w-5 h-5" />
+            <Printer className="w-4 h-4" />
           </button>
           <button
             onClick={handleShare}
-            className="flex-1 sm:flex-none p-2.5 text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm flex items-center justify-center"
+            className="flex-1 sm:flex-none p-2.5 text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm flex items-center justify-center cursor-pointer"
             title="Partager"
           >
-            <Share2 className="w-5 h-5" />
+            <Share2 className="w-4 h-4" />
           </button>
           <button
             onClick={handleDownloadReceipt}
-            className="flex-[2] sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-[#d4af37] text-[#0a0f1e] font-bold rounded-xl hover:bg-[#b8952e] transition-colors shadow-sm text-sm"
+            className="flex-[2] sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-[#d4af37] text-[#0a0f1e] font-bold rounded-xl hover:bg-[#b8952e] transition-colors shadow-sm text-sm cursor-pointer"
           >
             <Download className="w-4 h-4" />
-            <span>Télécharger</span>
+            <span>{transaction.invoice_url ? "Télécharger le Reçu" : "Exporter le Bordereau"}</span>
           </button>
         </div>
       </div>
@@ -201,145 +222,136 @@ export default function TransactionDetail() {
         <div className="lg:col-span-2 space-y-6 min-w-0">
           {/* Status Card */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-3xl border border-gray-200 shadow-lg p-5 sm:p-6 md:p-8 overflow-hidden"
+            className="bg-white rounded-3xl border border-gray-200 shadow-sm p-5 sm:p-6 md:p-8 overflow-hidden"
           >
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
               <div className="flex items-center gap-4 w-full">
                 <div
-                  className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center ${statusConfig.color.replace("text-", "bg-").replace("border-", "border-")}`}
+                  className={`shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center border ${statusConfig.color}`}
                 >
-                  <StatusIcon
-                    className={`w-6 h-6 sm:w-8 sm:h-8 ${statusConfig.color.split(" ")[1]}`}
-                  />
+                  <StatusIcon className="w-6 h-6" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h1 className="text-xl sm:text-2xl text-[#0a0f1e] font-bold flex flex-wrap items-center gap-2 sm:gap-3">
-                    <span className="truncate">{statusConfig.title}</span>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <h1 className="text-xl sm:text-2xl text-[#0a0f1e] font-serif font-bold break-words">
+                      {statusConfig.title}
+                    </h1>
                     <span
-                      className={`text-[10px] font-bold uppercase px-2 sm:px-3 py-1 rounded-full border whitespace-nowrap ${statusConfig.color}`}
+                      className={`text-[11px] font-bold uppercase px-3 py-0.5 rounded-full border whitespace-nowrap ${statusConfig.color}`}
                     >
                       {statusConfig.label}
                     </span>
-                  </h1>
-                  <p className="text-sm text-gray-500 mt-1">{formattedDate}</p>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">{formattedDate}</p>
                 </div>
               </div>
             </div>
 
-            {/* LE CARD DU MONTANT RESPONSIVE */}
-            <div className="bg-gradient-to-br from-[#d4af37]/5 to-[#f4e3b2]/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 border border-[#d4af37]/20 relative overflow-hidden">
+            {/* Montant responsive luxury */}
+            <div className="bg-gradient-to-br from-[#d4af37]/10 via-[#f4e3b2]/20 to-transparent rounded-2xl p-5 sm:p-7 border border-[#d4af37]/30 relative overflow-hidden">
               <div className="relative z-10 w-full">
-                <p className="text-[10px] sm:text-xs md:text-sm font-semibold text-gray-600 mb-1 sm:mb-2 uppercase tracking-wider">
-                  Montant Transaction
+                <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                  Montant de l'opération
                 </p>
-                <p className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-[#d4af37] mb-2 break-words break-all sm:break-normal leading-tight w-full tracking-tight">
-                  {transaction.amount.toLocaleString("fr-FR")} FCFA
+                <p className="text-2xl sm:text-3xl md:text-4xl font-serif font-black text-[#8c7423] tracking-tight break-words">
+                  {(Number(transaction.amount) || 0).toLocaleString("fr-FR")} FCFA
                 </p>
-                <p className="text-gray-700 text-[10px] sm:text-xs md:text-sm lg:text-base font-medium mt-2">
-                  {transaction.transaction_type === "reservation"
-                    ? "Acompte de réservation"
-                    : "Paiement"}{" "}
-                  pour {transaction.property_name}
+                <p className="text-gray-700 text-xs sm:text-sm font-medium mt-2">
+                  {getTransactionTypeLabel(transaction.transaction_type)}
+                  {transaction.property_name ? ` • Pour le bien « ${transaction.property_name} »` : ""}
                 </p>
               </div>
-              <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-[#d4af37]/10 rounded-full blur-2xl sm:blur-3xl -mr-10 -mt-10 pointer-events-none" />
             </div>
 
-            <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100">
-              <p className="text-[10px] sm:text-xs text-gray-400 font-mono break-all bg-gray-50 border border-gray-100 p-2 rounded-lg">
-                ID Transaction : {transaction.id}
+            <div className="mt-6 pt-5 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-gray-500">
+              <p className="font-mono break-all">
+                Référence Transaction : <span className="text-gray-700 font-semibold">{transaction.id}</span>
+              </p>
+              <p className="font-medium">
+                Nature : <span className="text-gray-800">{transaction.description || "Versement"}</span>
               </p>
             </div>
           </motion.div>
 
-          {/* Property Info */}
+          {/* Bien Concerné */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-3xl border border-gray-200 shadow-lg p-5 sm:p-6 md:p-8 min-w-0"
+            className="bg-white rounded-3xl border border-gray-200 shadow-sm p-5 sm:p-6 md:p-8 min-w-0"
           >
-            <h2 className="text-lg sm:text-xl font-bold text-[#0a0f1e] mb-6 flex items-center gap-2">
-              <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-[#d4af37] flex-shrink-0" />
-              <span className="truncate">Propriété Concernée</span>
+            <h2 className="text-lg font-serif font-bold text-[#0a0f1e] mb-4 flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-[#d4af37] shrink-0" />
+              <span>Bien Immobilier Associé</span>
             </h2>
-            <div className="mb-6">
-              <h3 className="text-lg sm:text-xl font-bold text-[#0a0f1e] mb-2 break-words">
-                {transaction.property_name}
+            <div className="mb-4">
+              <h3 className="text-base sm:text-lg font-bold text-[#0a0f1e] break-words">
+                {transaction.property_name || "Programme Immobilier MSF Congo"}
               </h3>
-              <p className="flex items-start sm:items-center gap-2 text-gray-600 text-xs sm:text-sm">
-                <MapPin className="w-4 h-4 text-[#d4af37] flex-shrink-0 mt-0.5 sm:mt-0" />
-                <span className="break-all text-gray-400 font-mono">
-                  ID Objet : {transaction.property_id}
-                </span>
+              <p className="text-gray-500 text-xs sm:text-sm mt-1">
+                Opération enregistrée au compte acquéreur auprès de la direction commerciale MSF.
               </p>
             </div>
 
-            <div className="pt-6 border-t border-gray-100">
+            <div className="pt-4 border-t border-gray-100">
               <Link
-                to={`/properties/${transaction.property_id}`}
-                className="inline-flex items-center gap-2 text-[#d4af37] hover:text-[#b8952e] font-semibold transition-colors text-sm sm:text-base"
+                to="/properties"
+                className="inline-flex items-center gap-2 text-[#8c7423] hover:text-[#5e4e16] font-semibold transition-colors text-sm"
               >
-                Voir les détails de la propriété{" "}
-                <ArrowLeft className="w-4 h-4 rotate-180" />
+                Parcourir les programmes & résidences <ArrowLeft className="w-4 h-4 rotate-180" />
               </Link>
             </div>
           </motion.div>
         </div>
 
-        {/* Sidebar Information */}
+        {/* Colonne Latérale */}
         <div className="space-y-6 w-full min-w-0">
-          {/* Buyer Info */}
+          {/* Titulaire */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 15 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white rounded-3xl border border-gray-200 shadow-lg p-5 sm:p-6"
+            className="bg-white rounded-3xl border border-gray-200 shadow-sm p-5 sm:p-6"
           >
-            <h2 className="text-lg font-bold text-[#0a0f1e] mb-6 flex items-center gap-2">
-              <User className="w-5 h-5 text-[#d4af37]" /> Titulaire du Compte
+            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <User className="w-4 h-4 text-[#d4af37]" /> Titulaire du Compte
             </h2>
-            <div className="space-y-4">
-              <div>
-                <p className="text-[#0a0f1e] font-bold text-lg truncate">
-                  {user?.user_metadata?.full_name || "Client MSF"}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <a
-                  href={`mailto:${user?.email}`}
-                  className="flex items-center gap-3 text-sm text-gray-600 hover:text-[#d4af37] break-all font-medium"
-                >
-                  <Mail className="w-4 h-4 flex-shrink-0 text-gray-400" />{" "}
-                  {user?.email}
-                </a>
-              </div>
+            <div className="space-y-2">
+              <p className="text-[#0a0f1e] font-bold text-base truncate">
+                {user?.user_metadata?.full_name || "Acquéreur Privilégié MSF"}
+              </p>
+              <a
+                href={`mailto:${user?.email}`}
+                className="flex items-center gap-2 text-xs text-gray-600 hover:text-[#d4af37] break-all font-medium transition-colors"
+              >
+                <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" /> {user?.email}
+              </a>
             </div>
           </motion.div>
 
-          {/* Quick Actions */}
+          {/* Justificatifs */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 15 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white rounded-3xl border border-gray-200 shadow-lg p-5 sm:p-6"
+            className="bg-white rounded-3xl border border-gray-200 shadow-sm p-5 sm:p-6"
           >
-            <h2 className="text-lg font-bold text-[#0a0f1e] mb-6">Documents</h2>
-            <div className="space-y-3 w-full">
+            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Justificatifs Officiels</h2>
+            <div className="space-y-2.5 w-full">
               <button
                 onClick={handleDownloadReceipt}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-[#0a0f1e] font-semibold rounded-xl transition-colors text-sm"
+                className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-[#0a0f1e] font-semibold rounded-xl transition-colors text-xs cursor-pointer"
               >
-                <FileText className="w-5 h-5 text-[#d4af37] flex-shrink-0" />{" "}
-                <span className="truncate">Télécharger le Reçu</span>
+                <FileText className="w-4 h-4 text-[#d4af37] shrink-0" />
+                <span className="truncate">{transaction.invoice_url ? "Télécharger le Reçu PDF" : "Générer le Reçu"}</span>
               </button>
               <button
                 onClick={handleEmailReceipt}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-[#0a0f1e] font-semibold rounded-xl transition-colors text-sm"
+                className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-[#0a0f1e] font-semibold rounded-xl transition-colors text-xs cursor-pointer"
               >
-                <Mail className="w-5 h-5 text-[#d4af37] flex-shrink-0" />{" "}
+                <Mail className="w-4 h-4 text-[#d4af37] shrink-0" />
                 <span className="truncate">Recevoir par Email</span>
               </button>
             </div>
@@ -347,21 +359,20 @@ export default function TransactionDetail() {
 
           {/* Support */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 15 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-gradient-to-br from-[#0a0f1e] to-[#1a2540] rounded-3xl border border-[#d4af37]/20 p-5 sm:p-6 text-white shadow-lg"
+            className="bg-gradient-to-br from-[#0a0f1e] to-[#162035] rounded-3xl border border-[#d4af37]/30 p-5 sm:p-6 text-white shadow-md"
           >
-            <h2 className="text-lg font-bold mb-2">Besoin d'aide ?</h2>
-            <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-              Une question sur cette transaction ? Notre équipe commerciale est
-              à votre disposition.
+            <h2 className="text-base font-serif font-bold mb-2">Service Comptabilité MSF</h2>
+            <p className="text-gray-300 text-xs mb-5 leading-relaxed">
+              Pour toute question relative aux attestations de paiement ou quittances, notre équipe financière vous assiste.
             </p>
             <Link
               to="/contact"
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#d4af37] hover:bg-[#b8952e] text-[#0a0f1e] font-bold rounded-xl transition-colors text-sm shadow-sm"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#d4af37] to-[#c49f2c] text-[#0a0f1e] font-bold rounded-xl transition-colors text-xs shadow-sm"
             >
-              Contacter le Support
+              Joindre le Service Client
             </Link>
           </motion.div>
         </div>

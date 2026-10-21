@@ -73,7 +73,7 @@ const resetInactivityTimer = () => {
 };
 
 const setupGlobalActivityListeners = () => {
-  if (isActivityListenerAttached || typeof window !== "undefined") return;
+  if (isActivityListenerAttached || typeof window === "undefined") return;
 
   const events = ["mousemove", "keydown", "click", "scroll", "touchstart"];
   const handleActivity = () => resetInactivityTimer();
@@ -95,7 +95,7 @@ if (typeof window !== "undefined") {
 const ensureUserE2EEKeys = async (userId: string) => {
   if (!supabase) return;
   try {
-    const keys = await initializeUserKeys();
+    const keys = await initializeUserKeys(userId);
     if (!keys) return;
 
     const { error } = await supabase
@@ -103,8 +103,8 @@ const ensureUserE2EEKeys = async (userId: string) => {
       .upsert(
         {
           user_id: userId,
-          ecdh_pub: keys.ecdhPubJwk,
-          ecdsa_pub: keys.ecdsaPubJwk,
+          ecdh_pub_key: keys.ecdhPubJwk,
+          ecdsa_pub_key: keys.ecdsaPubJwk,
         },
         { onConflict: "user_id" },
       );

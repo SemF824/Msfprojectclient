@@ -23,12 +23,17 @@ function getDB(): Promise<IDBDatabase> {
 /**
  * Sauvegarde une clé de façon sécurisée (IDB supporte le format natif CryptoKey)
  */
-export async function storeKey(keyId: 'ecdh' | 'ecdsa', keyPair: CryptoKeyPair): Promise<void> {
+export async function storeKey(
+  keyId: 'ecdh' | 'ecdsa',
+  keyPair: CryptoKeyPair,
+  userId?: string
+): Promise<void> {
   const db = await getDB();
+  const effectiveKey = userId ? `${keyId}_${userId}` : keyId;
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([STORE_NAME], 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
-    const request = store.put(keyPair, keyId);
+    const request = store.put(keyPair, effectiveKey);
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
   });
@@ -37,11 +42,32 @@ export async function storeKey(keyId: 'ecdh' | 'ecdsa', keyPair: CryptoKeyPair):
 /**
  * Récupère une paire de clés stockée
  */
-export async function loadKey(keyId: 'ecdh' | 'ecdsa'): Promise<CryptoKeyPair | null> {
+export async function loadKey(
+  keyId: 'ecdh' | 'ecdsa',
+  userId?: string
+): Promise<CryptoKeyPair | null> {
   const db = await getDB();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([STORE_NAME], 'readonly');
     const store = transaction.objectStore(STORE_NAME);
+    
+    // Si userId est spécifié, essayer d'abord la clé scopée par utilisateur
+    if (userId) {
+      const userRequest = store.get(`${keyId}_${userId}`);
+      userRequest.onsuccess = () => {
+        if (userRequest.result) {
+          resolve(userRequest.result);
+        } else {
+          // Fallback sur la clé legacy globale si présente
+          const legacyRequest = store.get(keyId);
+          legacyRequest.onsuccess = () => resolve(legacyRequest.result || null);
+          legacyRequest.onerror = () => reject(legacyRequest.error);
+        }
+      };
+      userRequest.onerror = () => reject(userRequest.error);
+      return;
+    }
+
     const request = store.get(keyId);
     request.onsuccess = () => resolve(request.result || null);
     request.onerror = () => reject(request.error);

@@ -68,6 +68,8 @@ export default function ClientAppRoutes() {
           <Route path="about" element={<About />} />
           <Route path="contact" element={<Contact />} />
           <Route path="devis-request" element={<DevisRequest />} />
+          <Route path="devis/:propertyId" element={<DevisRequest />} />
+          <Route path="devis" element={<DevisRequest />} />
           <Route path="projects/:id" element={<ProjectDetail />} />
           <Route path="login" element={<Login />} />
           <Route path="signup" element={<Signup />} />

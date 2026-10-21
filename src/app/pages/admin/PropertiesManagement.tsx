@@ -130,13 +130,13 @@ export default function PropertiesManagement() {
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        if (!file.type.startsWith("image/")) {
-          toast.error(`Le fichier "${file.name}" n'est pas une image valide.`);
+        if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+          toast.error(`Le fichier "${file.name}" n'est ni une image ni une vidéo valide.`);
           continue;
         }
 
-        if (file.size > 5 * 1024 * 1024) {
-          toast.error(`L'image "${file.name}" dépasse 5 Mo.`);
+        if (file.size > 25 * 1024 * 1024) {
+          toast.error(`Le média "${file.name}" dépasse la limite de 25 Mo.`);
           continue;
         }
 
@@ -144,8 +144,9 @@ export default function PropertiesManagement() {
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
         const filePath = `property-images/${fileName}`;
 
+        const propertiesBucket = import.meta.env.VITE_PROPERTIES_BUCKET || "make-3c1961a2-properties";
         const { error: uploadError } = await supabase.storage
-          .from("make-3c1961a2-properties")
+          .from(propertiesBucket)
           .upload(filePath, file, {
             cacheControl: "3600",
             upsert: false,
@@ -159,7 +160,7 @@ export default function PropertiesManagement() {
         const {
           data: { publicUrl },
         } = supabase.storage
-          .from("make-3c1961a2-properties")
+          .from(propertiesBucket)
           .getPublicUrl(filePath);
 
         newUrls.push(publicUrl);

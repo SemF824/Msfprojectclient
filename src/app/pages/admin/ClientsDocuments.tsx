@@ -178,7 +178,7 @@ export default function ClientsDocuments() {
         // 2. Récupération de la clé publique de l'expéditeur
         const { data: senderKey, error: sendErr } = await supabase
           .from("user_public_keys")
-          .select("ecdsa_pub")
+          .select("ecdsa_pub_key")
           .eq("user_id", doc.user_id)
           .single();
 
@@ -194,13 +194,16 @@ export default function ClientsDocuments() {
         if (dlErr || !blob) throw dlErr;
 
         // 4. Déchiffrement et vérification de la signature ECDSA
+        const senderEcdsa = (senderKey as any).ecdsa_pub_key || (senderKey as any).ecdsa_pub;
+        const ephemeralKey = (accessKey as any).ephemeral_pub_key || (accessKey as any).ephemeral_pub;
+
         const { fileBlob, isValidSignature } = await decryptDocument(
           blob,
           doc.iv,
           doc.signature,
-          senderKey.ecdsa_pub,
+          senderEcdsa,
           accessKey.encrypted_aes_key,
-          accessKey.ephemeral_pub
+          ephemeralKey
         );
 
         if (!isValidSignature) {

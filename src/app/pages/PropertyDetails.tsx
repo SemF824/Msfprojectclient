@@ -201,6 +201,7 @@ export default function PropertyDetails() {
         await supabase.from("favorites").insert({
           user_id: user.id,
           property_id: property.id,
+          property_name: property.title || "Propriété MSF",
         });
         setIsFavorite(true);
       }

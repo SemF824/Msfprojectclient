@@ -125,16 +125,16 @@ export default function ClientMessages() {
 
       const { data: publicKeys, error: keyErr } = await supabase
         .from("user_public_keys")
-        .select("user_id, ecdh_pub")
+        .select("user_id, ecdh_pub_key")
         .in("user_id", Array.from(recipientIds));
 
       if (keyErr || !publicKeys || publicKeys.length === 0) {
         throw new Error("Clés publiques introuvables. Initialisation de sécurité requise.");
       }
 
-      const recipients: RecipientKeyData[] = publicKeys.map((k) => ({
+      const recipients: RecipientKeyData[] = publicKeys.map((k: any) => ({
         recipientId: k.user_id,
-        ecdhPubJwk: k.ecdh_pub,
+        ecdhPubJwk: k.ecdh_pub_key || k.ecdh_pub,
       }));
 
       // 2. Chiffrer et signer le premier message

@@ -44,32 +44,29 @@ npm run dev
 npm run migrate:encrypt-devis
 ```
 
-### Stack Docker Local (Optionnel)
-Pour exécuter un environnement local MySQL / phpMyAdmin complémentaire :
-```bash
-docker-compose up -d
-```
+### Infrastructure Backend
+Le backend repose sur une instance **Supabase auto-hébergée (Hetzner)** connectée à PostgreSQL, Supabase Auth et Supabase Storage.
 
 ---
 
 ## 🔐 Sécurité Avancée & Cybersécurité E2EE
 
-Le projet intègre une architecture de sécurité de niveau bancaire :
+Le projet intègre une architecture de sécurité moderne et durcie :
 
 1. **Chiffrement de Bout en Bout (E2EE) - WebCrypto API** :
    - **Échange de clés & Signatures** : ECDH (P-256) pour la dérivation de clés éphémères et ECDSA (P-256) pour la signature numérique d'authenticité.
    - **Chiffrement Symétrique** : AES-GCM (256 bits) avec vecteur d'initialisation (IV) unique de 96 bits pour la messagerie et les documents.
-   - **Stockage Sécurisé** : Clés privées non-extractibles conservées localement dans **IndexedDB** (`keyStore.ts`).
+   - **Stockage Sécurisé & Multi-Comptes** : Clés privées non-extractibles conservées localement dans **IndexedDB** (`keyStore.ts`), isolées par identifiant utilisateur.
 
 2. **Chiffrement au Repos (AES-256)** :
-   - Chiffrement automatique des données personnelles sensibles (`client_phone`, `message`, `client_address`) dans les demandes de devis avant enregistrement en BDD (`devisEncryption.ts`).
+   - Chiffrement préventif des données personnelles sensibles (`client_phone`, `message`, `client_address`) dans les demandes de devis (`devisEncryption.ts`).
 
 3. **Protection Anti-Bot & RGPD** :
    - Intégration **Google reCAPTCHA v3** sur tous les formulaires publics.
    - Bannières de consentement des cookies, politiques de confidentialité, mentions légales et gestion des données conformément au RGPD.
 
 4. **Contrôle d'Accès basé sur les Rôles (RBAC) & RLS** :
-   - Rôles : `client`, `agent`, `admin`, `superadmin`.
+   - Rôles : `client`, `admin`, `superadmin`.
    - Politiques Row Level Security (RLS) Supabase garantissant l'isolation totale des données.
 
 ---
@@ -78,17 +75,16 @@ Le projet intègre une architecture de sécurité de niveau bancaire :
 
 - **Frontend** : React 18, TypeScript (typage strict Zod & TypeScript), Vite 7
 - **Routing** : React Router v7
-- **Design & UI** : Tailwind CSS v4, Radix UI, Motion (Framer Motion), Lucide Icons
-- **Backend & BDD** : Supabase PostgreSQL, Supabase Auth, Supabase Storage
+- **Design & UI** : Tailwind CSS v4, Radix UI, Motion (Framer Motion), Lucide Icons, Polices Haute Couture (Playfair Display & Plus Jakarta Sans)
+- **Backend & BDD** : Supabase PostgreSQL (Serveur dédié Hetzner), Supabase Auth (PKCE & Cookies sécurisés), Supabase Storage
 - **Edge Functions (Deno / Hono)** :
   - `calendly-webhook` : Synchronisation automatique des rendez-vous
   - `submit-contact` : Validation reCAPTCHA et traitement du formulaire de contact
   - `server` : API backend Hono avec KV Store
 - **Monitoring & Métriques** : Sentry (`@sentry/react`)
-- **Paiements & Devises** : Convertisseur multi-devises dynamique (XAF / EUR / USD)
+- **Paiements & Devises** : Convertisseur multi-devises dynamique (XAF / EUR / USD) avec parité fixe BEAC
 - **Internationalisation Téléphonique** : `libphonenumber-js`
 - **Prise de RDV** : `react-calendly`
-- **GraphQL** : Firebase DataConnect (`dataconnect/`)
 
 ---
 

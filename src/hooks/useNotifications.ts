@@ -1,17 +1,8 @@
-import { useEffect, useState, useCallback } from 'react';
-import { supabase } from './useSupabaseAuth'; // Assurez-vous que le chemin est correct
+import { useEffect, useState, useCallback } from "react";
+import { useSupabaseAuth, supabase } from "./useSupabaseAuth";
+import type { Notification, NotificationType } from "../types/database.types";
 
-// Définissez le type de vos notifications pour TypeScript
-export interface Notification {
-  id: string;
-  user_id: string;
-  title: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'payment' | 'document'; // Types définis dans votre table SQL
-  is_read: boolean;
-  link?: string; // Optionnel, si la notification doit rediriger
-  created_at: string; // Ou Date, si vous préférez le parser
-}
+export type { Notification, NotificationType };
 
 interface UseNotificationsReturn {
   notifications: Notification[];
@@ -20,101 +11,114 @@ interface UseNotificationsReturn {
   error: string | null;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
-  fetchNotifications: () => Promise<void>; // Expose la fonction de rafraîchissement
+  fetchNotifications: () => Promise<void>;
 }
 
 export function useNotifications(): UseNotificationsReturn {
+  const { user } = useSupabaseAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Utilisez useCallback pour mémoriser la fonction et éviter des re-render inutiles
   const fetchNotifications = useCallback(async () => {
+    if (!user || !supabase) {
+      setNotifications([]);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
-      if (!supabase) {
-        throw new Error("Client Supabase non initialisé.");
-      }
       const { data, error: supabaseError } = await supabase
-        .from('notifications')
-        .select('*')
-        .order('created_at', { ascending: false }); // Triez par le plus récent
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
 
-      if (supabaseError) {
-        throw supabaseError;
-      }
-      setNotifications(data || []);
+      if (supabaseError) throw supabaseError;
+      setNotifications((data || []) as Notification[]);
     } catch (err: any) {
       console.error("[useNotifications] Erreur lors de la récupération :", err);
       setError(err.message || "Impossible de charger les notifications.");
     } finally {
       setIsLoading(false);
     }
-  }, []); // Dépendances vides car supabase est statique après initialisation
+  }, [user]);
 
-  // Effet pour charger les notifications et s'abonner aux changements en temps réel
+  // Écoute en temps réel Supabase
   useEffect(() => {
+    if (!user || !supabase) return;
+
     fetchNotifications();
 
-    if (!supabase) return;
-
-    // Abonnement en temps réel aux insertions pour les nouvelles notifications
-    const channel = supabase.channel('notifications_changes')
+    const channel = supabase
+      .channel(`notifications_${user.id}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*', // Écoute INSERT, UPDATE, DELETE pour rafraîchir la liste
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${supabase.auth.currentUser?.id}`, // IMPORTANT: Filtrer par l'utilisateur connecté
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
         },
-        () => fetchNotifications() // Recharge les notifications à chaque changement
+        () => {
+          fetchNotifications();
+        }
       )
       .subscribe();
 
     return () => {
-      // Nettoyage de l'abonnement lors du démontage du composant
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
-  }, [fetchNotifications]); // Dépend de fetchNotifications
+  }, [user, fetchNotifications]);
 
-  // Compte des notifications non lues
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  // Marquer une notification comme lue
-  const markAsRead = useCallback(async (id: string) => {
-    try {
-      if (!supabase) {
-        throw new Error("Client Supabase non initialisé.");
+  const markAsRead = useCallback(
+    async (id: string) => {
+      if (!user || !supabase) return;
+      try {
+        await supabase
+          .from("notifications")
+          .update({ is_read: true })
+          .eq("id", id)
+          .eq("user_id", user.id);
+
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+        );
+      } catch (err: any) {
+        console.error("[useNotifications] Erreur lors du marquage :", err);
+        setError(err.message || "Impossible de marquer comme lu.");
       }
-      await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-      fetchNotifications(); // Rafraîchit la liste après la mise à jour
-    } catch (err: any) {
-      console.error("[useNotifications] Erreur lors du marquage comme lu :", err);
-      setError(err.message || "Impossible de marquer comme lu.");
-    }
-  }, [fetchNotifications]);
+    },
+    [user]
+  );
 
-  // Marquer toutes les notifications comme lues
   const markAllAsRead = useCallback(async () => {
+    if (!user || !supabase) return;
     try {
-      if (!supabase) {
-        throw new Error("Client Supabase non initialisé.");
-      }
-      // Marquez uniquement les notifications non lues de l'utilisateur actuel
       await supabase
-        .from('notifications')
+        .from("notifications")
         .update({ is_read: true })
-        .eq('user_id', supabase.auth.currentUser?.id) // S'assurer que seul l'utilisateur voit ses notifs
-        .eq('is_read', false);
-      fetchNotifications();
+        .eq("user_id", user.id)
+        .eq("is_read", false);
+
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     } catch (err: any) {
-      console.error("[useNotifications] Erreur lors du marquage de toutes les notifications :", err);
-      setError(err.message || "Impossible de marquer toutes les notifications comme lues.");
+      console.error("[useNotifications] Erreur marquage global :", err);
+      setError(err.message || "Impossible de marquer tout comme lu.");
     }
-  }, [fetchNotifications]);
+  }, [user]);
 
-
-  return { notifications, unreadCount, isLoading, error, markAsRead, markAllAsRead, fetchNotifications };
+  return {
+    notifications,
+    unreadCount,
+    isLoading,
+    error,
+    markAsRead,
+    markAllAsRead,
+    fetchNotifications,
+  };
 }

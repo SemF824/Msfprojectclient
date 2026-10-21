@@ -8,21 +8,21 @@ const ECDSA_PARAMS = { name: 'ECDSA', namedCurve: 'P-256' };
  * Génère et stocke les paires de clés s'elles n'existent pas encore.
  * @returns Les clés publiques au format JWK prêtes à être envoyées à Supabase.
  */
-export async function initializeUserKeys(): Promise<{ ecdhPubJwk: JsonWebKey; ecdsaPubJwk: JsonWebKey } | null> {
+export async function initializeUserKeys(userId?: string): Promise<{ ecdhPubJwk: JsonWebKey; ecdsaPubJwk: JsonWebKey } | null> {
   try {
-    let ecdhKeys = await loadKey('ecdh');
-    let ecdsaKeys = await loadKey('ecdsa');
+    let ecdhKeys = await loadKey('ecdh', userId);
+    let ecdsaKeys = await loadKey('ecdsa', userId);
 
     // Génération si introuvable
     if (!ecdhKeys) {
       ecdhKeys = await crypto.subtle.generateKey(ECDH_PARAMS, false, ['deriveKey', 'deriveBits']) as CryptoKeyPair;
-      await storeKey('ecdh', ecdhKeys);
+      await storeKey('ecdh', ecdhKeys, userId);
     }
 
     if (!ecdsaKeys) {
       // Pour la signature, extractable=false sécurise la clé privée
       ecdsaKeys = await crypto.subtle.generateKey(ECDSA_PARAMS, false, ['sign', 'verify']) as CryptoKeyPair;
-      await storeKey('ecdsa', ecdsaKeys);
+      await storeKey('ecdsa', ecdsaKeys, userId);
     }
 
     // Export des clés publiques uniquement pour les stocker sur le serveur

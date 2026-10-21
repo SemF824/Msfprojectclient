@@ -278,8 +278,8 @@ export default function AdminDashboard() {
               </p>
             </div>
             <button
-              onClick={() => navigate("/admin/demandes")}
-              className="text-xs font-bold text-[#d4af37] hover:text-[#b8952e] flex items-center gap-1 bg-[#d4af37]/5 px-3 py-1.5 rounded-lg transition-all"
+              onClick={() => navigate("/admin/demandes?tab=devis")}
+              className="text-xs font-bold text-[#d4af37] hover:text-[#b8952e] flex items-center gap-1 bg-[#d4af37]/5 px-3 py-1.5 rounded-lg transition-all cursor-pointer"
             >
               Voir tout <ArrowUpRight className="w-3.5 h-3.5" />
             </button>
@@ -302,7 +302,8 @@ export default function AdminDashboard() {
                 return (
                   <div
                     key={req.id}
-                    className="py-4 flex items-center justify-between gap-4 first:pt-0 last:pb-0 hover:bg-gray-50/50 px-2 rounded-xl transition-colors"
+                    onClick={() => navigate(`/admin/demandes/${req.id}`)}
+                    className="py-4 flex items-center justify-between gap-4 first:pt-0 last:pb-0 hover:bg-amber-50/40 px-3 rounded-xl transition-all cursor-pointer group"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold text-sm text-[#0a0f1e] truncate">

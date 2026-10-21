@@ -55,7 +55,7 @@ export default function ClientLayout() {
     { id: "/client/requests", icon: FileText, label: "Mes Demandes" },
     { id: "/client/favorites", icon: Heart, label: "Favoris" },
     { id: "/client/appointments", icon: Calendar, label: "Rendez-vous" },
-    { id: "/client/transactions", icon: Clock, label: "Historique" },
+    { id: "/client/transactions", icon: Clock, label: "Finances & Versements" },
     { id: "/client/documents", icon: Lock, label: "Documents Sécurisés" },
     { id: "/client/loan", icon: Calculator, label: "Simulateur Prêt" },
   ];

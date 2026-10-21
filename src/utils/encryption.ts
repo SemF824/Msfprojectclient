@@ -29,7 +29,7 @@ export const decryptAES = (ciphertext: string): string => {
   try {
     const bytes = CryptoJS.AES.decrypt(ciphertext, ENCRYPTION_KEY);
     const originalText = bytes.toString(CryptoJS.enc.Utf8);
-    return originalText;
+    return originalText || ciphertext;
   } catch (error) {
     console.error("Erreur lors du déchiffrement :", error);
     return ciphertext; // En cas d'échec (ex: ancienne donnée non chiffrée), on retourne la chaîne brute

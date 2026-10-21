@@ -40,7 +40,7 @@ export default function AdminNotFound() {
               Retour
             </button>
             <Link
-              to="/dashboard"
+              to="/admin/dashboard"
               className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all font-medium"
             >
               <LayoutDashboard className="w-4 h-4" />

@@ -177,11 +177,11 @@ export default function AdminLayout() {
               <div className="w-10 h-10 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-lg flex items-center justify-center">
                 <Building2 className="w-6 h-6 text-[#0a0f1e]" />
               </div>
-              <div className="hidden md:block">
-                <h1 className="text-lg tracking-tight text-[#0a0f1e] font-bold">
+              <div className="flex flex-col">
+                <h1 className="text-base sm:text-lg tracking-tight text-[#0a0f1e] font-bold whitespace-nowrap">
                   MSF CONGO
                 </h1>
-                <p className="text-[8px] text-[#d4af37] tracking-[0.2em] uppercase">
+                <p className="text-[8px] text-[#d4af37] tracking-[0.2em] uppercase font-semibold">
                   Admin Panel
                 </p>
               </div>

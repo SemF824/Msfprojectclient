@@ -76,11 +76,12 @@ export default function EncryptedChat({
     }
 
     try {
+      const senderEcdsaPub = senderPubKey.ecdsa_pub_key || senderPubKey.ecdsa_pub;
       const { text, isValidSignature } = await decryptChatMessage(
         msg.content_encrypted,
         msg.iv,
         msg.signature,
-        senderPubKey.ecdsa_pub,
+        senderEcdsaPub,
         accessKey.encrypted_aes_key,
         accessKey.ephemeral_pub
       );
@@ -137,7 +138,7 @@ export default function EncryptedChat({
       // 3. Clés publiques des expéditeurs
       const { data: publicKeys } = await supabase
         .from("user_public_keys")
-        .select("user_id, ecdsa_pub")
+        .select("user_id, ecdsa_pub_key")
         .in("user_id", senderIds);
 
       const publicKeysMap: Record<string, any> = {};
@@ -186,24 +187,33 @@ export default function EncryptedChat({
           const newMsg = payload.new as any;
           if (newMsg.sender_id === currentUserId) return;
 
-          // Récupérer la clé d'accès et la clé publique de l'expéditeur
-          const [{ data: ak }, { data: pk }] = await Promise.all([
-            client
+          // Récupérer la clé publique de l'expéditeur et la clé d'accès avec retry anti-concurrence
+          let accessKey = null;
+          for (let attempt = 0; attempt < 4; attempt++) {
+            const { data } = await client
               .from("message_access_keys")
               .select("*")
               .eq("message_id", newMsg.id)
               .eq("recipient_id", currentUserId)
-              .maybeSingle(),
-            client
-              .from("user_public_keys")
-              .select("user_id, ecdsa_pub")
-              .eq("user_id", newMsg.sender_id)
-              .maybeSingle(),
-          ]);
+              .maybeSingle();
+            if (data) {
+              accessKey = data;
+              break;
+            }
+            if (attempt < 3) {
+              await new Promise((r) => setTimeout(r, 250));
+            }
+          }
+
+          const { data: pk } = await client
+            .from("user_public_keys")
+            .select("user_id, ecdsa_pub_key")
+            .eq("user_id", newMsg.sender_id)
+            .maybeSingle();
 
           const decrypted = await decryptMessageRow(
             newMsg,
-            ak ? { [newMsg.id]: ak } : {},
+            accessKey ? { [newMsg.id]: accessKey } : {},
             pk ? { [pk.user_id]: pk } : {}
           );
 
@@ -269,16 +279,16 @@ export default function EncryptedChat({
 
       const { data: keysData, error: keysErr } = await supabase
         .from("user_public_keys")
-        .select("user_id, ecdh_pub")
+        .select("user_id, ecdh_pub_key")
         .in("user_id", Array.from(recipientIds));
 
       if (keysErr || !keysData || keysData.length === 0) {
         throw new Error("Clés publiques des participants introuvables.");
       }
 
-      const recipients: RecipientKeyData[] = keysData.map((k) => ({
+      const recipients: RecipientKeyData[] = keysData.map((k: any) => ({
         recipientId: k.user_id,
-        ecdhPubJwk: k.ecdh_pub,
+        ecdhPubJwk: k.ecdh_pub_key || k.ecdh_pub,
       }));
 
       // 2. Chiffrement E2EE & Signature ECDSA

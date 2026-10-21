@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { Link, useParams, useNavigate } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
   FileText,
@@ -16,7 +17,7 @@ import {
   Square,
   Briefcase,
 } from "lucide-react";
-import { supabase } from "../../hooks/useSupabaseAuth";
+import { supabase, useSupabaseAuth } from "../../hooks/useSupabaseAuth";
 import { toast } from "sonner";
 import { encryptDevisRequest } from "../../utils/devisEncryption";
 import { z } from "zod";
@@ -31,20 +32,43 @@ export const phoneSchema = z.string().refine(
 export default function DevisRequest() {
   const { propertyId } = useParams();
   const navigate = useNavigate();
+  const { user } = useSupabaseAuth();
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
+  // Récupération dynamique de la propriété réelle depuis Supabase
+  const { data: dbProperty } = useQuery({
+    queryKey: ["devis_property_fetch", propertyId],
+    queryFn: async () => {
+      if (!supabase || !propertyId) return null;
+      const { data, error } = await supabase
+        .from("properties")
+        .select("*")
+        .eq("id", propertyId)
+        .maybeSingle();
+
+      if (error) return null;
+      return data;
+    },
+    enabled: Boolean(propertyId),
+  });
+
   const property = {
-    id: propertyId || "tchikobo-villa-5",
-    title: "Villa Tchikobo Prestige",
-    location: "Tchikobo, Pointe-Noire",
-    price: 295200000,
-    priceLabel: "295 200 000 FCFA",
-    type: "Villa de Luxe",
-    bedrooms: 5,
-    bathrooms: 4,
-    surface: 450,
-    image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800",
+    id: propertyId || dbProperty?.id || "tchikobo-villa-5",
+    title: dbProperty?.title || "Villa Tchikobo Prestige",
+    location: dbProperty?.location || "Tchikobo, Pointe-Noire",
+    price: dbProperty?.price ? Number(dbProperty.price) : 295200000,
+    priceLabel: dbProperty?.price
+      ? `${new Intl.NumberFormat("fr-FR").format(Number(dbProperty.price))} FCFA`
+      : "295 200 000 FCFA",
+    type: dbProperty?.type || "Villa de Luxe",
+    bedrooms: dbProperty?.beds ?? 5,
+    bathrooms: dbProperty?.baths ?? 4,
+    surface: dbProperty?.sqft ?? 450,
+    image:
+      dbProperty?.image ||
+      dbProperty?.images?.[0] ||
+      "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800",
   };
 
   const [formData, setFormData] = useState({
@@ -98,6 +122,7 @@ export default function DevisRequest() {
 
     try {
       const payload = {
+        client_id: user?.id || null,
         client_first_name: formData.firstName,
         client_last_name: formData.lastName,
         client_email: formData.email,
@@ -108,6 +133,7 @@ export default function DevisRequest() {
         client_country: formData.country,
         client_profession: formData.profession,
         client_company: formData.company || null,
+        client_monthly_income: formData.monthlyIncome || null,
         property_id: property.id,
         property_name: property.title,
         property_price: property.price,
@@ -121,7 +147,7 @@ export default function DevisRequest() {
         number_of_persons: parseInt(formData.numberOfPersons, 10),
         message: formData.message || null,
         status: "nouveau",
-        priority: "normale",
+        priority: "moyenne",
         terms_accepted: formData.acceptTerms,
         contact_accepted: formData.acceptContact,
       };
