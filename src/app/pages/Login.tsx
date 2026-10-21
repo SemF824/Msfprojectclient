@@ -14,8 +14,10 @@ import {
 } from "lucide-react";
 import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 import { Provider } from "@supabase/supabase-js";
+import { useTranslation } from "../../context/LanguageContext";
 
 export default function Login() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, isAdmin, userRole, signIn, resetPassword, getUserRole } = useSupabaseAuth();
@@ -35,9 +37,9 @@ export default function Login() {
 
   useEffect(() => {
     if (searchParams.get("confirmed") === "true") {
-      setSuccessMessage("Votre adresse email a été confirmée avec succès. Vous pouvez maintenant vous connecter.");
+      setSuccessMessage(t("login.emailConfirmed"));
     }
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   useEffect(() => {
     if (user) {
@@ -65,7 +67,7 @@ export default function Login() {
       });
 
       if (resendErr) throw resendErr;
-      setSuccessMessage("Un nouvel email de confirmation a été envoyé à votre adresse.");
+      setSuccessMessage(t("login.resendSuccess"));
       setError(null);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Échec du renvoi de l'email.";
@@ -172,7 +174,7 @@ export default function Login() {
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/80 border border-gray-200 text-gray-600 hover:text-[#d4af37] hover:border-[#d4af37]/40 shadow-sm transition-all text-xs font-medium backdrop-blur-sm"
           >
             <HomeIcon className="w-3.5 h-3.5" />
-            <span>Retour à l'accueil</span>
+            <span>{t("login.backHome")}</span>
           </Link>
         </div>
 
@@ -183,12 +185,12 @@ export default function Login() {
         >
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-[#0a0f1e] mb-2 tracking-tight">
-              {isResetMode ? "Réinitialisation" : "Espace Client"}
+              {isResetMode ? t("login.resetTitle") : t("login.title")}
             </h1>
             <p className="text-sm text-gray-500">
               {isResetMode
-                ? "Entrez votre email pour recevoir le lien de récupération"
-                : "Connectez-vous pour suivre vos démarches immobilières"}
+                ? t("login.resetSubtitle")
+                : t("login.subtitle")}
             </p>
           </div>
 
@@ -225,7 +227,7 @@ export default function Login() {
                   className="w-full mt-2 py-2 px-3 bg-red-100 hover:bg-red-200 text-red-800 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isResendingEmail ? "animate-spin" : ""}`} />
-                  Renvoyer l'e-mail de confirmation
+                  {t("login.resendConfirmation")}
                 </button>
               )}
             </motion.div>
@@ -234,7 +236,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-gray-700 ml-1">
-                Adresse email
+                {t("login.email")}
               </label>
               <div className="relative">
                 <Mail className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
@@ -253,7 +255,7 @@ export default function Login() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between ml-1">
                   <label className="text-xs font-semibold text-gray-700">
-                    Mot de passe
+                    {t("login.password")}
                   </label>
                   <button
                     type="button"
@@ -264,7 +266,7 @@ export default function Login() {
                     }}
                     className="text-xs text-[#d4af37] hover:underline font-medium"
                   >
-                    Mot de passe oublié ?
+                    {t("login.forgotPassword")}
                   </button>
                 </div>
                 <div className="relative">
@@ -297,7 +299,7 @@ export default function Login() {
                 <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>{isResetMode ? "Envoyer le lien" : "Se connecter"}</span>
+                  <span>{isResetMode ? t("login.sendReset") : t("login.loginBtn")}</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -315,7 +317,7 @@ export default function Login() {
                 }}
                 className="text-xs text-gray-500 hover:text-[#0a0f1e] font-medium"
               >
-                Retour à la connexion
+                {t("login.backToLogin")}
               </button>
             </div>
           )}
@@ -361,12 +363,12 @@ export default function Login() {
 
               <div className="mt-8 text-center">
                 <p className="text-xs text-gray-500">
-                  Vous n'avez pas de compte ?{" "}
+                  {t("login.noAccount")}{" "}
                   <Link
                     to="/signup"
                     className="font-bold text-[#d4af37] hover:underline"
                   >
-                    Créer un compte
+                    {t("login.createAccount")}
                   </Link>
                 </p>
               </div>

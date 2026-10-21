@@ -9,8 +9,11 @@ import { Expertise } from "../components/Expertise";
 import { PropertyFilter } from "../components/PropertyFilter";
 import { FeaturedProperties } from "../components/FeaturedProperties";
 import { useSEO } from "../../hooks/useSEO";
+import { useTranslation } from "../../context/LanguageContext";
 
 export default function Home() {
+  const { t } = useTranslation();
+
   // INJECTION SEO DYNAMIQUE
   useSEO({
     title: "Promoteur Immobilier d'Excellence",
@@ -71,15 +74,19 @@ export default function Home() {
       <section className="py-24 bg-[#0a0f1e] text-white">
         <div className="container mx-auto px-6">
           <div className="max-w-3xl mx-auto text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Investissez en toute sérénité</h2>
-            <p className="text-gray-400">Un processus transparent et sécurisé en 3 étapes clés, conçu pour vous garantir une tranquillité d'esprit totale.</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              {t("home.investSection")}
+            </h2>
+            <p className="text-gray-400">
+              {t("home.investDesc")}
+            </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { title: "Réservation & Gros Œuvre", pct: "30%", desc: "Sécurisez votre villa avec un premier apport. Ce montant couvre l'acquisition du terrain, les études préliminaires et la réalisation complète des fondations." },
-              { title: "Élévation & Toiture", pct: "30%", desc: "Vous réglez 10% pour l'élévation des murs de la structure, puis 20% supplémentaires à la mise hors d'eau (installation de la toiture). Vous ne payez que ce que vous voyez s'élever." },
-              { title: "Finitions & Clés en main", pct: "40%", desc: "Ce dernier versement sécurise la finalisation de votre villa : plomberie, électricité, finitions intérieures/extérieures et la remise officielle de vos clés." }
+              { title: t("home.step1Title"), pct: t("home.step1Pct"), desc: t("home.step1Desc") },
+              { title: t("home.step2Title"), pct: t("home.step2Pct"), desc: t("home.step2Desc") },
+              { title: t("home.step3Title"), pct: t("home.step3Pct"), desc: t("home.step3Desc") }
             ].map((feature, i) => (
               <div 
                 key={i} 

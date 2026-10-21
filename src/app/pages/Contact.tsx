@@ -21,6 +21,7 @@ import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { PhoneInput } from "../components/ui/PhoneInput";
 import { supabase } from "../../hooks/useSupabaseAuth";
 import { useCurrency } from "../../context/CurrencyContext";
+import { useTranslation } from "../../context/LanguageContext";
 import { isValidPhone } from "../../utils/phone";
 
 export const phoneSchema = z.string().refine(
@@ -97,6 +98,7 @@ const GoogleMap = memo(function GoogleMap() {
 });
 
 export default function Contact() {
+  const { t } = useTranslation();
   const { executeRecaptcha } = useGoogleReCaptcha();
   const { formatPrice, currency } = useCurrency();
 
@@ -374,14 +376,13 @@ export default function Contact() {
             className="max-w-4xl mx-auto text-center"
           >
             <h1 className="text-5xl md:text-6xl lg:text-7xl mb-6 text-white">
-              Contactez-
+              {t("contact.pageTitle")}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">
-                Nous
+                {t("contact.pageTitleHighlight")}
               </span>
             </h1>
             <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-              Notre équipe d'experts est à votre écoute pour concrétiser vos
-              projets immobiliers
+              {t("contact.pageSubtitle")}
             </p>
           </motion.div>
         </div>
@@ -756,15 +757,14 @@ export default function Contact() {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#d4af37]/10 rounded-full mb-4">
               <Users className="w-5 h-5 text-[#d4af37]" />
               <span className="text-sm font-semibold text-[#d4af37]">
-                L'Équipe Dirigeante
+                {t("contact.sectionTeam")}
               </span>
             </div>
             <h2 className="text-4xl md:text-5xl text-[#0a0f1e] mb-4">
-              Rencontrez Notre Équipe
+              {t("contact.meetTeam")}
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Une équipe expérimentée et dévouée à la réussite de vos projets
-              immobiliers
+              {t("contact.meetTeamSub")}
             </p>
           </motion.div>
 
@@ -783,7 +783,7 @@ export default function Contact() {
                 <div className="p-8 md:p-12">
                   <div className="inline-block px-4 py-1.5 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] rounded-full mb-4 shadow-sm">
                     <span className="text-xs font-bold text-[#0a0f1e] uppercase tracking-wider">
-                      Fondateur & Direction
+                      {t("contact.founderBadge")}
                     </span>
                   </div>
                   <h3 className="text-3xl md:text-4xl font-bold text-[#0a0f1e] mb-2">
@@ -793,7 +793,7 @@ export default function Contact() {
                     {team[0].role}
                   </p>
                   <p className="text-gray-600 leading-relaxed text-base">
-                    Visionnaire et leader de MSF Congo depuis 2001, Roger ROC a bâti une entreprise de référence dans la construction durable et l'immobilier de prestige au Congo.
+                    {t("contact.founderDesc")}
                   </p>
                 </div>
               </div>
@@ -804,7 +804,7 @@ export default function Contact() {
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-10">
               <h3 className="text-2xl md:text-3xl font-bold text-[#0a0f1e]">
-                Nos Collaborateurs
+                {t("contact.collaborators")}
               </h3>
               <div className="w-16 h-1 bg-[#d4af37] mx-auto mt-3 rounded-full"></div>
             </div>

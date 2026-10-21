@@ -1,33 +1,36 @@
 import { Award, Building2, Globe, Users } from "lucide-react";
-
-const stats = [
-  {
-    icon: Building2,
-    value: "2001",
-    label: "Année de Création",
-    description: "Acteur dans la construction durable au Congo",
-  },
-  {
-    icon: Globe,
-    value: "470+",
-    label: "Contrats",
-    description: "Ils nous ont fait confiance",
-  },
-  {
-    icon: Users,
-    value: "92%",
-    label: "Taux de Satisfaction",
-    description: "Ils sont satisfaits",
-  },
-  {
-    icon: Award,
-    value: "5+",
-    label: "Projets Majeurs",
-    description: "Expérience et Excellence",
-  },
-];
+import { useTranslation } from "../../context/LanguageContext";
 
 export function Statistics() {
+  const { t } = useTranslation();
+
+  const stats = [
+    {
+      icon: Building2,
+      value: "2001",
+      label: t("statistics.founded"),
+      description: t("statistics.foundedDesc"),
+    },
+    {
+      icon: Globe,
+      value: "470+",
+      label: t("statistics.contracts"),
+      description: t("statistics.contractsDesc"),
+    },
+    {
+      icon: Users,
+      value: "92%",
+      label: t("statistics.satisfaction"),
+      description: t("statistics.satisfactionDesc"),
+    },
+    {
+      icon: Award,
+      value: "5+",
+      label: t("statistics.projects"),
+      description: t("statistics.projectsDesc"),
+    },
+  ];
+
   return (
     <section className="py-16 sm:py-20 px-4 sm:px-6 relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
       <div className="absolute inset-0 opacity-5 pointer-events-none">
@@ -67,7 +70,7 @@ export function Statistics() {
                 </div>
                 <div className="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5 text-[11px] text-[#8c7423] font-semibold uppercase tracking-wider">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]" />
-                  <span>Référence MSF</span>
+                  <span>{t("statistics.reference")}</span>
                 </div>
               </div>
             );

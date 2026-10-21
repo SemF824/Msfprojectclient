@@ -17,8 +17,11 @@ import { Link, useNavigate } from "react-router";
 import { useSupabaseAuth } from "../../hooks/useSupabaseAuth";
 import { useNotifications } from "../../hooks/useNotifications";
 import { CurrencySelector } from "./CurrencySelector";
+import { LanguageSelector } from "./LanguageSelector";
+import { useTranslation } from "../../context/LanguageContext";
 
 export function Header() {
+  const { t } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -63,38 +66,39 @@ export function Header() {
               to="/"
               className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
             >
-              Accueil
+              {t("nav.home")}
             </Link>
             <Link
               to="/properties"
               className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
             >
-              Propriétés
+              {t("nav.properties")}
             </Link>
             <Link
               to="/services"
               className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
             >
-              Services
+              {t("nav.services")}
             </Link>
             <Link
               to="/about"
               className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
             >
-              À Propos
+              {t("nav.about")}
             </Link>
             <Link
               to="/contact"
               className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
             >
-              Contact
+              {t("nav.contact")}
             </Link>
           </nav>
 
-          {/* Actions & Sélecteur de Devise */}
+          {/* Actions & Sélecteurs */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Sélecteur de monnaie Desktop */}
-            <div className="hidden sm:block">
+            {/* Sélecteurs Desktop */}
+            <div className="hidden sm:flex items-center gap-2">
+              <LanguageSelector />
               <CurrencySelector />
             </div>
 
@@ -105,7 +109,7 @@ export function Header() {
                   <input
                     autoFocus
                     type="text"
-                    placeholder="Rechercher un bien..."
+                    placeholder={t("nav.searchPlaceholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-32 sm:w-48 lg:w-64 pl-4 pr-8 sm:pr-10 py-1.5 sm:py-2 bg-gray-100 border-none rounded-full text-xs sm:text-sm text-[#0a0f1e] placeholder:text-gray-400 focus:ring-2 focus:ring-[#d4af37] outline-none transition-all"
@@ -114,7 +118,7 @@ export function Header() {
                     type="button"
                     onClick={() => setIsSearchOpen(false)}
                     className="absolute right-2 sm:right-3 text-gray-400 hover:text-red-500"
-                    aria-label="Fermer la recherche"
+                    aria-label={t("nav.closeSearch")}
                   >
                     <X
                       className="w-3.5 h-3.5 sm:w-4 sm:h-4"
@@ -126,7 +130,7 @@ export function Header() {
                 <button
                   onClick={() => setIsSearchOpen(true)}
                   className="p-1.5 sm:p-2 text-gray-600 hover:text-[#d4af37] transition-colors rounded-full hover:bg-gray-100"
-                  aria-label="Ouvrir la recherche"
+                  aria-label={t("nav.openSearch")}
                 >
                   <Search
                     className="w-4 h-4 sm:w-5 sm:h-5"
@@ -206,43 +210,43 @@ export function Header() {
                             to="/admin"
                             onClick={() => setIsUserMenuOpen(false)}
                             className="flex items-center gap-3 px-3 py-2.5 bg-gradient-to-r from-[#d4af37]/10 to-transparent text-[#0a0f1e] hover:bg-[#d4af37]/20 transition-colors rounded-xl font-semibold"
-                            aria-label="Espace MSF Congo"
+                            aria-label={t("nav.adminSpace")}
                           >
                             <Building2 className="w-4 h-4 text-[#d4af37]" />
-                            <span className="text-sm">Espace MSF Congo</span>
+                            <span className="text-sm">{t("nav.adminSpace")}</span>
                           </Link>
                         )}
                         <Link
                           to="/client/dashboard"
                           onClick={() => setIsUserMenuOpen(false)}
                           className="flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#0a0f1e] transition-colors rounded-xl"
-                          aria-label="Tableau de bord"
+                          aria-label={t("nav.dashboard")}
                         >
                           <Building2 className="w-4 h-4" />
                           <span className="text-sm font-medium">
-                            Tableau de bord
+                            {t("nav.dashboard")}
                           </span>
                         </Link>
                         <Link
                           to="/client/profile"
                           onClick={() => setIsUserMenuOpen(false)}
                           className="flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#0a0f1e] transition-colors rounded-xl"
-                          aria-label="Mon Profil"
+                          aria-label={t("nav.myProfile")}
                         >
                           <User className="w-4 h-4" />
                           <span className="text-sm font-medium">
-                            Mon Profil
+                            {t("nav.myProfile")}
                           </span>
                         </Link>
                         <Link
                           to="/client/favorites"
                           onClick={() => setIsUserMenuOpen(false)}
                           className="flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-[#0a0f1e] transition-colors rounded-xl"
-                          aria-label="Mes Favoris"
+                          aria-label={t("nav.myFavorites")}
                         >
                           <Heart className="w-4 h-4" />
                           <span className="text-sm font-medium">
-                            Mes Favoris
+                            {t("nav.myFavorites")}
                           </span>
                         </Link>
                       </div>
@@ -254,10 +258,10 @@ export function Header() {
                             await signOut();
                             setIsUserMenuOpen(false);
                           }}
-                          aria-label="Se déconnecter"
+                          aria-label={t("nav.logout")}
                         >
                           <LogOut className="w-4 h-4" aria-hidden="true" />
-                          <span className="text-sm">Déconnexion</span>
+                          <span className="text-sm">{t("nav.logout")}</span>
                         </button>
                       </div>
                     </div>
@@ -268,10 +272,10 @@ export function Header() {
               <Link
                 to="/login"
                 className="hidden md:flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-full font-semibold hover:shadow-lg hover:shadow-[#d4af37]/30 transition-all transform hover:-translate-y-0.5"
-                aria-label="Espace Client"
+                aria-label={t("nav.clientSpace")}
               >
                 <User className="w-4 h-4" aria-hidden="true" />
-                <span className="text-sm">Espace Client</span>
+                <span className="text-sm">{t("nav.clientSpace")}</span>
               </Link>
             )}
 
@@ -279,7 +283,7 @@ export function Header() {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="lg:hidden p-1.5 sm:p-2 text-gray-600 hover:text-[#d4af37] transition-colors"
               aria-expanded={isMenuOpen}
-              aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+              aria-label={isMenuOpen ? t("nav.closeMenu") : t("nav.openMenu")}
             >
               {isMenuOpen ? (
                 <X className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
@@ -293,9 +297,16 @@ export function Header() {
         {/* Menu Mobile */}
         {isMenuOpen && (
           <div className="lg:hidden py-4 border-t border-gray-100 absolute left-0 right-0 bg-white px-4 shadow-xl">
+            <div className="mb-3 pb-3 border-b border-gray-100 flex items-center justify-between">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                {t("nav.language")}
+              </span>
+              <LanguageSelector />
+            </div>
+
             <div className="mb-4 pb-3 border-b border-gray-100 flex items-center justify-between">
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Devise d'affichage
+                {t("nav.currency")}
               </span>
               <CurrencySelector />
             </div>
@@ -306,35 +317,35 @@ export function Header() {
                 className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Accueil
+                {t("nav.home")}
               </Link>
               <Link
                 to="/properties"
                 className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Propriétés
+                {t("nav.properties")}
               </Link>
               <Link
                 to="/services"
                 className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Services
+                {t("nav.services")}
               </Link>
               <Link
                 to="/about"
                 className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                À Propos
+                {t("nav.about")}
               </Link>
               <Link
                 to="/contact"
                 className="text-sm font-medium text-gray-600 hover:text-[#d4af37] transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Contact
+                {t("nav.contact")}
               </Link>
 
               {isLoggedIn ? (
@@ -346,7 +357,7 @@ export function Header() {
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <Building2 className="w-4 h-4" />
-                      <span className="text-sm">Espace MSF Congo</span>
+                      <span className="text-sm">{t("nav.adminSpace")}</span>
                     </Link>
                   )}
                   <Link
@@ -355,7 +366,7 @@ export function Header() {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <Building2 className="w-4 h-4" />
-                    <span>Tableau de bord</span>
+                    <span>{t("nav.dashboard")}</span>
                   </Link>
                   <Link
                     to="/client/profile"
@@ -363,7 +374,7 @@ export function Header() {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <User className="w-4 h-4" />
-                    <span>Mon Profil</span>
+                    <span>{t("nav.myProfile")}</span>
                   </Link>
                   <Link
                     to="/client/favorites"
@@ -371,7 +382,7 @@ export function Header() {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <Heart className="w-4 h-4" />
-                    <span>Mes Favoris</span>
+                    <span>{t("nav.myFavorites")}</span>
                   </Link>
                   <Link
                     to="/client/notifications"
@@ -380,7 +391,7 @@ export function Header() {
                   >
                     <Bell className="w-4 h-4" />
                     <span>
-                      Notifications {unreadCount > 0 && `(${unreadCount})`}
+                      {t("nav.notifications")} {unreadCount > 0 && `(${unreadCount})`}
                     </span>
                   </Link>
                   <button
@@ -391,7 +402,7 @@ export function Header() {
                     }}
                   >
                     <LogOut className="w-4 h-4" />
-                    <span>Déconnexion</span>
+                    <span>{t("nav.logout")}</span>
                   </button>
                 </div>
               ) : (
@@ -401,7 +412,7 @@ export function Header() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <User className="w-4 h-4" />
-                  <span className="text-sm">Espace Client</span>
+                  <span className="text-sm">{t("nav.clientSpace")}</span>
                 </Link>
               )}
             </nav>

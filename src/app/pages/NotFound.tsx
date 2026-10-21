@@ -1,8 +1,11 @@
 import { Link } from "react-router";
 import { Home, Search, ArrowLeft } from "lucide-react";
 import { motion } from "motion/react";
+import { useTranslation } from "../../context/LanguageContext";
 
 export default function NotFound() {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 flex items-center justify-center px-6">
       <motion.div
@@ -24,10 +27,10 @@ export default function NotFound() {
           </div>
 
           <h2 className="text-3xl md:text-4xl text-[#0a0f1e] font-bold mb-4">
-            Page Introuvable
+            {t("notFound.title")}
           </h2>
           <p className="text-gray-600 text-lg mb-8">
-            Désolé, la page que vous recherchez n'existe pas ou a été déplacée.
+            {t("notFound.desc")}
           </p>
 
           {/* Action Buttons */}
@@ -37,14 +40,14 @@ export default function NotFound() {
               className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              Retour
+              {t("notFound.back")}
             </button>
             <Link
               to="/"
               className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all font-medium"
             >
               <Home className="w-4 h-4" />
-              Retour à l'Accueil
+              {t("notFound.backHome")}
             </Link>
           </div>
         </div>
@@ -55,25 +58,25 @@ export default function NotFound() {
             to="/"
             className="p-4 bg-white rounded-xl border border-gray-200 hover:border-[#d4af37] transition-colors text-gray-700 hover:text-[#d4af37]"
           >
-            <p className="text-sm font-medium">Accueil</p>
+            <p className="text-sm font-medium">{t("nav.home")}</p>
           </Link>
           <Link
             to="/services"
             className="p-4 bg-white rounded-xl border border-gray-200 hover:border-[#d4af37] transition-colors text-gray-700 hover:text-[#d4af37]"
           >
-            <p className="text-sm font-medium">Services</p>
+            <p className="text-sm font-medium">{t("nav.services")}</p>
           </Link>
           <Link
             to="/contact"
             className="p-4 bg-white rounded-xl border border-gray-200 hover:border-[#d4af37] transition-colors text-gray-700 hover:text-[#d4af37]"
           >
-            <p className="text-sm font-medium">Contact</p>
+            <p className="text-sm font-medium">{t("nav.contact")}</p>
           </Link>
           <Link
-            to="/dashboard"
+            to="/client/dashboard"
             className="p-4 bg-white rounded-xl border border-gray-200 hover:border-[#d4af37] transition-colors text-gray-700 hover:text-[#d4af37]"
           >
-            <p className="text-sm font-medium">Dashboard</p>
+            <p className="text-sm font-medium">{t("nav.dashboard")}</p>
           </Link>
         </div>
       </motion.div>

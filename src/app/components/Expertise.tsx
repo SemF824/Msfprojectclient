@@ -1,59 +1,64 @@
 import { motion } from "motion/react";
 import { Construction, Route, Droplet, Building2 } from "lucide-react";
-
-const expertiseAreas = [
-  {
-    icon: Building2,
-    title: "Promotion Immobilière",
-    description: "Leader de la promotion immobilière privée au Congo-Brazzaville. Conception et réalisation de villes nouvelles complètes avec infrastructures intégrées.",
-    highlights: ["Villas de standing", "Immeubles résidentiels", "Lotissements urbains"]
-  },
-  {
-    icon: Construction,
-    title: "Génie Civil",
-    description: "Construction de ponts et infrastructures lourdes indispensables pour désenclaver nos cités et connecter les quartiers au centre-ville.",
-    highlights: ["Ponts routiers", "Ouvrages d'art", "Fondations spéciales"]
-  },
-  {
-    icon: Route,
-    title: "Aménagement Urbain",
-    description: "Réalisation de routes modernes et de ronds-points emblématiques comme la place Antonetti à Pointe-Noire. Création de voiries complètes pour nos développements.",
-    highlights: ["Routes bitumées", "Ronds-points", "Voiries urbaines"]
-  },
-  {
-    icon: Droplet,
-    title: "Assainissement",
-    description: "Création de systèmes complets d'évacuation et de gestion des eaux sur des zones auparavant marécageuses. Solutions écologiques et durables.",
-    highlights: ["Drainage urbain", "Réseaux EU/EP", "Assainissement écologique"]
-  }
-];
-
-// Orchestration
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.15 }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    transition: { duration: 0.5, ease: "easeOut" } 
-  }
-};
+import { useTranslation } from "../../context/LanguageContext";
 
 export function Expertise() {
+  const { t } = useTranslation();
+
+  const expertiseAreas = [
+    {
+      icon: Building2,
+      title: t("expertise.area1Title"),
+      description: t("expertise.area1Desc"),
+      highlights: [
+        t("expertise.area1h1"),
+        t("expertise.area1h2"),
+        t("expertise.area1h3"),
+      ],
+    },
+    {
+      icon: Construction,
+      title: t("expertise.area2Title"),
+      description: t("expertise.area2Desc"),
+      highlights: [
+        t("expertise.area2h1"),
+        t("expertise.area2h2"),
+        t("expertise.area2h3"),
+      ],
+    },
+    {
+      icon: Route,
+      title: t("expertise.area3Title"),
+      description: t("expertise.area3Desc"),
+      highlights: [
+        t("expertise.area3h1"),
+        t("expertise.area3h2"),
+        t("expertise.area3h3"),
+      ],
+    },
+    {
+      icon: Droplet,
+      title: t("expertise.area4Title"),
+      description: t("expertise.area4Desc"),
+      highlights: [
+        t("expertise.area4h1"),
+        t("expertise.area4h2"),
+        t("expertise.area4h3"),
+      ],
+    },
+  ];
+
   return (
     <section className="py-24 px-6 bg-gradient-to-br from-white via-slate-50 to-blue-50 relative overflow-hidden">
       <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle at 2px 2px, #d4af37 1px, transparent 0)',
-          backgroundSize: '40px 40px'
-        }} />
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 2px 2px, #d4af37 1px, transparent 0)",
+            backgroundSize: "40px 40px",
+          }}
+        />
       </div>
 
       <div className="container mx-auto relative z-10">
@@ -62,36 +67,35 @@ export function Expertise() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            style={{ WebkitTransform: "translate3d(0,0,0)" }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1e3a5f]/40 backdrop-blur-md border border-[#d4af37]/30 mb-4"
           >
             <Building2 className="w-4 h-4 text-[#d4af37]" />
-            <span className="text-xs text-[#d4af37] tracking-wider uppercase">Nos Expertises</span>
+            <span className="text-xs text-[#d4af37] tracking-wider uppercase">
+              {t("expertise.badge")}
+            </span>
           </motion.div>
-          
+
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            style={{ WebkitTransform: "translate3d(0,0,0)" }}
-            className="text-4xl md:text-5xl mb-4"
+            className="text-4xl md:text-5xl mb-4 font-bold"
           >
-            <span className="text-[#0a0f1e]">Au-delà de </span>
+            <span className="text-[#0a0f1e]">{t("expertise.title1")} </span>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">
-              l'Immobilier
+              {t("expertise.title2")}
             </span>
           </motion.h2>
-          
+
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            style={{ WebkitTransform: "translate3d(0,0,0)" }}
             className="text-gray-600 max-w-3xl mx-auto text-lg"
           >
-            MSF Congo ne construit pas que des maisons, nous bâtissons l'infrastructure de la nation
+            {t("expertise.subtitle")}
           </motion.p>
         </div>
 
@@ -115,7 +119,10 @@ export function Expertise() {
               </p>
               <ul className="space-y-2 flex-shrink-0">
                 {area.highlights.map((highlight) => (
-                  <li key={highlight} className="flex items-center gap-2 text-gray-700">
+                  <li
+                    key={highlight}
+                    className="flex items-center gap-2 text-gray-700"
+                  >
                     <div className="w-1.5 h-1.5 bg-[#d4af37] rounded-full flex-shrink-0" />
                     <span className="text-sm">{highlight}</span>
                   </li>
@@ -129,16 +136,15 @@ export function Expertise() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          style={{ WebkitTransform: "translate3d(0,0,0)" }}
           className="mt-16 text-center"
         >
           <div className="inline-block max-w-4xl p-8 bg-white backdrop-blur-xl rounded-3xl border border-gray-200 shadow-xl">
             <p className="text-xl text-[#0a0f1e] mb-3">
-              <strong className="text-[#d4af37]">Une Vision Holistique</strong> du Développement Urbain
+              <strong className="text-[#d4af37]">{t("expertise.holisticTitle")}</strong>{" "}
+              {t("expertise.holisticSuffix")}
             </p>
             <p className="text-gray-600">
-              De la conception des logements à la construction des infrastructures,
-              MSF Congo maîtrise l'intégralité de la chaîne de valeur pour créer des villes véritablement autonomes et durables.
+              {t("expertise.holisticDesc")}
             </p>
           </div>
         </motion.div>

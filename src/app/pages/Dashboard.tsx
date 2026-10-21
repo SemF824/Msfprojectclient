@@ -13,6 +13,7 @@ import { useSupabaseAuth, supabase } from "../../hooks/useSupabaseAuth";
 import { EmptyState } from "../components/EmptyState";
 import { toast } from "sonner";
 import { decryptDevisRequests } from "../../utils/devisEncryption";
+import { useTranslation } from "../../context/LanguageContext";
 import type {
   Appointment,
   DevisRequest,
@@ -37,6 +38,7 @@ const itemVariants: Variants = {
 };
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { user: authUser, isLoading: isAuthLoading } = useSupabaseAuth();
 
   const { data: dashboardData, isLoading: isDataLoading } = useQuery({
@@ -90,7 +92,7 @@ export default function Dashboard() {
 
   const stats = [
     {
-      label: "Demandes Actives",
+      label: t("dashboard.activeRequests"),
       value: devisRequests
         .filter((r) => r?.status === "nouveau" || r?.status === "en_cours")
         .length.toString(),
@@ -98,13 +100,13 @@ export default function Dashboard() {
       color: "from-blue-500 to-blue-600",
     },
     {
-      label: "Propriétés Favorites",
+      label: t("dashboard.favoriteProperties"),
       value: favorites.length.toString(),
       icon: Heart,
       color: "from-pink-500 to-pink-600",
     },
     {
-      label: "Visites Planifiées",
+      label: t("dashboard.plannedVisits"),
       value: appointments
         .filter((a) => a?.status === "planifie")
         .length.toString(),
@@ -112,7 +114,7 @@ export default function Dashboard() {
       color: "from-green-500 to-green-600",
     },
     {
-      label: "Documents Sécurisés",
+      label: t("dashboard.secureDocuments"),
       value: documents.length.toString(),
       icon: Lock,
       color: "from-purple-500 to-purple-600",
@@ -121,15 +123,15 @@ export default function Dashboard() {
 
   const statusLabel = (s: string) =>
     ({
-      en_attente: "En attente",
-      complete: "Terminée",
-      echoue: "Échouée",
-      planifie: "Planifié",
-      nouveau: "Nouveau",
-      en_cours: "En cours",
+      en_attente: t("dashboard.status.en_attente"),
+      complete: t("dashboard.status.complete"),
+      echoue: t("dashboard.status.echoue"),
+      planifie: t("dashboard.status.planifie"),
+      nouveau: t("dashboard.status.nouveau"),
+      en_cours: t("dashboard.status.en_cours"),
     })[s] ??
     s ??
-    "Inconnu";
+    t("dashboard.status.unknown");
 
   if (isAuthLoading || isDataLoading) {
     return (
@@ -156,13 +158,13 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 sm:mb-8">
         <div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl text-[#0a0f1e] mb-1 sm:mb-2 font-bold break-words">
-            Bonjour,{" "}
+            {t("dashboard.greeting")}{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">
               {displayName.split(" ")[0]}
             </span>
           </h1>
           <p className="text-gray-500 text-xs sm:text-sm">
-            Voici un aperçu de votre activité immobilière
+            {t("dashboard.subtitle")}
           </p>
         </div>
       </div>
@@ -175,24 +177,23 @@ export default function Dashboard() {
         <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-[#d4af37]/10 rounded-full blur-3xl -mr-10 -mt-10" />
         <div className="relative z-10">
           <h2 className="text-xl sm:text-2xl text-white font-semibold mb-2 sm:mb-3 leading-tight">
-            Entamer une démarche immobilière
+            {t("dashboard.startJourney")}
           </h2>
           <p className="text-gray-300 mb-6 max-w-xl text-sm sm:text-base leading-relaxed">
-            Prêt à trouver la maison de vos rêves ou à investir ? Explorez nos
-            biens ou estimez votre capacité d'emprunt.
+            {t("dashboard.startJourneyDesc")}
           </p>
           <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
             <Link
               to="/properties"
               className="w-full sm:w-auto px-6 py-3.5 bg-[#d4af37] text-[#0a0f1e] font-semibold rounded-xl hover:bg-[#f4e3b2] transition-colors flex items-center justify-center gap-2 text-sm sm:text-base shadow-sm"
             >
-              <Search className="w-4 h-4 sm:w-5 sm:h-5" /> Explorer les biens
+              <Search className="w-4 h-4 sm:w-5 sm:h-5" /> {t("dashboard.exploreProperties")}
             </Link>
             <Link
               to="/client/loan"
               className="w-full sm:w-auto px-6 py-3.5 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition-colors border border-white/20 flex items-center justify-center gap-2 text-sm sm:text-base"
             >
-              <Calculator className="w-4 h-4 sm:w-5 sm:h-5" /> Estimer mon prêt
+              <Calculator className="w-4 h-4 sm:w-5 sm:h-5" /> {t("dashboard.estimateLoan")}
             </Link>
           </div>
         </div>
@@ -227,20 +228,20 @@ export default function Dashboard() {
         >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base sm:text-lg text-[#0a0f1e] font-semibold">
-              Prochains Rendez-vous
+              {t("dashboard.upcomingAppointments")}
             </h2>
             <Link
               to="/client/appointments"
               className="text-xs sm:text-sm text-[#d4af37] hover:underline font-medium"
             >
-              Voir tout
+              {t("dashboard.viewAll")}
             </Link>
           </div>
           {appointments.length === 0 ? (
             <EmptyState
               icon={Calendar}
-              title="Aucun rendez-vous"
-              description="Vous n'avez pas de visite prévue."
+              title={t("dashboard.noAppointments")}
+              description={t("dashboard.noAppointmentsDesc")}
             />
           ) : (
             <div className="space-y-3">
@@ -254,7 +255,7 @@ export default function Dashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[#0a0f1e] font-medium text-xs sm:text-sm truncate">
-                      {apt.property_name || "Visite immobilière"}
+                      {apt.property_name || t("dashboard.propertyVisit")}
                     </p>
                     <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">
                       {apt.appointment_date
@@ -278,20 +279,20 @@ export default function Dashboard() {
         >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg text-[#0a0f1e] font-semibold">
-              Demandes Actives
+              {t("dashboard.activeDevis")}
             </h2>
             <Link
               to="/client/requests"
               className="text-sm text-[#d4af37] hover:underline"
             >
-              Voir tout
+              {t("dashboard.viewAll")}
             </Link>
           </div>
           {devisRequests.length === 0 ? (
             <EmptyState
               icon={FileText}
-              title="Aucune demande"
-              description="Vous n'avez pas de demande en cours."
+              title={t("dashboard.noDevis")}
+              description={t("dashboard.noDevisDesc")}
             />
           ) : (
             <div className="space-y-3">

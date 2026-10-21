@@ -5,31 +5,34 @@ import {
   ArrowRight, Phone, Star, Users
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { useTranslation } from "../../context/LanguageContext";
 
 export default function Services() {
+  const { t } = useTranslation();
+
   const services = [
     {
       icon: Building2,
-      title: "Trouver la Maison qui Vous Convient",
-      description: "Toute notre équipe est à votre écoute et se tient à votre disposition pour vous conseiller et vous aider à trouver la maison qui correspond à votre attente et budget. En toute confidentialité vous aurez la possibilité d'obtenir un devis détaillé et un planning prévisionnel des travaux à réaliser.",
+      title: t("services.s1Title"),
+      description: t("services.s1Desc"),
       image: "https://images.unsplash.com/photo-1668609268461-4f6a15269ff1?auto=format&fit=crop&w=1080&q=80"
     },
     {
       icon: TrendingUp,
-      title: "Investir dans des Opérations Immobilières de MSF",
-      description: "Nous sommes à votre écoute et intervenons en conseil dans vos choix, afin de maximiser vos investissements immobiliers au Congo et en Afrique Centrale.",
+      title: t("services.s2Title"),
+      description: t("services.s2Desc"),
       image: "https://images.unsplash.com/photo-1763621569464-409a050b112e?auto=format&fit=crop&w=1080&q=80"
     },
     {
       icon: Key,
-      title: "Vente à Terme et Sur Plan",
-      description: "Nous vous proposons la vente à terme et sur plan selon votre choix, vous permettant d'acquérir votre propriété selon vos possibilités financières.",
+      title: t("services.s3Title"),
+      description: t("services.s3Desc"),
       image: "https://images.unsplash.com/photo-1721244654394-36a7bc2da288?auto=format&fit=crop&w=1080&q=80"
     },
     {
       icon: Settings,
-      title: "Ameublement et Décoration",
-      description: "En collaboration avec nos partenaires, nous vous proposons l'ameublement et la décoration de votre maison pour un intérieur à votre image.",
+      title: t("services.s4Title"),
+      description: t("services.s4Desc"),
       image: "https://images.unsplash.com/photo-1760072513357-9d450e935a80?auto=format&fit=crop&w=1080&q=80"
     }
   ];
@@ -37,28 +40,28 @@ export default function Services() {
   const steps = [
     {
       number: "01",
-      title: "Consultation Gratuite",
-      description: "Rencontrez nos experts pour définir vos besoins et votre budget"
+      title: t("services.step01"),
+      description: t("services.step01Desc")
     },
     {
       number: "02",
-      title: "Sélection Personnalisée",
-      description: "Nous identifions les propriétés correspondant à vos critères"
+      title: t("services.step02"),
+      description: t("services.step02Desc")
     },
     {
       number: "03",
-      title: "Visites Guidées",
-      description: "Découvrez vos propriétés coup de cœur avec nos conseillers"
+      title: t("services.step03"),
+      description: t("services.step03Desc")
     },
     {
       number: "04",
-      title: "Négociation & Financement",
-      description: "Nous négocions pour vous et facilitons votre financement"
+      title: t("services.step04"),
+      description: t("services.step04Desc")
     },
     {
       number: "05",
-      title: "Signature & Livraison",
-      description: "Finalisation sécurisée et accompagnement jusqu'à la remise des clés"
+      title: t("services.step05"),
+      description: t("services.step05Desc")
     }
   ];
 
@@ -103,11 +106,10 @@ export default function Services() {
             className="max-w-4xl mx-auto text-center"
           >
             <h1 className="text-5xl md:text-6xl lg:text-7xl mb-6 text-white">
-              Nos <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">Services</span>
+              {t("services.pageTitle")} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">{t("services.pageTitleHighlight")}</span>
             </h1>
             <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-              MSF Congo vous accompagne à chaque étape de votre projet immobilier avec expertise,
-              professionnalisme et un service client d'excellence.
+              {t("services.pageSubtitle")}
             </p>
           </motion.div>
         </div>
@@ -124,10 +126,10 @@ export default function Services() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl text-[#0a0f1e] mb-4">
-              Une Gamme Complète de Services
+              {t("services.rangeTitle")}
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Des solutions immobilières sur mesure pour répondre à tous vos besoins
+              {t("services.rangeSubtitle")}
             </p>
           </motion.div>
 
@@ -190,10 +192,10 @@ export default function Services() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl text-[#0a0f1e] mb-4">
-              Comment Acheter en 5 Étapes
+              {t("services.processTitle")}
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Un processus simple et transparent pour concrétiser votre projet immobilier
+              {t("services.processSubtitle")}
             </p>
           </motion.div>
 
@@ -238,10 +240,10 @@ export default function Services() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl text-[#0a0f1e] mb-4">
-              Ce Que Disent Nos Clients
+              {t("services.testimonialsTitle")}
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              La satisfaction de nos clients est notre plus belle récompense
+              {t("services.testimonialsSubtitle")}
             </p>
           </motion.div>
 
@@ -288,10 +290,10 @@ export default function Services() {
             className="max-w-4xl mx-auto text-center"
           >
             <h2 className="text-4xl md:text-5xl text-white mb-6">
-              Prêt à Démarrer Votre Projet ?
+              {t("services.ctaTitle")}
             </h2>
             <p className="text-gray-300 text-lg mb-8">
-              Nos experts sont à votre disposition pour une consultation gratuite et personnalisée
+              {t("services.ctaDesc")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -299,14 +301,14 @@ export default function Services() {
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-shadow duration-300 font-medium"
               >
                 <Users className="w-5 h-5" />
-                Demander une Consultation
+                {t("services.ctaBtn")}
               </Link>
               <a
                 href="tel:+242064588618"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-xl hover:bg-white/20 transition-colors duration-300 font-medium"
               >
                 <Phone className="w-5 h-5" />
-                +242 06 458 8618
+                {t("services.ctaBtnPhone")}
               </a>
             </div>
           </motion.div>

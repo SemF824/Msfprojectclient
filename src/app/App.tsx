@@ -3,6 +3,7 @@ import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "sonner";
 import CookieConsent from "./components/CookieConsent";
 import { CurrencyProvider } from "../context/CurrencyContext";
+import { LanguageProvider } from "../context/LanguageContext";
 
 // Fallback global de chargement
 const FullScreenLoader = () => (
@@ -32,26 +33,28 @@ function ScrollToTop() {
 export default function App() {
   return (
     <BrowserRouter>
-      <CurrencyProvider>
-        {/* Écouteur de navigation globale */}
-        <ScrollToTop />
+      <LanguageProvider>
+        <CurrencyProvider>
+          {/* Écouteur de navigation globale */}
+          <ScrollToTop />
 
-        {/* Gestionnaire de notifications global de l'application */}
-        <Toaster position="top-right" richColors closeButton />
+          {/* Gestionnaire de notifications global de l'application */}
+          <Toaster position="top-right" richColors closeButton />
 
-        {/* Bannière de consentement pour les cookies (RGPD/CCPA) */}
-        <CookieConsent />
+          {/* Bannière de consentement pour les cookies (RGPD/CCPA) */}
+          <CookieConsent />
 
-        <Suspense fallback={<FullScreenLoader />}>
-          <Routes>
-            {/* TOUT ce qui commence par /admin est géré par la branche Admin */}
-            <Route path="/admin/*" element={<AdminAppRoutes />} />
+          <Suspense fallback={<FullScreenLoader />}>
+            <Routes>
+              {/* TOUT ce qui commence par /admin est géré par la branche Admin */}
+              <Route path="/admin/*" element={<AdminAppRoutes />} />
 
-            {/* TOUT le reste est géré par la branche Client */}
-            <Route path="/*" element={<ClientAppRoutes />} />
-          </Routes>
-        </Suspense>
-      </CurrencyProvider>
+              {/* TOUT le reste est géré par la branche Client */}
+              <Route path="/*" element={<ClientAppRoutes />} />
+            </Routes>
+          </Suspense>
+        </CurrencyProvider>
+      </LanguageProvider>
     </BrowserRouter>
   );
 }

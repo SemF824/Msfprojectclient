@@ -10,6 +10,7 @@ import { supabase } from "../../hooks/useSupabaseAuth";
 import { z } from "zod";
 import { PhoneInput } from "../components/ui/PhoneInput";
 import { isValidPhone } from "../../utils/phone";
+import { useTranslation } from "../../context/LanguageContext";
 
 export const phoneSchema = z.string().refine(
   (val) => isValidPhone(val, "CG") || isValidPhone(val),
@@ -17,6 +18,7 @@ export const phoneSchema = z.string().refine(
 );
 
 export default function Signup() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
@@ -123,7 +125,7 @@ export default function Signup() {
       <div className="relative z-10 w-full max-w-2xl">
         <Link to="/" className="inline-flex items-center gap-2 text-gray-500 hover:text-[#d4af37] transition-colors mb-8">
           <HomeIcon className="w-4 h-4" />
-          <span className="text-sm font-medium">Retour à l'accueil</span>
+          <span className="text-sm font-medium">{t("login.backHome")}</span>
         </Link>
 
         <motion.div
@@ -136,7 +138,7 @@ export default function Signup() {
               <User className="w-8 h-8 text-[#d4af37]" />
             </div>
             <h1 className="text-3xl font-bold text-[#0a0f1e] mb-2">
-              {step === 1 ? "Identifiants" : step === 2 ? "Profil Client" : "Vérification"}
+              {step === 1 ? t("signup.credentials") : step === 2 ? t("signup.profile") : t("signup.verification")}
             </h1>
             <div className="flex justify-center gap-2 mt-4">
               <div className={`h-1.5 w-12 rounded-full transition-colors ${step >= 1 ? 'bg-[#d4af37]' : 'bg-gray-200'}`} />
@@ -157,37 +159,37 @@ export default function Signup() {
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="relative">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d4af37]" />
-                    <input type="text" placeholder="Prénom" required value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} className={inputClasses} />
+                    <input type="text" placeholder={t("signup.firstName")} required value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} className={inputClasses} />
                   </div>
                   <div className="relative">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d4af37]" />
-                    <input type="text" placeholder="Nom" required value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} className={inputClasses} />
+                    <input type="text" placeholder={t("signup.lastName")} required value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} className={inputClasses} />
                   </div>
                 </div>
 
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d4af37]" />
-                  <input type="email" placeholder="Email professionnel" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className={inputClasses} />
+                  <input type="email" placeholder={t("signup.email")} required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className={inputClasses} />
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d4af37]" />
-                    <input type={showPassword ? "text" : "password"} placeholder="Mot de passe" required value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className={inputClasses} />
+                    <input type={showPassword ? "text" : "password"} placeholder={t("signup.password")} required value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className={inputClasses} />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#d4af37]">
                       {showPassword ? <EyeOff size={20}/> : <Eye size={20}/>}
                     </button>
                   </div>
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d4af37]" />
-                    <input type="password" placeholder="Confirmation" required value={formData.confirmPassword} onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})} className={inputClasses} />
+                    <input type="password" placeholder={t("signup.confirmPassword")} required value={formData.confirmPassword} onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})} className={inputClasses} />
                   </div>
                 </div>
 
                 {error && <div className="text-red-600 text-sm flex items-center gap-2 bg-red-50 p-3 rounded-xl border border-red-100"><AlertCircle size={16}/>{error}</div>}
 
                 <button type="submit" className="w-full py-4 bg-[#0a0f1e] text-[#d4af37] rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-black hover:shadow-xl transition-all group">
-                  Étape Suivante <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                  {t("signup.nextStep")} <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                 </button>
               </motion.form>
             )}
@@ -204,7 +206,7 @@ export default function Signup() {
                 <div className="relative">
                   <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d4af37]" />
                   <input type="date" required value={formData.birthDate} onChange={(e) => setFormData({...formData, birthDate: e.target.value})} className={inputClasses} />
-                  <label className="absolute -top-2.5 left-4 bg-white px-2 text-[10px] text-gray-500 font-bold uppercase tracking-wider">Date de naissance</label>
+                  <label className="absolute -top-2.5 left-4 bg-white px-2 text-[10px] text-gray-500 font-bold uppercase tracking-wider">{t("signup.birthDate")}</label>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4 items-end">
@@ -212,7 +214,7 @@ export default function Signup() {
                     <PhoneInput
                       id="phone"
                       name="phone"
-                      label="Téléphone"
+                      label={t("signup.phone")}
                       required
                       value={formData.phone}
                       onChange={handlePhoneChange}
@@ -222,7 +224,7 @@ export default function Signup() {
                   <div className="relative">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d4af37]" />
                     <select value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className={`${inputClasses} appearance-none`} required>
-                      <option value="">Votre Ville</option>
+                      <option value="">{t("signup.city")}</option>
                       <option value="pointe-noire">Pointe-Noire</option>
                       <option value="brazzaville">Brazzaville</option>
                       <option value="dolisie">Dolisie</option>
@@ -233,17 +235,17 @@ export default function Signup() {
 
                 <label className="flex items-start gap-3 text-sm text-gray-600 cursor-pointer group">
                   <input type="checkbox" required checked={formData.acceptTerms} onChange={(e) => setFormData({...formData, acceptTerms: e.target.checked})} className="mt-1 accent-[#d4af37] w-4 h-4" />
-                  <span className="group-hover:text-[#0a0f1e] transition-colors">J'accepte les conditions d'utilisation et la politique de confidentialité de MSF Congo.</span>
+                  <span className="group-hover:text-[#0a0f1e] transition-colors">{t("signup.acceptTerms")}</span>
                 </label>
 
                 {error && <div className="text-red-600 text-sm p-3 bg-red-50 rounded-xl border border-red-100"><AlertCircle size={16}/>{error}</div>}
 
                 <div className="grid grid-cols-2 gap-4">
                   <button type="button" onClick={() => setStep(1)} className="py-4 border border-gray-200 rounded-xl font-bold text-gray-500 flex items-center justify-center gap-2 hover:bg-gray-50 transition-all">
-                    <ChevronLeft size={18}/> Retour
+                    <ChevronLeft size={18}/> {t("signup.back")}
                   </button>
                   <button type="submit" disabled={isLoading} className="py-4 bg-[#0a0f1e] text-[#d4af37] rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-black hover:shadow-xl transition-all disabled:opacity-50">
-                    {isLoading ? <Loader2 className="animate-spin" /> : "Finaliser"}
+                    {isLoading ? <Loader2 className="animate-spin" /> : t("signup.finalize")}
                   </button>
                 </div>
               </motion.form>
@@ -259,18 +261,18 @@ export default function Signup() {
                 <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Mail className="w-10 h-10 text-green-500" />
                 </div>
-                <h3 className="text-2xl font-bold text-[#0a0f1e] mb-4">Vérifiez vos emails</h3>
-                <p className="text-gray-600 mb-8">Un lien de confirmation a été envoyé à <strong>{formData.email}</strong>. Confirmez-le pour accéder à l'intégralité de vos services.</p>
-                <Link to="/login" className="inline-block px-8 py-3 bg-[#0a0f1e] text-[#d4af37] rounded-xl font-bold hover:shadow-lg transition-all">Aller à la connexion</Link>
+                <h3 className="text-2xl font-bold text-[#0a0f1e] mb-4">{t("signup.checkEmails")}</h3>
+                <p className="text-gray-600 mb-8">{t("signup.checkEmailsDesc")}</p>
+                <Link to="/login" className="inline-block px-8 py-3 bg-[#0a0f1e] text-[#d4af37] rounded-xl font-bold hover:shadow-lg transition-all">{t("signup.goToLogin")}</Link>
               </motion.div>
             )}
           </AnimatePresence>
         </motion.div>
         <div className="mt-8 text-center">
             <p className="text-gray-500 text-sm">
-              Déjà membre ?{' '}
+              {t("signup.haveAccount")}{' '}
               <Link to="/login" className="font-bold text-[#0a0f1e] hover:text-[#d4af37] underline underline-offset-4">
-                Se connecter ici
+                {t("signup.login")}
               </Link>
             </p>
         </div>

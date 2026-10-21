@@ -10,8 +10,12 @@ import {
   Download,
 } from "lucide-react";
 import { Link } from "react-router";
+import { useTranslation } from "../../context/LanguageContext";
+import { LanguageSelector } from "./LanguageSelector";
 
 export function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className="bg-gradient-to-br from-gray-900 via-[#0a0f1e] to-gray-900 text-white pt-20 pb-8 px-6 relative overflow-hidden border-t border-[#d4af37]/20">
       <div className="container mx-auto">
@@ -30,8 +34,7 @@ export function Footer() {
               </div>
             </div>
             <p className="text-gray-400 text-sm mb-6">
-              Redéfinir l'immobilier de luxe au Congo avec des développements de
-              classe mondiale et un service inégalé.
+              {t("footer.tagline")}
             </p>
             <div className="flex gap-3">
               <a
@@ -63,14 +66,14 @@ export function Footer() {
 
           {/* ── Liens Rapides ───────────────────────────────────────────────── */}
           <div>
-            <h4 className="text-white mb-6">Liens Rapides</h4>
+            <h4 className="text-white mb-6">{t("footer.quickLinks")}</h4>
             <ul className="space-y-3">
               <li>
                 <Link
                   to="#apropos"
                   className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors"
                 >
-                  À Propos
+                  {t("nav.about")}
                 </Link>
               </li>
               <li>
@@ -78,7 +81,7 @@ export function Footer() {
                   to="#proprietes"
                   className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors"
                 >
-                  Propriétés
+                  {t("nav.properties")}
                 </Link>
               </li>
               <li>
@@ -94,7 +97,7 @@ export function Footer() {
                   to="/services"
                   className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors"
                 >
-                  Investissement
+                  {t("nav.services")}
                 </Link>
               </li>
               <li>
@@ -102,7 +105,7 @@ export function Footer() {
                   to="/contact"
                   className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors"
                 >
-                  Contact
+                  {t("nav.contact")}
                 </Link>
               </li>
             </ul>
@@ -110,14 +113,14 @@ export function Footer() {
 
           {/* ── Juridique & Politiques ───────────────────────────────────────── */}
           <div>
-            <h4 className="text-white mb-6">Légal & Confidentialité</h4>
+            <h4 className="text-white mb-6">{t("footer.legal")}</h4>
             <ul className="space-y-3">
               <li>
                 <Link
                   to="/legal-mentions"
                   className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors"
                 >
-                  Mentions Légales
+                  {t("footer.legalMentions")}
                 </Link>
               </li>
               <li>
@@ -125,7 +128,7 @@ export function Footer() {
                   to="/privacy-policy"
                   className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors"
                 >
-                  Politique de Confidentialité
+                  {t("footer.privacyPolicy")}
                 </Link>
               </li>
               <li>
@@ -133,7 +136,7 @@ export function Footer() {
                   to="/cookie-policy"
                   className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors"
                 >
-                  Politique des Cookies
+                  {t("footer.cookiePolicy")}
                 </Link>
               </li>
               <li>
@@ -141,7 +144,7 @@ export function Footer() {
                   to="/refund-policy"
                   className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors"
                 >
-                  Rétractation & Remboursement
+                  {t("footer.refundPolicy")}
                 </Link>
               </li>
             </ul>
@@ -149,7 +152,7 @@ export function Footer() {
 
           {/* ── Contact ─────────────────────────────────────────────────────── */}
           <div>
-            <h4 className="text-white mb-6">Contactez-nous</h4>
+            <h4 className="text-white mb-6">{t("footer.contactUs")}</h4>
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-[#d4af37] flex-shrink-0 mt-0.5" />
@@ -192,10 +195,10 @@ export function Footer() {
             {/* LE BOUTON BROCHURE INTÉGRÉ DANS TON DESIGN */}
             <div className="mt-6 p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-[#d4af37]/30">
               <p className="text-xs text-[#d4af37] mb-2 font-semibold uppercase tracking-wider">
-                Ressources
+                {t("footer.resources")}
               </p>
               <p className="text-sm text-gray-300 mb-3">
-                Découvrez notre projet Résidences Caraïbes en détail.
+                {t("footer.brochureText")}
               </p>
               <a
                 href="/brochure-caraibes.pdf"
@@ -203,16 +206,16 @@ export function Footer() {
                 className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#d4af37] text-[#0a0f1e] rounded-lg hover:bg-[#f4e3b2] transition-all font-bold text-sm"
               >
                 <Download className="w-4 h-4" />
-                Télécharger la Brochure
+                {t("footer.downloadBrochure")}
               </a>
             </div>
 
             <div className="mt-4 p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
               <p className="text-xs text-gray-400 mb-1">
-                Succursale Brazzaville
+                {t("footer.brazzavilleOffice")}
               </p>
               <p className="text-sm text-gray-300">
-                Également présents dans la capitale
+                {t("footer.brazzavilleText")}
               </p>
             </div>
           </div>
@@ -222,33 +225,30 @@ export function Footer() {
         <div className="pt-8 border-t border-white/10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-400 text-sm">
-              © 2026 MSF Congo - Roger ROC. Tous droits réservés.
+              {t("footer.copyright")}
             </p>
-            <div className="flex gap-6">
-              <a
-                href="#"
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+              <Link
+                to="/privacy-policy"
                 className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors"
               >
-                Politique de Confidentialité
-              </a>
-              <a
-                href="#"
+                {t("footer.privacyPolicyShort")}
+              </Link>
+              <Link
+                to="/legal-mentions"
                 className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors"
               >
-                Conditions d'Utilisation
-              </a>
-              <a
-                href="#"
-                className="text-gray-400 text-sm hover:text-[#d4af37] transition-colors"
-              >
-                Mentions Légales
-              </a>
+                {t("footer.termsOfUse")}
+              </Link>
               <a
                 href="/admin"
                 className="text-gray-500 text-xs hover:text-[#d4af37] transition-colors opacity-60 hover:opacity-100"
               >
-                Admin
+                {t("footer.admin")}
               </a>
+              <div className="ml-2">
+                <LanguageSelector />
+              </div>
             </div>
           </div>
         </div>

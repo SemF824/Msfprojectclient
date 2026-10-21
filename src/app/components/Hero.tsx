@@ -1,6 +1,7 @@
 import { ArrowRight, Play } from "lucide-react";
 import { motion } from "motion/react";
 import { Link } from "react-router";
+import { useTranslation } from "../../context/LanguageContext";
 
 // Hack anti-clignotement WebKit / Safari
 const safariFix: React.CSSProperties = {
@@ -11,6 +12,8 @@ const safariFix: React.CSSProperties = {
 };
 
 export function Hero() {
+  const { t } = useTranslation();
+
   return (
     /*
      * h-[100svh] est gardé mais on s'assure d'avoir un min-height
@@ -53,7 +56,7 @@ export function Hero() {
           >
             <div className="w-2 h-2 bg-[#d4af37] rounded-full animate-pulse" />
             <span className="text-[10px] md:text-xs text-[#d4af37] tracking-wider uppercase">
-              Projet Kounda
+              {t("hero.badge")}
             </span>
           </motion.div>
 
@@ -65,9 +68,9 @@ export function Hero() {
             style={safariFix}
             className="text-4xl md:text-7xl mb-4 md:mb-6 tracking-tight font-bold"
           >
-            <span className="block text-white">L'Excellence du</span>
+            <span className="block text-white">{t("hero.title1")}</span>
             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] to-[#f4e3b2]">
-              Luxe au Congo
+              {t("hero.title2")}
             </span>
           </motion.h1>
 
@@ -79,10 +82,7 @@ export function Hero() {
             style={safariFix}
             className="text-sm md:text-lg text-gray-300 mb-5 md:mb-8 max-w-2xl leading-relaxed"
           >
-            Découvrez le summum de l'habitat côtier avec notre développement
-            exclusif en front de mer. L'architecture moderne rencontre
-            l'élégance africaine dans cette collection prestigieuse de
-            résidences ultra-luxueuses.
+            {t("hero.description")}
           </motion.p>
 
           {/* Stats */}
@@ -94,9 +94,9 @@ export function Hero() {
             className="flex flex-wrap gap-4 md:gap-8 mb-6 md:mb-10"
           >
             {[
-              { val: "3 000", label: "Maisons Prévues" },
-              { val: "600 ha", label: "Rés. Caraïbes" },
-              { val: "Depuis 2001", label: "Leader au Congo" },
+              { val: t("hero.stat1Val"), label: t("hero.stat1Label") },
+              { val: t("hero.stat2Val"), label: t("hero.stat2Label") },
+              { val: t("hero.stat3Val"), label: t("hero.stat3Label") },
             ].map((stat, i) => (
               <div
                 key={i}
@@ -125,7 +125,7 @@ export function Hero() {
               className="group flex items-center justify-center gap-2 px-6 py-3.5 md:px-8 md:py-4 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] text-[#0a0f1e] rounded-xl hover:shadow-2xl hover:shadow-[#d4af37]/40 transition-all sm:w-fit"
             >
               <span className="font-bold text-sm md:text-base">
-                Découvrez les Résidences Caraïbes
+                {t("hero.cta1")}
               </span>
               <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
@@ -134,7 +134,7 @@ export function Hero() {
               className="flex items-center justify-center gap-2 px-6 py-3.5 md:px-8 md:py-4 bg-white/10 text-white rounded-xl border border-[#d4af37]/30 hover:bg-white/20 transition-all font-medium text-sm md:text-base sm:w-fit"
             >
               <Play className="w-4 h-4 md:w-5 md:h-5 text-[#d4af37]" />
-              <span>Visite Virtuelle</span>
+              <span>{t("hero.cta2")}</span>
             </a>
           </motion.div>
         </div>
@@ -149,7 +149,7 @@ export function Hero() {
         className="absolute bottom-6 md:bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 pointer-events-none"
       >
         <span className="text-[9px] md:text-xs text-gray-400 uppercase tracking-widest whitespace-nowrap drop-shadow-md">
-          Défiler pour Découvrir
+          {t("hero.scroll")}
         </span>
         <div className="w-5 h-8 md:w-6 md:h-10 border-2 border-[#d4af37]/50 rounded-full flex items-start justify-center p-1 md:p-1.5">
           <motion.div
