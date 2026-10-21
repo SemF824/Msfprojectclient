@@ -326,31 +326,31 @@ export default function Contact() {
       name: "Roger ROC",
       role: "Fondateur – Président Directeur Général",
       image:
-        "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80",
+        "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=1080&q=80",
     },
     {
       name: "Chems ROC",
       role: "Responsable Départemental Brazzaville",
       image:
-        "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80",
+        "https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?auto=format&fit=crop&w=1080&q=80",
     },
     {
       name: "Mireille LOLA",
       role: "Responsable Administratif et Commercial",
       image:
-        "https://images.unsplash.com/photo-1760320483844-3d808de62def?auto=format&fit=crop&w=1080&q=80",
+        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1080&q=80",
     },
     {
       name: "Elie LIBALI",
       role: "Directeur des Ressources Humaines",
       image:
-        "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80",
+        "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=1080&q=80",
     },
     {
       name: "Naji KHALIL",
       role: "Directeur des Projets",
       image:
-        "https://images.unsplash.com/photo-1642257834579-eee89ff3e9fd?auto=format&fit=crop&w=1080&q=80",
+        "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=1080&q=80",
     },
   ];
 
@@ -368,10 +368,9 @@ export default function Contact() {
 
         <div className="container mx-auto px-6 relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            style={{ WebkitTransform: "translate3d(0,0,0)" }}
+            transition={{ duration: 0.6 }}
             className="max-w-4xl mx-auto text-center"
           >
             <h1 className="text-5xl md:text-6xl lg:text-7xl mb-6 text-white">
@@ -388,14 +387,14 @@ export default function Contact() {
         </div>
       </section>
 
-      {/* Contact Info Cards avec Orchestration */}
+      {/* Contact Info Cards */}
       <section className="py-12 sm:py-20">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+            viewport={{ once: true }}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-16 sm:mb-20"
           >
             {contactInfo.map((info, index) => {
@@ -404,12 +403,7 @@ export default function Contact() {
                 <motion.div
                   key={index}
                   variants={itemVariants}
-                  style={{
-                    WebkitBackfaceVisibility: "hidden",
-                    backfaceVisibility: "hidden",
-                    WebkitTransform: "translate3d(0,0,0)",
-                  }}
-                  className="bg-white rounded-2xl border border-gray-200 shadow-sm sm:shadow-lg p-5 sm:p-6 text-center isolate"
+                  className="bg-white rounded-2xl border border-gray-200 shadow-sm sm:shadow-lg p-5 sm:p-6 text-center"
                 >
                   <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-[#d4af37] to-[#f4e3b2] rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
                     <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-[#0a0f1e]" />
@@ -438,11 +432,10 @@ export default function Contact() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 max-w-7xl mx-auto">
             {/* Contact Form */}
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
+              initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "0px 0px -80px 0px" }}
-              transition={{ duration: 0.6 }}
-              style={{ WebkitTransform: "translate3d(0,0,0)" }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
               className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 sm:p-8"
             >
               <h2 className="text-3xl text-[#0a0f1e] mb-2">
@@ -702,11 +695,10 @@ export default function Contact() {
 
             {/* Map & Office Info */}
             <motion.div
-              initial={{ opacity: 0, x: 30 }}
+              initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "0px 0px -80px 0px" }}
-              transition={{ duration: 0.6 }}
-              style={{ WebkitTransform: "translate3d(0,0,0)" }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
               className="space-y-6"
             >
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
@@ -751,20 +743,19 @@ export default function Contact() {
         </div>
       </section>
 
-      {/* Team Section avec Orchestration */}
+      {/* Team Section - Disposition Pyramide sans clignotement */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "0px 0px -80px 0px" }}
+            viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            style={{ WebkitTransform: "translate3d(0,0,0)" }}
             className="text-center mb-16"
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#d4af37]/10 rounded-full mb-4">
               <Users className="w-5 h-5 text-[#d4af37]" />
-              <span className="text-sm text-[#d4af37]">
+              <span className="text-sm font-semibold text-[#d4af37]">
                 L'Équipe Dirigeante
               </span>
             </div>
@@ -777,37 +768,68 @@ export default function Contact() {
             </p>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "0px 0px -80px 0px" }}
-            transition={{ duration: 0.6 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          >
-            {team.map((member, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-gray-50 rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300"
-              >
-                <div className="relative h-72">
+          {/* Sommet de la Pyramide : Roger ROC - Grand format en vedette */}
+          <div className="max-w-4xl mx-auto mb-16">
+            <div className="group bg-white rounded-3xl border-2 border-[#d4af37] shadow-xl hover:shadow-2xl hover:shadow-[#d4af37]/20 transition-[box-shadow,border-color] duration-300 overflow-hidden">
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div className="relative h-96 md:h-full min-h-[360px] overflow-hidden">
                   <ImageWithFallback
-                    src={member.image}
-                    alt={member.name}
-                    className="w-full h-full object-cover"
+                    src={team[0].image}
+                    alt={team[0].name}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                    <h3 className="text-xl font-bold mb-1">{member.name}</h3>
-                    <p className="text-sm text-[#d4af37]">{member.role}</p>
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#0a0f1e]/40 to-transparent" />
+                </div>
+                <div className="p-8 md:p-12">
+                  <div className="inline-block px-4 py-1.5 bg-gradient-to-r from-[#d4af37] to-[#f4e3b2] rounded-full mb-4 shadow-sm">
+                    <span className="text-xs font-bold text-[#0a0f1e] uppercase tracking-wider">
+                      Fondateur & Direction
+                    </span>
+                  </div>
+                  <h3 className="text-3xl md:text-4xl font-bold text-[#0a0f1e] mb-2">
+                    {team[0].name}
+                  </h3>
+                  <p className="text-[#d4af37] text-lg font-semibold mb-6">
+                    {team[0].role}
+                  </p>
+                  <p className="text-gray-600 leading-relaxed text-base">
+                    Visionnaire et leader de MSF Congo depuis 2001, Roger ROC a bâti une entreprise de référence dans la construction durable et l'immobilier de prestige au Congo.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Base de la Pyramide : 4 Collaborateurs en 2 par 2 */}
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-10">
+              <h3 className="text-2xl md:text-3xl font-bold text-[#0a0f1e]">
+                Nos Collaborateurs
+              </h3>
+              <div className="w-16 h-1 bg-[#d4af37] mx-auto mt-3 rounded-full"></div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {team.slice(1).map((member, index) => (
+                <div
+                  key={index}
+                  className="group bg-white rounded-2xl border border-gray-200 shadow-md hover:shadow-xl hover:border-[#d4af37] transition-[box-shadow,border-color] duration-300 overflow-hidden"
+                >
+                  <div className="relative h-80 overflow-hidden">
+                    <ImageWithFallback
+                      src={member.image}
+                      alt={member.name}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e]/85 via-[#0a0f1e]/35 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                      <h4 className="text-2xl font-bold mb-1">{member.name}</h4>
+                      <p className="text-sm font-medium text-[#d4af37]">{member.role}</p>
+                    </div>
                   </div>
                 </div>
-              </motion.div>
-            ))}
-          </motion.div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
     </div>
