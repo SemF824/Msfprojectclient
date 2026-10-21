@@ -1,86 +1,78 @@
 import { Award, Building2, Globe, Users } from "lucide-react";
-// CORRECTION : Import explicite du type Variants
-import { motion, type Variants } from "motion/react";
-
-// CORRECTION : Typage strict de l'objet avec : Variants
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
-};
-
-// CORRECTION : Typage strict de l'objet avec : Variants
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
-};
 
 const stats = [
   {
     icon: Building2,
     value: "2001",
     label: "Année de Création",
-    description: "Acteur dans la construction durable au Congo"
+    description: "Acteur dans la construction durable au Congo",
   },
   {
     icon: Globe,
     value: "470+",
     label: "Contrats",
-    description: "Ils nous ont fait confiance"
+    description: "Ils nous ont fait confiance",
   },
   {
     icon: Users,
     value: "92%",
     label: "Taux de Satisfaction",
-    description: "Ils sont satisfaits"
+    description: "Ils sont satisfaits",
   },
   {
     icon: Award,
     value: "5+",
     label: "Projets Majeurs",
-    description: "Expérience et Excellence"
-  }
+    description: "Expérience et Excellence",
+  },
 ];
 
 export function Statistics() {
   return (
-    <section className="py-20 px-6 relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle at 2px 2px, #d4af37 1px, transparent 0)',
-          backgroundSize: '40px 40px'
-        }} />
+    <section className="py-16 sm:py-20 px-4 sm:px-6 relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
+      <div className="absolute inset-0 opacity-5 pointer-events-none">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 2px 2px, #d4af37 1px, transparent 0)",
+            backgroundSize: "40px 40px",
+          }}
+        />
       </div>
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#d4af37]/50 to-transparent" />
-      
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#d4af37]/40 to-transparent" />
+
       <div className="container mx-auto relative z-10">
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.1 }}
-        >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
-              <motion.div
+              <div
                 key={stat.label}
-                variants={itemVariants}
-                className="relative group h-full"
+                className="relative bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 hover:border-[#d4af37]/60 transition-[border-color,box-shadow] duration-200 hover:shadow-lg shadow-sm flex flex-col justify-between group"
               >
-                <div className="relative bg-white backdrop-blur-xl rounded-2xl p-8 border border-gray-200 hover:border-[#d4af37]/50 transition-all duration-500 hover:shadow-xl hover:shadow-[#d4af37]/20 h-full flex flex-col">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#d4af37]/20 to-[#f4e3b2]/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <Icon className="w-7 h-7 text-[#d4af37]" />
+                <div>
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#d4af37]/20 to-[#f4e3b2]/20 flex items-center justify-center mb-5 text-[#8c7423]">
+                    <Icon className="w-6 h-6 text-[#8c7423]" />
                   </div>
-                  <div className="text-4xl text-[#0a0f1e] mb-2 font-bold">{stat.value}</div>
-                  <div className="text-lg text-[#d4af37] mb-2 font-semibold">{stat.label}</div>
-                  <div className="text-sm text-gray-600 leading-relaxed">{stat.description}</div>
-                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#d4af37]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="text-3xl sm:text-4xl text-[#0a0f1e] mb-1 font-bold tracking-tight">
+                    {stat.value}
+                  </div>
+                  <div className="text-base text-[#8c7423] mb-2 font-semibold">
+                    {stat.label}
+                  </div>
+                  <div className="text-xs sm:text-sm text-gray-500 leading-relaxed">
+                    {stat.description}
+                  </div>
                 </div>
-              </motion.div>
+                <div className="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5 text-[11px] text-[#8c7423] font-semibold uppercase tracking-wider">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]" />
+                  <span>Référence MSF</span>
+                </div>
+              </div>
             );
           })}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

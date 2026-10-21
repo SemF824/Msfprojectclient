@@ -119,7 +119,7 @@ export default function Notifications() {
         />
         <div className="flex items-start justify-between mt-2">
           <div>
-            <h1 className="text-3xl md:text-4xl font-serif font-bold tracking-tight">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
               Centre de <span className="text-[#d4af37]">Notifications</span>
             </h1>
             <p className="text-gray-500 text-sm mt-1">
@@ -193,7 +193,7 @@ export default function Notifications() {
           className="bg-white rounded-2xl border border-gray-200 shadow-sm p-12 text-center"
         >
           <Bell className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-          <h3 className="text-lg text-[#0a0f1e] font-serif font-bold">Aucune notification</h3>
+          <h3 className="text-lg text-[#0a0f1e] font-bold">Aucune notification</h3>
           <p className="text-gray-400 text-sm mt-1">Vous n'avez aucun message en attente dans cette catégorie.</p>
         </motion.div>
       ) : (
@@ -211,12 +211,9 @@ export default function Notifications() {
               : "";
 
             return (
-              <motion.div
+              <div
                 key={notification.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.03 }}
-                className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all ${
+                className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-[border-color,background-color] duration-150 ${
                   !notification.is_read ? "border-[#d4af37]/60 bg-[#faf8f2]" : "border-gray-200"
                 }`}
               >
@@ -263,7 +260,7 @@ export default function Notifications() {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>

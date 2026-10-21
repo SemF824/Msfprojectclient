@@ -159,20 +159,16 @@ export default function Favorites() {
           </div>
         </div>
       ) : (
-        <motion.div
-          layout
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          <AnimatePresence mode="popLayout">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <AnimatePresence>
             {favorites.map((property) => (
               <motion.div
                 key={property.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                transition={{ duration: 0.25 }}
-                className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col h-full"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:border-[#d4af37]/60 hover:shadow-md transition-[border-color,box-shadow] duration-200 overflow-hidden flex flex-col h-full"
               >
                 {/* Image & Tag */}
                 <div className="relative aspect-[16/10] bg-gray-100 flex-shrink-0 overflow-hidden group">
@@ -259,7 +255,7 @@ export default function Favorites() {
               </motion.div>
             ))}
           </AnimatePresence>
-        </motion.div>
+        </div>
       )}
     </div>
   );

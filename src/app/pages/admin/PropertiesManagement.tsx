@@ -495,7 +495,7 @@ export default function PropertiesManagement() {
               key={p.id}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-md hover:border-[#d4af37]/30 transition-all group"
+              className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-md hover:border-[#d4af37]/50 transition-[border-color,box-shadow] duration-200 group"
             >
               {/* Image */}
               <div className="relative h-40 bg-gray-100 overflow-hidden">

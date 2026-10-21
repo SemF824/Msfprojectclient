@@ -227,26 +227,20 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── KPIs Grille ── */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {kpiCards.map((card, i) => {
           const Theme = colorMap[card.color] || colorMap.blue;
           return (
-            <motion.div
+            <div
               key={i}
-              variants={itemVariants}
-              className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all group"
+              className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between hover:border-[#d4af37]/60 hover:shadow-md transition-[border-color,box-shadow] duration-200 group"
             >
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-xs font-bold uppercase text-gray-400 tracking-wider mb-1">
                     {card.title}
                   </p>
-                  <h3 className="text-3xl font-black text-[#0a0f1e] tracking-tight group-hover:text-[#d4af37] transition-colors">
+                  <h3 className="text-3xl font-black text-[#0a0f1e] tracking-tight group-hover:text-[#8c7423] transition-colors">
                     {card.value}
                   </h3>
                 </div>
@@ -259,10 +253,10 @@ export default function AdminDashboard() {
               <p className="text-[11px] text-gray-400 mt-4 font-medium border-t border-gray-50 pt-3">
                 {card.desc}
               </p>
-            </motion.div>
+            </div>
           );
         })}
-      </motion.div>
+      </div>
 
       {/* ── Contenu Central ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

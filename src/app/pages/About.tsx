@@ -92,35 +92,23 @@ export default function About() {
           </motion.div>
 
           {/* LA GRILLE ORCHESTRÉE */}
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
-          >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {engagements.map((item, index) => {
               const Icon = item.icon;
               return (
-                <motion.div 
+                <div 
                   key={index}
-                  variants={itemVariants}
-                  style={{
-                    WebkitBackfaceVisibility: "hidden",
-                    backfaceVisibility: "hidden",
-                    WebkitTransform: "translate3d(0,0,0)"
-                  }}
-                  className="p-8 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors text-center group isolate"
+                  className="p-8 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 hover:border-[#d4af37]/40 transition-[background-color,border-color] duration-200 text-center group"
                 >
-                  <div className="w-16 h-16 bg-[#d4af37]/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform will-change-transform">
+                  <div className="w-16 h-16 bg-[#d4af37]/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-105 transition-transform duration-300">
                     <Icon aria-label={item.title} className="w-8 h-8 text-[#d4af37]" />
                   </div>
                   <h3 className="text-xl font-bold mb-3">{item.title}</h3>
                   <p className="text-gray-400 text-sm">{item.desc}</p>
-                </motion.div>
+                </div>
               );
             })}
-          </motion.div>
+          </div>
         </div>
       </section>
     </div>

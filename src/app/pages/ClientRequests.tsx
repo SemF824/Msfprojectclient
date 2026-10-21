@@ -85,7 +85,7 @@ export default function ClientRequests() {
             { label: "Mes Demandes", path: "/client/requests" },
           ]}
         />
-        <h1 className="text-3xl text-[#0a0f1e] mt-2 mb-1 font-serif font-bold tracking-tight">
+        <h1 className="text-3xl text-[#0a0f1e] mt-2 mb-1 font-bold tracking-tight">
           Vos Dossiers & <span className="text-[#d4af37]">Demandes de Devis</span>
         </h1>
         <p className="text-gray-500 text-sm">
@@ -119,7 +119,7 @@ export default function ClientRequests() {
               return (
                 <div
                   key={r.id}
-                  className="p-5 bg-white rounded-xl border border-gray-100 hover:border-[#d4af37]/50 transition-all shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  className="p-5 bg-white rounded-xl border border-gray-100 hover:border-[#d4af37]/60 transition-[border-color,box-shadow] duration-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                 >
                   <div className="flex items-start gap-4 min-w-0">
                     <div className="w-12 h-12 bg-gradient-to-br from-[#d4af37]/15 to-[#f4e3b2]/20 border border-[#d4af37]/25 rounded-xl flex items-center justify-center shrink-0">

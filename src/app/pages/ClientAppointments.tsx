@@ -121,7 +121,7 @@ export default function ClientAppointments() {
               { label: "Rendez-vous", path: "/client/appointments" },
             ]}
           />
-          <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mt-2 mb-2 font-serif font-bold tracking-tight">
+          <h1 className="text-3xl md:text-4xl text-[#0a0f1e] mt-2 mb-2 font-bold tracking-tight">
             Vos Rendez-vous & <span className="text-[#d4af37]">Rencontres</span>
           </h1>
           <p className="text-gray-600 text-sm md:text-base">
@@ -238,7 +238,7 @@ export default function ClientAppointments() {
                   key={apt.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`border rounded-xl transition-all duration-200 overflow-hidden flex flex-col ${
+                  className={`border rounded-xl transition-[border-color,box-shadow,background-color] duration-200 overflow-hidden flex flex-col ${
                     isExpanded
                       ? "border-[#d4af37] shadow-md bg-[#faf8f2]/40"
                       : "border-gray-200 hover:border-[#d4af37]/60 bg-white"

@@ -153,7 +153,7 @@ export default function TransactionDetail() {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-center px-4">
         <AlertCircle className="w-16 h-16 text-rose-400" />
-        <h2 className="text-2xl font-serif font-bold text-[#0a0f1e]">Opération Introuvable</h2>
+        <h2 className="text-2xl font-bold text-[#0a0f1e]">Opération Introuvable</h2>
         <p className="text-gray-500 text-sm max-w-md">
           Cette transaction n'existe pas ou vous n'avez pas l'autorisation d'y accéder.
         </p>
@@ -235,7 +235,7 @@ export default function TransactionDetail() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2.5">
-                    <h1 className="text-xl sm:text-2xl text-[#0a0f1e] font-serif font-bold break-words">
+                    <h1 className="text-xl sm:text-2xl text-[#0a0f1e] font-bold break-words">
                       {statusConfig.title}
                     </h1>
                     <span
@@ -255,7 +255,7 @@ export default function TransactionDetail() {
                 <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1">
                   Montant de l'opération
                 </p>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-serif font-black text-[#8c7423] tracking-tight break-words">
+                <p className="text-2xl sm:text-3xl md:text-4xl font-black text-[#8c7423] tracking-tight break-words">
                   {(Number(transaction.amount) || 0).toLocaleString("fr-FR")} FCFA
                 </p>
                 <p className="text-gray-700 text-xs sm:text-sm font-medium mt-2">
@@ -282,7 +282,7 @@ export default function TransactionDetail() {
             transition={{ delay: 0.1 }}
             className="bg-white rounded-3xl border border-gray-200 shadow-sm p-5 sm:p-6 md:p-8 min-w-0"
           >
-            <h2 className="text-lg font-serif font-bold text-[#0a0f1e] mb-4 flex items-center gap-2">
+            <h2 className="text-lg font-bold text-[#0a0f1e] mb-4 flex items-center gap-2">
               <Building2 className="w-5 h-5 text-[#d4af37] shrink-0" />
               <span>Bien Immobilier Associé</span>
             </h2>
@@ -364,7 +364,7 @@ export default function TransactionDetail() {
             transition={{ delay: 0.4 }}
             className="bg-gradient-to-br from-[#0a0f1e] to-[#162035] rounded-3xl border border-[#d4af37]/30 p-5 sm:p-6 text-white shadow-md"
           >
-            <h2 className="text-base font-serif font-bold mb-2">Service Comptabilité MSF</h2>
+            <h2 className="text-base font-bold mb-2">Service Comptabilité MSF</h2>
             <p className="text-gray-300 text-xs mb-5 leading-relaxed">
               Pour toute question relative aux attestations de paiement ou quittances, notre équipe financière vous assiste.
             </p>

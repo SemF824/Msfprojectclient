@@ -174,7 +174,7 @@ export default function Transactions() {
               { label: "Finances", path: "/client/transactions" },
             ]}
           />
-          <h1 className="text-2xl sm:text-3xl text-[#0a0f1e] mt-2 font-serif font-bold tracking-tight">
+          <h1 className="text-2xl sm:text-3xl text-[#0a0f1e] mt-2 font-bold tracking-tight">
             Suivi Financier & <span className="text-[#d4af37]">Versements</span>
           </h1>
           <p className="text-gray-500 text-sm">
@@ -299,7 +299,7 @@ export default function Transactions() {
                   key={transaction.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white border border-gray-100 rounded-xl hover:border-[#d4af37]/40 shadow-sm hover:shadow-md transition-all overflow-hidden"
+                  className="bg-white border border-gray-100 rounded-xl hover:border-[#d4af37]/60 shadow-sm hover:shadow-md transition-[border-color,box-shadow] duration-200 overflow-hidden"
                 >
                   <Link
                     to={`/client/transactions/${transaction.id}`}

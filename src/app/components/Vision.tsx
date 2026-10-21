@@ -87,41 +87,27 @@ export function Vision() {
         </div>
 
         {/* LA GRILLE ORCHESTRÉE */}
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8"
-        >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
           {visionPoints.map((point, index) => (
-            <motion.div
+            <div
               key={index}
-              variants={itemVariants}
-              style={{
-                WebkitBackfaceVisibility: "hidden",
-                backfaceVisibility: "hidden",
-                WebkitTransform: "translate3d(0,0,0)"
-              }}
-              // CRITIQUE : Remplacement de transition-all par transition-colors transition-shadow
-              className="group h-full flex flex-col relative p-6 sm:p-8 bg-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-[#d4af37]/20 hover:border-[#d4af37]/50 transition-colors transition-shadow duration-300 hover:shadow-2xl hover:shadow-[#d4af37]/20 isolate transform-gpu"
+              className="group h-full flex flex-col relative p-6 sm:p-8 bg-white/5 rounded-2xl sm:rounded-3xl border border-[#d4af37]/20 hover:border-[#d4af37]/60 transition-[border-color,box-shadow] duration-200 hover:shadow-xl hover:shadow-[#d4af37]/10"
             >
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-[#d4af37]/20 to-transparent rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-500 flex-shrink-0">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-[#d4af37]/20 to-transparent rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
                 <point.icon className="w-6 h-6 sm:w-8 sm:h-8 text-[#d4af37]" />
               </div>
               <h3 className="text-xl sm:text-2xl text-white mb-3 group-hover:text-[#d4af37] transition-colors font-bold">{point.title}</h3>
               <p className="text-sm sm:text-base text-gray-300 leading-relaxed flex-grow">{point.description}</p>
-              <div className="absolute bottom-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-[#d4af37]/10 to-transparent rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-            </motion.div>
+              <div className="absolute bottom-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-[#d4af37]/10 to-transparent rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+            </div>
           ))}
-        </motion.div>
+        </div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "0px 0px -80px 0px" }}
-          style={{ WebkitTransform: "translate3d(0,0,0)" }}
-          className="text-center mt-12 sm:mt-16 transform-gpu"
+          className="text-center mt-12 sm:mt-16"
         >
           <div className="inline-block p-5 sm:p-8 w-full sm:w-auto bg-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-[#d4af37]/20 shadow-xl">
             <p className="text-gray-300 text-sm sm:text-lg mb-2 sm:mb-4">

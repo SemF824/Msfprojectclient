@@ -148,10 +148,7 @@ export function Projects() {
             >
               <div className="w-full lg:w-1/2 relative">
                 <div
-                  className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-gray-100 bg-white isolate transform-gpu"
-                  style={{
-                    WebkitMaskImage: "-webkit-radial-gradient(white, black)",
-                  }}
+                  className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-gray-100 bg-white"
                 >
                   <img
                     src={project.image}

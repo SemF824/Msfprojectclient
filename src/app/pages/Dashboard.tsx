@@ -198,17 +198,11 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {stats.map((s, i) => (
-          <motion.div
+          <div
             key={i}
-            variants={itemVariants}
-            className="bg-white rounded-2xl border border-gray-200 shadow-sm sm:shadow-lg p-4 sm:p-5 flex flex-col justify-center"
+            className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:border-[#d4af37]/60 transition-[border-color,box-shadow] duration-200 p-4 sm:p-5 flex flex-col justify-center"
           >
             <div
               className={`w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br ${s.color} rounded-xl flex items-center justify-center mb-2 sm:mb-3`}
@@ -221,9 +215,9 @@ export default function Dashboard() {
             <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 font-medium">
               {s.label}
             </p>
-          </motion.div>
+          </div>
         ))}
-      </motion.div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         <motion.div
